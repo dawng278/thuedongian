@@ -357,17 +357,23 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
   Future<void> _confirm() async {
     setState(() => _loading = true);
     try {
-      final invoice = await context.read<InvoicesProvider>().createInvoice(
+      final result = await context.read<InvoicesProvider>().createInvoice(
         Map.of(widget.cart),
         widget.products,
       );
       if (mounted) {
         Navigator.pop(context);
         widget.onClear();
+        final num = result.serverNumber ?? result.localNumber;
+        final offline = result.serverNumber == null;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hóa đơn #${invoice.invoiceNumber} — ${_currencyFmt.format(widget.total)}đ'),
-            backgroundColor: Colors.green,
+            content: Text(
+              offline
+                ? 'Hóa đơn #$num (offline) — ${_currencyFmt.format(widget.total)}đ'
+                : 'Hóa đơn #$num — ${_currencyFmt.format(widget.total)}đ',
+            ),
+            backgroundColor: offline ? Colors.orange : Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );

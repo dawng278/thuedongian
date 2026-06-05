@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/products_provider.dart';
+import '../../providers/invoices_provider.dart';
 import '../sale/sale_screen.dart';
 import '../manage/product_manage_screen.dart';
 
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             tooltip: _isSaleMode ? 'Chế độ Quản lý' : 'Chế độ Bán hàng',
             onPressed: () => setState(() => _isSaleMode = !_isSaleMode),
           ),
+          _SyncBadge(),
           PopupMenuButton<String>(
             onSelected: (v) async {
               if (v == 'logout') await context.read<AuthProvider>().logout();
@@ -78,6 +80,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _RevenueStub(),
               ],
             ),
+    );
+  }
+}
+
+class _SyncBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final pending = context.watch<InvoicesProvider>().pendingCount;
+    if (pending == 0) return const SizedBox.shrink();
+    return IconButton(
+      icon: Badge(
+        label: Text('$pending'),
+        child: const Icon(Icons.cloud_upload_outlined),
+      ),
+      tooltip: 'Đồng bộ $pending hóa đơn offline',
+      onPressed: () async {
+        final result = await context.read<InvoicesProvider>().syncPending();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
+              backgroundColor: result.errors > 0 ? Colors.orange : Colors.green,
+            ),
+          );
+        }
+      },
     );
   }
 }
