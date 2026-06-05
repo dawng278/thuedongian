@@ -8,9 +8,10 @@ import '../models/invoice.dart';
 // Mock trả dữ liệu giả — dùng để app chạy độc lập khi chưa có backend
 class MockApiService implements ApiService {
   static const _uuid = Uuid();
+  static const _storeId = 'store-demo-001';
 
   final _store = const StoreDto(
-    id: 'store-demo-001',
+    id: _storeId,
     name: 'Quán Ăn Demo',
     taxId: '0123456789',
     address: '123 Đường Láng, Hà Nội',
@@ -18,21 +19,21 @@ class MockApiService implements ApiService {
   );
 
   final _products = <ProductDto>[
-    ProductDto(id: 'p1', name: 'Phở bò tái', price: 50000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p2', name: 'Phở bò chín', price: 50000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p3', name: 'Phở gà', price: 45000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p4', name: 'Bún bò Huế', price: 55000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p5', name: 'Bún riêu', price: 45000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p6', name: 'Bánh mì thịt', price: 25000, unit: 'cái', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p7', name: 'Bánh mì trứng', price: 20000, unit: 'cái', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p8', name: 'Cơm sườn', price: 55000, unit: 'đĩa', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p9', name: 'Cơm tấm bì chả', price: 50000, unit: 'đĩa', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p10', name: 'Trà đá', price: 5000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p11', name: 'Trà chanh', price: 15000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p12', name: 'Cà phê đen', price: 20000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p13', name: 'Cà phê sữa', price: 25000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p14', name: 'Nước cam', price: 30000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
-    ProductDto(id: 'p15', name: 'Sinh tố bơ', price: 35000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p1', storeId: _storeId, name: 'Phở bò tái', price: 50000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p2', storeId: _storeId, name: 'Phở bò chín', price: 50000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p3', storeId: _storeId, name: 'Phở gà', price: 45000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p4', storeId: _storeId, name: 'Bún bò Huế', price: 55000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p5', storeId: _storeId, name: 'Bún riêu', price: 45000, unit: 'bát', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p6', storeId: _storeId, name: 'Bánh mì thịt', price: 25000, unit: 'cái', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p7', storeId: _storeId, name: 'Bánh mì trứng', price: 20000, unit: 'cái', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p8', storeId: _storeId, name: 'Cơm sườn', price: 55000, unit: 'đĩa', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p9', storeId: _storeId, name: 'Cơm tấm bì chả', price: 50000, unit: 'đĩa', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p10', storeId: _storeId, name: 'Trà đá', price: 5000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p11', storeId: _storeId, name: 'Trà chanh', price: 15000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p12', storeId: _storeId, name: 'Cà phê đen', price: 20000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p13', storeId: _storeId, name: 'Cà phê sữa', price: 25000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p14', storeId: _storeId, name: 'Nước cam', price: 30000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
+    ProductDto(id: 'p15', storeId: _storeId, name: 'Sinh tố bơ', price: 35000, unit: 'ly', isActive: true, updatedAt: DateTime(2026, 6, 7)),
   ];
 
   final _invoices = <InvoiceDto>[];
@@ -70,12 +71,14 @@ class MockApiService implements ApiService {
   }
 
   @override
-  Future<ProductDto> createProduct(String name, int price, String? unit) async {
+  Future<ProductDto> createProduct(String name, int price, {String? unit, String? category}) async {
     final p = ProductDto(
       id: _uuid.v4(),
+      storeId: _storeId,
       name: name,
       price: price,
       unit: unit,
+      category: category,
       isActive: true,
       updatedAt: DateTime.now(),
     );
@@ -89,9 +92,11 @@ class MockApiService implements ApiService {
     final old = _products[idx];
     final updated = ProductDto(
       id: old.id,
+      storeId: old.storeId,
       name: data['name'] as String? ?? old.name,
       price: data['price'] as int? ?? old.price,
       unit: data['unit'] as String? ?? old.unit,
+      category: data['category'] as String? ?? old.category,
       isActive: data['is_active'] as bool? ?? old.isActive,
       updatedAt: DateTime.now(),
     );
@@ -104,9 +109,11 @@ class MockApiService implements ApiService {
     final idx = _products.indexWhere((p) => p.id == id);
     _products[idx] = ProductDto(
       id: _products[idx].id,
+      storeId: _products[idx].storeId,
       name: _products[idx].name,
       price: _products[idx].price,
       unit: _products[idx].unit,
+      category: _products[idx].category,
       isActive: false,
       updatedAt: DateTime.now(),
     );

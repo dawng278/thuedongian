@@ -56,18 +56,19 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<ProductDto> createProduct(String name, int price, String? unit) async {
+  Future<ProductDto> createProduct(String name, int price, {String? unit, String? category}) async {
     final res = await _dio.post('/products', data: {
       'name': name,
       'price': price,
       if (unit != null) 'unit': unit,
+      if (category != null) 'category': category,
     });
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
   }
 
   @override
   Future<ProductDto> updateProduct(String id, Map<String, dynamic> data) async {
-    final res = await _dio.patch('/products/$id', data: data);
+    final res = await _dio.put('/products/$id', data: data);
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
   }
 

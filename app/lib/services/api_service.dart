@@ -11,7 +11,7 @@ abstract class ApiService {
   Future<StoreDto> updateStore(Map<String, dynamic> data);
 
   Future<List<ProductDto>> getProducts({bool includeInactive = false});
-  Future<ProductDto> createProduct(String name, int price, String? unit);
+  Future<ProductDto> createProduct(String name, int price, {String? unit, String? category});
   Future<ProductDto> updateProduct(String id, Map<String, dynamic> data);
   Future<void> deleteProduct(String id);
 
