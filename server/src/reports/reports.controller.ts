@@ -15,4 +15,13 @@ export class ReportsController {
   ) {
     return this.reportsService.getRevenue(req.user.userId, from, to);
   }
+
+  @Get('period')
+  getPeriodReport(
+    @Request() req: { user: { userId: string } },
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.reportsService.getPeriodReport(req.user.userId, from, to);
+  }
 }

@@ -82,4 +82,52 @@ export class ReportsService {
       top_products: topItems,
     };
   }
+
+  async getPeriodReport(userId: string, from: string, to: string) {
+    const storeId = await this.getStoreId(userId);
+    const fromDate = new Date(from);
+    const toDate = new Date(to + 'T23:59:59');
+
+    const [invoices, topProducts] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where: { store_id: storeId, created_at: { gte: fromDate, lte: toDate } },
+        include: { items: true },
+        orderBy: { created_at: 'asc' },
+      }),
+      this.prisma.invoiceItem.groupBy({
+        by: ['product_name'],
+        where: { invoice: { store_id: storeId, created_at: { gte: fromDate, lte: toDate } } },
+        _sum: { subtotal: true, quantity: true },
+        orderBy: { _sum: { subtotal: 'desc' } },
+        take: 10,
+      }),
+    ]);
+
+    const totalRevenue = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
+
+    return {
+      from,
+      to,
+      total_revenue: totalRevenue,
+      invoice_count: invoices.length,
+      invoices: invoices.map((inv) => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        created_at: inv.created_at,
+        total_amount: Number(inv.total_amount),
+        note: inv.note,
+        items: inv.items.map((item) => ({
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price: Number(item.price),
+          subtotal: Number(item.subtotal),
+        })),
+      })),
+      top_products: topProducts.map((p) => ({
+        product_name: p.product_name,
+        total_revenue: Number(p._sum.subtotal ?? 0),
+        total_quantity: Number(p._sum.quantity ?? 0),
+      })),
+    };
+  }
 }
