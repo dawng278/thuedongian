@@ -1,10 +1,14 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { InvoiceXmlService } from './invoice-xml.service';
 
 @Injectable()
 export class InvoicesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private xmlService: InvoiceXmlService,
+  ) {}
 
   private async getStoreId(userId: string): Promise<string> {
     const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
@@ -88,5 +92,36 @@ export class InvoicesService {
       throw new NotFoundException('Không tìm thấy hóa đơn');
     }
     return invoice;
+  }
+
+  async exportXml(userId: string, id: string): Promise<string> {
+    const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
+    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
+
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!invoice || invoice.store_id !== store.id) {
+      throw new NotFoundException('Không tìm thấy hóa đơn');
+    }
+
+    return this.xmlService.buildXml({
+      invoiceNumber: invoice.invoice_number,
+      storeId: store.id,
+      storeName: store.name,
+      storeTaxId: store.tax_id,
+      storeAddress: store.address,
+      storePhone: store.phone,
+      createdAt: invoice.created_at,
+      items: invoice.items.map((item) => ({
+        productName: item.product_name,
+        quantity: item.quantity,
+        price: Number(item.price),
+        subtotal: Number(item.subtotal),
+      })),
+      totalAmount: Number(invoice.total_amount),
+      note: invoice.note,
+    });
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/products_provider.dart';
 import '../../providers/invoices_provider.dart';
+import 'invoice_qr_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 
@@ -362,7 +363,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
         widget.products,
       );
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // close cart sheet
         widget.onClear();
         final num = result.serverNumber ?? result.localNumber;
         final offline = result.serverNumber == null;
@@ -374,7 +375,17 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
                 : 'Hóa đơn #$num — ${_currencyFmt.format(widget.total)}đ',
             ),
             backgroundColor: offline ? Colors.orange : Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Xem QR',
+              textColor: Colors.white,
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvoiceQrScreen(invoice: result.invoice),
+                ),
+              ),
+            ),
           ),
         );
       }

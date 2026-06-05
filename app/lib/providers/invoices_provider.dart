@@ -30,8 +30,9 @@ class InvoicesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Create invoice: always save to SQLite first, then try to sync
-  Future<({int localNumber, int? serverNumber})> createInvoice(
+  /// Create invoice: always save to SQLite first, then try to sync.
+  /// Returns localNumber, optional serverNumber, and the full InvoiceDto for QR display.
+  Future<({int localNumber, int? serverNumber, InvoiceDto invoice})> createInvoice(
     Map<String, int> cart,
     List<ProductDto> products, {
     String? note,
@@ -40,6 +41,9 @@ class InvoicesProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final now = DateTime.now();
+      final invoiceId = _uuid.v4();
+
       final items = cart.entries.map((e) {
         final product = products.firstWhere((p) => p.id == e.key);
         return CreateInvoiceItemInput(
@@ -51,8 +55,8 @@ class InvoicesProvider extends ChangeNotifier {
       }).toList();
 
       final dto = CreateInvoiceDto(
-        id: _uuid.v4(),
-        createdAt: DateTime.now(),
+        id: invoiceId,
+        createdAt: now,
         note: note,
         items: items,
       );
@@ -77,7 +81,26 @@ class InvoicesProvider extends ChangeNotifier {
       }
 
       await _refreshPendingCount();
-      return (localNumber: local.localNumber, serverNumber: serverNumber);
+
+      final invoiceDto = InvoiceDto(
+        id: invoiceId,
+        invoiceNumber: serverNumber ?? local.localNumber,
+        totalAmount: items.fold(0, (s, i) => s + i.price * i.quantity),
+        note: note,
+        createdAt: now,
+        items: items
+            .map((i) => InvoiceItemDto(
+                  id: '',
+                  productId: i.productId,
+                  productName: i.productName,
+                  price: i.price,
+                  quantity: i.quantity,
+                  subtotal: i.price * i.quantity,
+                ))
+            .toList(),
+      );
+
+      return (localNumber: local.localNumber, serverNumber: serverNumber, invoice: invoiceDto);
     } finally {
       _creating = false;
       notifyListeners();

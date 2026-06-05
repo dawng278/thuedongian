@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hóa đơn điện tử mẫu — TaxEasy / Thông tư 78/2021/TT-BTC -->
+<HDon xmlns="http://hoadon.gdt.gov.vn/schema/2.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      version="2.0">
+  <DLHDon>
+    <TTChung>
+      <MSHDon>2</MSHDon>           <!-- Mẫu số: 2 = hóa đơn bán hàng -->
+      <KHMSHDon>HKD-2026</KHMSHDon> <!-- Ký hiệu mẫu số -->
+      <KHHDon>HKD-2026</KHHDon>    <!-- Ký hiệu hóa đơn -->
+      <SHDon>1</SHDon>              <!-- Số hóa đơn -->
+      <NLap>2026-06-06</NLap>       <!-- Ngày lập -->
+      <DVTTe>VND</DVTTe>            <!-- Đơn vị tiền tệ -->
+      <TGia>1</TGia>                <!-- Tỷ giá (VND = 1) -->
+    </TTChung>
+    <NDHDon>
+      <NBan>
+        <Ten>Cửa hàng Nguyễn Văn A</Ten>
+        <MST>0123456789</MST>
+        <DChi>123 Lê Lợi, Quận 1, TP.HCM</DChi>
+        <SDThoai>0901234567</SDThoai>
+      </NBan>
+      <DSHHDVu>
+        <HHDVu>
+          <STT>1</STT>
+          <THHDVu>Cà phê sữa đá</THHDVu>
+          <DVTinh/>
+          <SLuong>2</SLuong>
+          <DGia>35000</DGia>
+          <ThTien>70000</ThTien>
+          <TSuat>1%</TSuat>
+        </HHDVu>
+        <HHDVu>
+          <STT>2</STT>
+          <THHDVu>Bánh mì thịt</THHDVu>
+          <DVTinh/>
+          <SLuong>1</SLuong>
+          <DGia>25000</DGia>
+          <ThTien>25000</ThTien>
+          <TSuat>1%</TSuat>
+        </HHDVu>
+      </DSHHDVu>
+    </NDHDon>
+    <TToan>
+      <THTTHDon>95000</THTTHDon>   <!-- Tổng tiền thanh toán -->
+      <TgTCThue>94059</TgTCThue>   <!-- Tiền gốc chưa thuế -->
+      <TgTThue>941</TgTThue>        <!-- Tiền thuế (1%) -->
+    </TToan>
+  </DLHDon>
+  <DSCKS/>  <!-- Vùng chữ ký số — để trống, điền khi ký -->
+</HDon>
