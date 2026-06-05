@@ -166,6 +166,39 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<Map<String, dynamic>> getTaxEstimate({String period = 'month'}) async {
+    final revenue = (await getRevenue())['month_revenue'] as int;
+    const vatRate = 0.03;
+    const pitRate = 0.015;
+    return {
+      'period_label': 'Tháng demo',
+      'period_revenue': revenue,
+      'annualised_revenue': revenue * 12,
+      'below_threshold': revenue * 12 < 100000000,
+      'exempt_threshold': 100000000,
+      'business_type': 'food_beverage',
+      'business_type_label': 'Ăn uống',
+      'vat_rate': vatRate,
+      'pit_rate': pitRate,
+      'vat_amount': (revenue * vatRate).round(),
+      'pit_amount': (revenue * pitRate).round(),
+      'total_tax': (revenue * (vatRate + pitRate)).round(),
+      'source': 'Thông tư 40/2021/TT-BTC',
+      'disclaimer': 'Số liệu ước tính tham khảo — không thay thế tư vấn thuế chính thức.',
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaxDeadlines() async {
+    return {
+      'deadlines': [
+        {'label': 'Kê khai thuế Q2 (2026)', 'deadline': '2026-07-30', 'daysLeft': 54, 'urgent': false},
+        {'label': 'Kê khai thuế Q3 (2026)', 'deadline': '2026-10-30', 'daysLeft': 146, 'urgent': false},
+      ],
+    };
+  }
+
+  @override
   Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to}) async {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);

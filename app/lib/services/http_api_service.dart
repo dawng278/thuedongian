@@ -117,4 +117,16 @@ class HttpApiService implements ApiService {
     });
     return res.data as Map<String, dynamic>;
   }
+
+  @override
+  Future<Map<String, dynamic>> getTaxEstimate({String period = 'month'}) async {
+    final res = await _dio.get('/tax/estimate', queryParameters: {'period': period});
+    return res.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaxDeadlines() async {
+    final res = await _dio.get('/tax/deadlines');
+    return res.data as Map<String, dynamic>;
+  }
 }

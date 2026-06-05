@@ -20,14 +20,15 @@ model User {
 }
 
 model Store {
-  id         String   @id @default(uuid())
-  owner_id   String
-  name       String
-  tax_id     String?
-  address    String?
-  phone      String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id            String   @id @default(uuid())
+  owner_id      String
+  name          String
+  tax_id        String?
+  address       String?
+  phone         String?
+  business_type String?  // goods | food_beverage | services (TT 40/2021)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   owner    User      @relation(fields: [owner_id], references: [id])
   products Product[]

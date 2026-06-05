@@ -22,4 +22,7 @@ abstract class ApiService {
   Future<Map<String, dynamic>> syncInvoices(List<CreateInvoiceDto> invoices);
 
   Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to});
+
+  Future<Map<String, dynamic>> getTaxEstimate({String period = 'month'});
+  Future<Map<String, dynamic>> getTaxDeadlines();
 }

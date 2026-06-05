@@ -7,6 +7,7 @@ import '../sale/sale_screen.dart';
 import '../manage/product_manage_screen.dart';
 import '../manage/revenue_screen.dart';
 import '../manage/invoice_history_screen.dart';
+import '../manage/tax_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductsProvider>().loadProducts();
     });
@@ -69,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 controller: _tabController,
                 tabs: const [
                   Tab(icon: Icon(Icons.analytics_outlined), text: 'Doanh thu'),
+                  Tab(icon: Icon(Icons.calculate_outlined), text: 'Thuế'),
                   Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Sản phẩm'),
                   Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Hóa đơn'),
                 ],
@@ -80,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               controller: _tabController,
               children: const [
                 RevenueScreen(),
+                TaxScreen(),
                 ProductManageScreen(),
                 InvoiceHistoryScreen(),
               ],
