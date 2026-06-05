@@ -36,6 +36,7 @@ class InvoiceItemDto {
 
 class InvoiceDto {
   final String id;
+  final int? invoiceNumber;
   final int totalAmount;
   final String? note;
   final DateTime createdAt;
@@ -44,6 +45,7 @@ class InvoiceDto {
 
   const InvoiceDto({
     required this.id,
+    this.invoiceNumber,
     required this.totalAmount,
     this.note,
     required this.createdAt,
@@ -53,6 +55,7 @@ class InvoiceDto {
 
   factory InvoiceDto.fromJson(Map<String, dynamic> json) => InvoiceDto(
         id: json['id'] as String,
+        invoiceNumber: json['invoice_number'] as int?,
         totalAmount: (json['total_amount'] as num).toInt(),
         note: json['note'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),
@@ -66,6 +69,7 @@ class InvoiceDto {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        if (invoiceNumber != null) 'invoice_number': invoiceNumber,
         'total_amount': totalAmount,
         if (note != null) 'note': note,
         'created_at': createdAt.toIso8601String(),

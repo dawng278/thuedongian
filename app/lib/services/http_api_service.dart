@@ -56,18 +56,19 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<ProductDto> createProduct(String name, int price, String? unit) async {
+  Future<ProductDto> createProduct(String name, int price, {String? unit, String? category}) async {
     final res = await _dio.post('/products', data: {
       'name': name,
       'price': price,
       if (unit != null) 'unit': unit,
+      if (category != null) 'category': category,
     });
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
   }
 
   @override
   Future<ProductDto> updateProduct(String id, Map<String, dynamic> data) async {
-    final res = await _dio.patch('/products/$id', data: data);
+    final res = await _dio.put('/products/$id', data: data);
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
   }
 
@@ -105,6 +106,27 @@ class HttpApiService implements ApiService {
     final res = await _dio.post('/sync/invoices', data: {
       'invoices': invoices.map((i) => i.toJson()).toList(),
     });
+    return res.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to}) async {
+    final res = await _dio.get('/reports/revenue', queryParameters: {
+      if (from != null) 'from': from.toIso8601String().substring(0, 10),
+      if (to != null) 'to': to.toIso8601String().substring(0, 10),
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaxEstimate({String period = 'month'}) async {
+    final res = await _dio.get('/tax/estimate', queryParameters: {'period': period});
+    return res.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaxDeadlines() async {
+    final res = await _dio.get('/tax/deadlines');
     return res.data as Map<String, dynamic>;
   }
 }

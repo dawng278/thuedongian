@@ -5,9 +5,7 @@
 
 | ID | Mô tả bug | Cách tái hiện | Mức độ | Người phát hiện | Trạng thái | Cách khắc phục |
 |----|-----------|---------------|--------|-----------------|------------|----------------|
-| B02-01 | (ví dụ) | | Thấp/TB/Cao | A/B | 🔴 Mở / 🟡 Đang xử lý / 🟢 Đã đóng | |
-|  |  |  |  |  |  |  |
-|  |  |  |  |  |  |  |
+| B02-01 | `GET /stores/me` trả 401 dù token hợp lệ | Đăng nhập lấy token → gọi `/stores/me` với Bearer token | Cao | Claude Code | 🟢 Đã đóng | `JwtModule.register()` đánh giá `process.env.JWT_SECRET` trước khi `ConfigModule` load → secret là `undefined`. Fix: dùng `JwtModule.registerAsync()` + inject `ConfigService` vào `JwtStrategy` |
 
 ## Ghi chú
 - Bug chặn demo → ưu tiên cao nhất.
