@@ -164,4 +164,31 @@ class MockApiService implements ApiService {
     }
     return {'synced': synced, 'skipped': [], 'errors': []};
   }
+
+  @override
+  Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to}) async {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    final todayRevenue = _invoices
+        .where((i) => !i.createdAt.isBefore(todayStart))
+        .fold(0, (s, i) => s + i.totalAmount);
+    final monthInvoices = _invoices.where((i) => !i.createdAt.isBefore(monthStart)).toList();
+    final monthRevenue = monthInvoices.fold(0, (s, i) => s + i.totalAmount);
+
+    final dailyMap = <String, int>{};
+    for (final inv in monthInvoices) {
+      final day = inv.createdAt.toIso8601String().substring(0, 10);
+      dailyMap[day] = (dailyMap[day] ?? 0) + inv.totalAmount;
+    }
+
+    return {
+      'today_revenue': todayRevenue,
+      'month_revenue': monthRevenue,
+      'month_invoice_count': monthInvoices.length,
+      'daily': dailyMap.entries.map((e) => {'date': e.key, 'revenue': e.value}).toList(),
+      'top_products': <Map<String, dynamic>>[],
+    };
+  }
 }

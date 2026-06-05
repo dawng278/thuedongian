@@ -5,6 +5,8 @@ import '../../providers/products_provider.dart';
 import '../../providers/invoices_provider.dart';
 import '../sale/sale_screen.dart';
 import '../manage/product_manage_screen.dart';
+import '../manage/revenue_screen.dart';
+import '../manage/invoice_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductsProvider>().loadProducts();
     });
@@ -40,13 +42,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSaleMode ? storeName : 'Quản lý — $storeName'),
+        title: Text(_isSaleMode ? storeName : 'Quản lý'),
         backgroundColor: color.inversePrimary,
         actions: [
-          IconButton(
-            icon: Icon(_isSaleMode ? Icons.bar_chart : Icons.point_of_sale),
-            tooltip: _isSaleMode ? 'Chế độ Quản lý' : 'Chế độ Bán hàng',
-            onPressed: () => setState(() => _isSaleMode = !_isSaleMode),
+          // Mode toggle button
+          _ModeToggle(
+            isSaleMode: _isSaleMode,
+            onToggle: () => setState(() => _isSaleMode = !_isSaleMode),
           ),
           _SyncBadge(),
           PopupMenuButton<String>(
@@ -66,8 +68,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             : TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Sản phẩm'),
                   Tab(icon: Icon(Icons.analytics_outlined), text: 'Doanh thu'),
+                  Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Sản phẩm'),
+                  Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Hóa đơn'),
                 ],
               ),
       ),
@@ -75,11 +78,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ? const SaleScreen()
           : TabBarView(
               controller: _tabController,
-              children: [
-                const ProductManageScreen(),
-                _RevenueStub(),
+              children: const [
+                RevenueScreen(),
+                ProductManageScreen(),
+                InvoiceHistoryScreen(),
               ],
             ),
+    );
+  }
+}
+
+class _ModeToggle extends StatelessWidget {
+  final bool isSaleMode;
+  final VoidCallback onToggle;
+
+  const _ModeToggle({required this.isSaleMode, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: TextButton.icon(
+        style: TextButton.styleFrom(
+          backgroundColor: isSaleMode
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.secondaryContainer,
+          foregroundColor: isSaleMode
+              ? Theme.of(context).colorScheme.onPrimaryContainer
+              : Theme.of(context).colorScheme.onSecondaryContainer,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        icon: Icon(isSaleMode ? Icons.point_of_sale : Icons.manage_accounts, size: 18),
+        label: Text(isSaleMode ? 'Bán hàng' : 'Quản lý', style: const TextStyle(fontSize: 13)),
+        onPressed: onToggle,
+      ),
     );
   }
 }
@@ -106,24 +139,6 @@ class _SyncBadge extends StatelessWidget {
           );
         }
       },
-    );
-  }
-}
-
-class _RevenueStub extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.analytics_outlined, size: 80, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 16),
-          Text('Doanh thu', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          const Text('Task 08/10 sẽ bổ sung biểu đồ & xuất báo cáo'),
-        ],
-      ),
     );
   }
 }

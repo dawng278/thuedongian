@@ -108,4 +108,13 @@ class HttpApiService implements ApiService {
     });
     return res.data as Map<String, dynamic>;
   }
+
+  @override
+  Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to}) async {
+    final res = await _dio.get('/reports/revenue', queryParameters: {
+      if (from != null) 'from': from.toIso8601String().substring(0, 10),
+      if (to != null) 'to': to.toIso8601String().substring(0, 10),
+    });
+    return res.data as Map<String, dynamic>;
+  }
 }
