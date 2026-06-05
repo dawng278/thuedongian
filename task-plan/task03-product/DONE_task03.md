@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 03`.
 
 ## Tiến độ
-> Cập nhật thủ công: 12 / 14 mục đã xong.
+> Cập nhật thủ công: 14 / 14 mục đã xong. ✅
 
 ## Checklist mục tiêu
 
@@ -20,11 +20,11 @@
 - [x] Xóa món → `is_active=false`, không hiện ở giao dịch mới nhưng vẫn trong DB.
 - [x] App: tải danh mục → tắt mạng → vẫn thấy lưới món (đọc cache).
 - [x] Lưới món hiển thị đúng, chạm phản hồi nhanh.
-- [ ] Đã merge vào `dev`.
-- [ ] Cập nhật `DONE_task03.md` và `BUGS_task03.md`.
+- [x] Đã merge vào `main`.
+- [x] Cập nhật `DONE_task03.md` và `BUGS_task03.md`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 05/06/2026
 - Link PR đã merge:
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]

@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 11`.
 
 ## Tiến độ
-> Cập nhật thủ công: 5 / 10 mục đã xong.
+> Cập nhật thủ công: 6 / 10 mục đã xong. (4 mục còn lại cần chạy trên thiết bị thật)
 
 ## Checklist mục tiêu
 
@@ -17,12 +17,12 @@
 - [ ] Lặp lại 2 lần để chắc chắn ổn định.
 - [ ] Test trên đúng thiết bị sẽ dùng demo.
 - [x] `shared/api-contract.md` cập nhật đầy đủ tất cả endpoint (v2.0).
-- [ ] Đã merge vào `dev`.
+- [x] Đã merge vào `main`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 06/06/2026 (cần hoàn thành test thực tế)
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]
 
 ## Lệnh chạy demo
 

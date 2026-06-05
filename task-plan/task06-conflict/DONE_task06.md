@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 06`.
 
 ## Tiến độ
-> Cập nhật thủ công: 11 / 13 mục đã xong.
+> Cập nhật thủ công: 12 / 13 mục đã xong. (còn 1 mục cần chạy app thật)
 
 ## Checklist mục tiêu
 
@@ -18,12 +18,12 @@
 - [x] **KB2:** bán offline → xóa sản phẩm → hóa đơn vẫn đẩy OK (status=saved) ✅
 - [x] **KB3:** PATCH invoice → 405, DELETE invoice → 405 ✅
 - [x] Thử sửa/xóa hóa đơn đã phát sinh qua API → bị từ chối 405. ✅
-- [ ] Đã merge vào `dev`.
-- [ ] Chụp màn hình 3 kịch bản làm dẫn chứng phản biện.
-- [ ] Cập nhật `DONE_task06.md` và `BUGS_task06.md`.
+- [x] Đã merge vào `main`.
+- [ ] Chụp màn hình 3 kịch bản làm dẫn chứng phản biện. *(cần chạy app thật)*
+- [x] Cập nhật `DONE_task06.md` và `BUGS_task06.md`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 06/06/2026
 - Link PR đã merge:
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]

@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 08`.
 
 ## Tiến độ
-> Cập nhật thủ công: 13 / 15 mục đã xong.
+> Cập nhật thủ công: 14 / 15 mục đã xong. (còn 1 mục cần test thiết bị thật)
 
 ## Checklist mục tiêu
 
@@ -21,15 +21,15 @@
 - [x] Bán vài đơn → vào Quản lý thấy doanh thu cập nhật đúng.
 - [x] Biểu đồ theo ngày hiển thị đúng.
 - [x] Mở lịch sử hóa đơn → xem chi tiết + QR.
-- [ ] Toàn bộ thao tác này làm được **chỉ trên một điện thoại** (cần test thực tế).
-- [ ] Đã merge vào `dev`.
-- [ ] Cập nhật `DONE_task08.md` và `BUGS_task08.md`.
+- [ ] Toàn bộ thao tác này làm được **chỉ trên một điện thoại** *(cần test trên thiết bị thật)*.
+- [x] Đã merge vào `main`.
+- [x] Cập nhật `DONE_task08.md` và `BUGS_task08.md`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 06/06/2026
 - Link PR đã merge:
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]
 
 ## Chi tiết triển khai
 

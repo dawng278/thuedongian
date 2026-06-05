@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 10`.
 
 ## Tiến độ
-> Cập nhật thủ công: 11 / 14 mục đã xong.
+> Cập nhật thủ công: 12 / 14 mục đã xong. (2 mục còn lại là chụp màn hình + báo cáo, dành cho task 13)
 
 ## Checklist mục tiêu
 
@@ -20,14 +20,14 @@
 - [x] Chạm 1 hóa đơn → xem chi tiết + mở QR + endpoint XML.
 - [x] Xuất báo cáo CSV → chia sẻ được từ điện thoại.
 - [x] Lọc thời gian → danh sách đổi đúng.
-- [ ] Đã merge vào `dev`.
-- [ ] Cập nhật `DONE_task10.md` và `BUGS_task10.md`.
+- [x] Đã merge vào `main`.
+- [x] Cập nhật `DONE_task10.md` và `BUGS_task10.md`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 06/06/2026
 - Link PR đã merge:
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]
 
 ## Chi tiết triển khai
 

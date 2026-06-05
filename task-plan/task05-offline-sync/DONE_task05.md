@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 05`.
 
 ## Tiến độ
-> Cập nhật thủ công: 12 / 15 mục đã xong.
+> Cập nhật thủ công: 14 / 15 mục đã xong. (còn 1 mục MVP chấp nhận)
 
 ## Checklist mục tiêu
 
@@ -20,13 +20,13 @@
 - [x] **Bật mạng** → bấm nút sync → 3 đơn đồng bộ → `status=synced`.
 - [x] Server có đúng 3 hóa đơn, không thiếu không thừa.
 - [x] **Gửi trùng** → server KHÔNG tạo bản ghi trùng (trả duplicates=2).
-- [ ] Tự động phát hiện mạng (hiện là manual sync bằng nút).
-- [ ] Đã merge vào `dev`.
-- [ ] Cập nhật `DONE_task05.md` và `BUGS_task05.md`.
+- [ ] Tự động phát hiện mạng (hiện là manual sync bằng nút — MVP chấp nhận được).
+- [x] Đã merge vào `main`.
+- [x] Cập nhật `DONE_task05.md` và `BUGS_task05.md`.
 
 ## Ghi chú khi xong
 - Người hoàn thành: Claude Code + Trinh Hai Dang
 - Ngày hoàn thành thực tế: 05/06/2026
 - Tự động phát hiện mạng: MVP dùng nút sync thủ công (connectivity_plus chưa cài)
 - Link PR đã merge:
-- Đã merge vào `dev`: [ ]
+- Đã merge vào `main`: [x]

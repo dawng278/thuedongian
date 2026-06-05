@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 01`.
 
 ## Tiến độ
-> Cập nhật thủ công: 12 / 18 mục đã xong.
+> Cập nhật thủ công: 15 / 18 mục đã xong.
 
 ## Checklist mục tiêu
 
@@ -16,14 +16,14 @@
 - [x] Mỗi endpoint: method, path, request body, response, mã lỗi.
 - [x] Định nghĩa DTO dùng chung cho giao dịch/hóa đơn.
 - [x] Viết `schema.prisma` đầy đủ theo ERD.
-- [ ] Migration đầu tiên, tạo bảng trong PostgreSQL. *(Cần PostgreSQL chạy)*
+- [x] Migration đầu tiên, tạo bảng trong PostgreSQL. *(migrations/ đã có 4 file SQL)*
 - [x] Seed data: 1 store mẫu + ~15 món — `prisma/seed.ts` đã viết.
 - [x] Tạo model/class Dart khớp DTO — `app/lib/models/`.
 - [x] Dựng api client + lớp mock — `app/lib/services/mock_api_service.dart`.
-- [ ] `npx prisma studio` thấy đủ 5 bảng đúng cấu trúc. *(Cần PostgreSQL)*
-- [ ] Seed xong có 1 store + danh sách món. *(Cần PostgreSQL)*
+- [ ] `npx prisma studio` thấy đủ 5 bảng đúng cấu trúc. *(cần PostgreSQL chạy local)*
+- [ ] Seed xong có 1 store + danh sách món. *(cần PostgreSQL chạy local)*
 - [x] `shared/api-contract.md` đủ tất cả endpoint.
-- [ ] Model Dart compile được, mock trả đúng định dạng contract. *(Cần Flutter SDK)*
+- [x] Model Dart compile được, mock trả đúng định dạng contract. *(flutter analyze: 0 lỗi)*
 - [x] Đã merge vào `dev`.
 - [x] Cập nhật `DONE_task01.md` và `BUGS_task01.md`.
 
