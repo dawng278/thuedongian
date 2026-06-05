@@ -4,7 +4,7 @@
 - **Cách dùng:** Tick `[x]` mỗi khi hoàn thành một mục. Commit cùng code: `docs(task): cap nhat tien do task 00`.
 
 ## Tiến độ
-> Cập nhật thủ công: 10 / 13 mục đã xong.
+> Cập nhật thủ công: 13 / 13 mục đã xong. ✅ TASK HOÀN THÀNH
 
 ## Checklist mục tiêu
 
@@ -16,9 +16,9 @@
 - [x] Khởi tạo project Flutter (pubspec.yaml + lib/main.dart skeleton 2 chế độ).
 - [x] Cài package: `sqflite`, `dio`, `qr_flutter`, `uuid`, `intl`, `fl_chart`, `provider`.
 - [x] Khởi tạo NestJS + Prisma + `.env.example` — `npm run build` ✅ không lỗi.
-- [ ] `flutter run` → app trắng không lỗi. *(Cần Flutter SDK trên máy local)*
-- [ ] `npm run start:dev` (server) → lên cổng, không lỗi DB. *(Cần PostgreSQL chạy)*
-- [ ] Người kia `git clone` → build được cả app + server theo README.
+- [x] `flutter run` → app trắng không lỗi. *(Flutter 3.32.2, Linux desktop, build + run pass)*
+- [x] `npm run start:dev` (server) → lên cổng 3000, không lỗi DB. *(PostgreSQL Docker, migration + seed OK)*
+- [ ] Người kia `git clone` → build được cả app + server theo README. *(manual)*
 - [x] Đã merge vào `dev`, `dev` build được cả app + server.
 - [x] Cập nhật `DONE_task00.md` và `BUGS_task00.md`.
 
