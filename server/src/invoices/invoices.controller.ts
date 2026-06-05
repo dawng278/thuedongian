@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request, MethodNotAllowedException } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -39,5 +39,16 @@ export class InvoicesController {
     @Param('id') id: string,
   ) {
     return this.invoicesService.findOne(req.user.userId, id);
+  }
+
+  // Invoices are immutable — no edit or delete
+  @Patch(':id')
+  patchNotAllowed() {
+    throw new MethodNotAllowedException('Hóa đơn không thể sửa sau khi tạo');
+  }
+
+  @Delete(':id')
+  deleteNotAllowed() {
+    throw new MethodNotAllowedException('Hóa đơn không thể xóa');
   }
 }
