@@ -1,10 +1,84 @@
-// TaxEasy — Prisma schema (skeleton, sẽ mở rộng ở task01)
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  stores Store[]
+
+  @@map("users")
+}
+
+model Store {
+  id         String   @id @default(uuid())
+  owner_id   String
+  name       String
+  tax_id     String?
+  address    String?
+  phone      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  owner    User      @relation(fields: [owner_id], references: [id])
+  products Product[]
+  invoices Invoice[]
+
+  @@map("stores")
+}
+
+model Product {
+  id         String   @id @default(uuid())
+  store_id   String
+  name       String
+  price      Decimal  @db.Decimal(12, 0)
+  unit       String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  store        Store         @relation(fields: [store_id], references: [id])
+  invoice_items InvoiceItem[]
+
+  @@map("products")
+}
+
+// id sinh ở CLIENT (UUID v4) — chống trùng khi sync offline
+model Invoice {
+  id           String    @id
+  store_id     String
+  total_amount Decimal   @db.Decimal(12, 0)
+  note         String?
+  created_at   DateTime  @default(now())
+  synced_at    DateTime?
+
+  store Store        @relation(fields: [store_id], references: [id])
+  items InvoiceItem[]
+
+  @@map("invoices")
+}
+
+// Snapshot: product_name + price bất biến sau khi tạo
+model InvoiceItem {
+  id           String  @id @default(uuid())
+  invoice_id   String
+  product_id   String?
+  product_name String
+  price        Decimal @db.Decimal(12, 0)
+  quantity     Int
+  subtotal     Decimal @db.Decimal(12, 0)
+
+  invoice Invoice  @relation(fields: [invoice_id], references: [id])
+  product Product? @relation(fields: [product_id], references: [id])
+
+  @@map("invoice_items")
 }
