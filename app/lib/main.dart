@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
 
 void main() {
-  runApp(const TaxEasyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: const TaxEasyApp(),
+    ),
+  );
 }
 
 class TaxEasyApp extends StatelessWidget {
@@ -16,57 +25,23 @@ class TaxEasyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const AuthGate(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  bool _isSaleMode = true;
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isSaleMode ? 'Bán hàng' : 'Quản lý'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: Icon(_isSaleMode ? Icons.bar_chart : Icons.shopping_cart),
-            tooltip: _isSaleMode ? 'Chuyển sang Quản lý' : 'Chuyển sang Bán hàng',
-            onPressed: () => setState(() => _isSaleMode = !_isSaleMode),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _isSaleMode ? Icons.point_of_sale : Icons.analytics,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _isSaleMode ? 'Chế độ Bán hàng' : 'Chế độ Quản lý',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'TaxEasy — Đang phát triển...',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+    final status = context.watch<AuthProvider>().status;
+    return switch (status) {
+      AuthStatus.unknown => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
         ),
-      ),
-    );
+      AuthStatus.authenticated => const HomeScreen(),
+      AuthStatus.unauthenticated => const LoginScreen(),
+    };
   }
 }
