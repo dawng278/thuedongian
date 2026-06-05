@@ -1,0 +1,42 @@
+name: taxeasy_app
+description: TaxEasy — Hỗ trợ hộ kinh doanh quản lý bán hàng & hóa đơn điện tử.
+
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Local DB
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+
+  # HTTP
+  dio: ^5.7.0
+
+  # QR
+  qr_flutter: ^4.1.0
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: ^0.19.0
+
+  # Charts
+  fl_chart: ^0.70.0
+
+  # State management
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/

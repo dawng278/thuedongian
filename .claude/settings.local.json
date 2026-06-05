@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(mkdir -p app server shared docs task-plan)",
+      "Bash(npm i *)",
+      "Bash(nest new *)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)"
+    ],
+    "additionalDirectories": [
+      "/home/dawngbeo/school-project/ThueDonGian"
+    ]
+  }
+}
