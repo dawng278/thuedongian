@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/products_provider.dart';
+import '../../providers/invoices_provider.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 
@@ -323,21 +324,73 @@ class _CartSheet extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Task 04 sẽ tạo hóa đơn — tổng: ${_currencyFmt.format(total)}đ')),
-                    );
-                  },
-                  icon: const Icon(Icons.check),
-                  label: const Text('Xác nhận bán'),
-                ),
+                _ConfirmSaleButton(cart: cart, products: products, total: total, onClear: onClear),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ConfirmSaleButton extends StatefulWidget {
+  final Map<String, int> cart;
+  final List<ProductDto> products;
+  final int total;
+  final VoidCallback onClear;
+
+  const _ConfirmSaleButton({
+    required this.cart,
+    required this.products,
+    required this.total,
+    required this.onClear,
+  });
+
+  @override
+  State<_ConfirmSaleButton> createState() => _ConfirmSaleButtonState();
+}
+
+class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
+  bool _loading = false;
+
+  Future<void> _confirm() async {
+    setState(() => _loading = true);
+    try {
+      final invoice = await context.read<InvoicesProvider>().createInvoice(
+        Map.of(widget.cart),
+        widget.products,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onClear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hóa đơn #${invoice.invoiceNumber} — ${_currencyFmt.format(widget.total)}đ'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tạo hóa đơn: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: _loading ? null : _confirm,
+      icon: _loading
+          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : const Icon(Icons.check),
+      label: const Text('Xác nhận bán'),
     );
   }
 }

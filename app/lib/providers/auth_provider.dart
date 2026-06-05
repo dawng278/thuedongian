@@ -22,11 +22,9 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isLoading => _status == AuthStatus.unknown;
 
-  // Dùng mock khi chưa có backend thật — đổi thành HttpApiService khi server chạy
-  late ApiService _api;
+  final ApiService _api;
 
-  AuthProvider() {
-    _api = HttpApiService(baseUrl: 'http://localhost:3000');
+  AuthProvider(this._api) {
     _tryRestoreSession();
   }
 
