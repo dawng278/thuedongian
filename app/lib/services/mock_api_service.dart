@@ -9,7 +9,7 @@ import '../models/invoice.dart';
 class MockApiService implements ApiService {
   static const _uuid = Uuid();
 
-  final _store = StoreDto(
+  final _store = const StoreDto(
     id: 'store-demo-001',
     name: 'Quán Ăn Demo',
     taxId: '0123456789',
