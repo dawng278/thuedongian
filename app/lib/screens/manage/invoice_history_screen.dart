@@ -65,11 +65,7 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _invoices.clear();
-      _page = 1;
-      _hasMore = true;
-    });
+    setState(() { _invoices.clear(); _page = 1; _hasMore = true; });
     await _loadMore();
   }
 
@@ -84,24 +80,17 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
           : DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (picked != null) {
-      setState(() {
-        _fromDate = picked.start;
-        _toDate = picked.end;
-      });
+      setState(() { _fromDate = picked.start; _toDate = picked.end; });
       _refresh();
     }
   }
 
   void _clearFilter() {
-    setState(() {
-      _fromDate = null;
-      _toDate = null;
-    });
+    setState(() { _fromDate = null; _toDate = null; });
     _refresh();
   }
 
   Future<void> _exportCsv() async {
-    // Build CSV from current loaded invoices
     final sb = StringBuffer();
     sb.writeln('Số HĐ,Ngày,Tổng tiền,Ghi chú,Các mặt hàng');
     for (final inv in _invoices) {
@@ -109,7 +98,6 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
       final note = inv.note?.replaceAll(',', ' ') ?? '';
       sb.writeln('${inv.invoiceNumber ?? '?'},${_dateFmtShort.format(inv.createdAt)},${inv.totalAmount},$note,"$items"');
     }
-
     try {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/taxeasy_invoices.csv');
@@ -130,43 +118,91 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final hasFilter = _fromDate != null || _toDate != null;
-    final color = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Column(
       children: [
         // Filter bar
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        Container(
+          color: const Color(0xFFF8F9FF),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.date_range, size: 16),
-                  label: Text(
-                    hasFilter
-                        ? '${_dateFmtShort.format(_fromDate!)} – ${_dateFmtShort.format(_toDate!)}'
-                        : 'Lọc theo ngày',
-                    style: const TextStyle(fontSize: 13),
-                    overflow: TextOverflow.ellipsis,
+                child: GestureDetector(
+                  onTap: _pickDateRange,
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFFC3C6D7)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 16, color: cs.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            hasFilter
+                                ? '${_dateFmtShort.format(_fromDate!)} – ${_dateFmtShort.format(_toDate!)}'
+                                : 'HÔM NAY',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: hasFilter ? cs.onSurface : cs.onSurfaceVariant,
+                              letterSpacing: 0.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(Icons.expand_more, size: 16, color: cs.onSurfaceVariant),
+                        if (hasFilter) ...[
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: _clearFilter,
+                            child: Icon(Icons.close, size: 14, color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  onPressed: _pickDateRange,
                 ),
               ),
-              if (hasFilter)
-                IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  tooltip: 'Xóa bộ lọc',
-                  onPressed: _clearFilter,
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _invoices.isEmpty ? null : _exportCsv,
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: _invoices.isEmpty ? const Color(0xFFEFF4FF) : cs.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.download, size: 16, color: _invoices.isEmpty ? cs.onSurfaceVariant : Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        'XUẤT CSV',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _invoices.isEmpty ? cs.onSurfaceVariant : Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              IconButton(
-                icon: const Icon(Icons.download_outlined),
-                tooltip: 'Xuất CSV',
-                onPressed: _invoices.isEmpty ? null : _exportCsv,
               ),
             ],
           ),
         ),
 
+        // List
         if (_loading && _invoices.isEmpty)
           const Expanded(child: Center(child: CircularProgressIndicator()))
         else if (_invoices.isEmpty)
@@ -175,9 +211,9 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 64, color: color.outline),
+                  Icon(Icons.receipt_long_outlined, size: 56, color: cs.outline),
                   const SizedBox(height: 12),
-                  const Text('Chưa có hóa đơn nào'),
+                  Text('Chưa có hóa đơn nào', style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
                 ],
               ),
             ),
@@ -185,8 +221,10 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
         else
           Expanded(
             child: RefreshIndicator(
+              color: cs.primary,
               onRefresh: _refresh,
               child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 itemCount: _invoices.length + (_hasMore ? 1 : 0),
                 itemBuilder: (context, i) {
                   if (i == _invoices.length) {
@@ -196,7 +234,13 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                       child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  return _InvoiceTile(invoice: _invoices[i]);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _InvoiceRow(
+                      invoice: _invoices[i],
+                      onTap: () => _showDetail(context, _invoices[i]),
+                    ),
+                  );
                 },
               ),
             ),
@@ -204,44 +248,116 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
       ],
     );
   }
-}
 
-class _InvoiceTile extends StatelessWidget {
-  final InvoiceDto invoice;
-  const _InvoiceTile({required this.invoice});
-
-  @override
-  Widget build(BuildContext context) {
-    final num = invoice.invoiceNumber;
-    return ListTile(
-      leading: CircleAvatar(
-        child: Text('#${num ?? '?'}', style: const TextStyle(fontSize: 12)),
-      ),
-      title: Text(
-        '${_currencyFmt.format(invoice.totalAmount)}đ',
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(_dateFmt.format(invoice.createdAt)),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => _showDetail(context),
-    );
-  }
-
-  void _showDetail(BuildContext context) {
+  void _showDetail(BuildContext context, InvoiceDto invoice) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => _InvoiceDetailSheet(invoice: invoice),
     );
   }
 }
+
+// ── Invoice row ────────────────────────────────────────────────────────────
+
+class _InvoiceRow extends StatelessWidget {
+  final InvoiceDto invoice;
+  final VoidCallback onTap;
+  const _InvoiceRow({required this.invoice, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final num = invoice.invoiceNumber;
+    final itemCount = invoice.items?.length ?? 0;
+    final isOnline = invoice.syncedAt != null;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            // Receipt icon circle
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5EEFF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.receipt_rounded, size: 22, color: cs.primary),
+            ),
+            const SizedBox(width: 14),
+            // Invoice info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '#INV-${num ?? '?'}',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_dateFmt.format(invoice.createdAt)}${itemCount > 0 ? ' • $itemCount món' : ''}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            // Status dot + amount
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isOnline ? const Color(0xFF00668A) : const Color(0xFF737686),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      isOnline ? 'Online' : 'Offline',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isOnline ? const Color(0xFF00668A) : cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_currencyFmt.format(invoice.totalAmount)}đ',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Detail Sheet ───────────────────────────────────────────────────────────
 
 class _InvoiceDetailSheet extends StatelessWidget {
   final InvoiceDto invoice;
   const _InvoiceDetailSheet({required this.invoice});
 
   void _downloadXml(BuildContext context) {
-    // XML endpoint: GET /invoices/:id/xml — returns application/xml file
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Endpoint XML: GET /invoices/${invoice.id}/xml'),
@@ -252,97 +368,124 @@ class _InvoiceDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final num = invoice.invoiceNumber;
     final items = invoice.items ?? [];
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      maxChildSize: 0.9,
-      minChildSize: 0.4,
-      expand: false,
-      builder: (context, scroll) => Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            width: 40, height: 4,
-            decoration: BoxDecoration(color: color.outline, borderRadius: BorderRadius.circular(2)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text('Hóa đơn #${num ?? '?'}', style: Theme.of(context).textTheme.titleLarge),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.qr_code),
-                  tooltip: 'Xem QR',
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => InvoiceQrScreen(invoice: invoice)),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.code_outlined),
-                  tooltip: 'Xuất XML',
-                  onPressed: () => _downloadXml(context),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _dateFmt.format(invoice.createdAt),
-                style: Theme.of(context).textTheme.bodySmall,
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scroll) => Column(
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-          ),
-          const Divider(),
-          Expanded(
-            child: ListView(
-              controller: scroll,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                ...items.map(
-                  (item) => ListTile(
-                    dense: true,
-                    title: Text('${item.productName} x${item.quantity}'),
-                    trailing: Text('${_currencyFmt.format(item.subtotal)}đ'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Hóa đơn #${num ?? '?'}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30)),
+                    ),
                   ),
-                ),
-                const Divider(),
-                ListTile(
-                  dense: true,
-                  title: const Text('Tổng cộng', style: TextStyle(fontWeight: FontWeight.bold)),
-                  trailing: Text(
-                    '${_currencyFmt.format(invoice.totalAmount)}đ',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: color.primary),
+                  IconButton(
+                    icon: Icon(Icons.qr_code_2_outlined, color: cs.primary),
+                    tooltip: 'Xem QR',
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => InvoiceQrScreen(invoice: invoice)));
+                    },
                   ),
-                ),
-                if (invoice.note != null && invoice.note!.isNotEmpty)
-                  ListTile(
-                    dense: true,
-                    title: const Text('Ghi chú'),
-                    subtitle: Text(invoice.note!),
+                  IconButton(
+                    icon: Icon(Icons.code_outlined, color: cs.primary),
+                    tooltip: 'Xuất XML',
+                    onPressed: () => _downloadXml(context),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 16),
-            child: FilledButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
-              label: const Text('Đóng'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                _dateFmt.format(invoice.createdAt),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              ),
             ),
-          ),
-        ],
+            Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+            Expanded(
+              child: ListView(
+                controller: scroll,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  const SizedBox(height: 12),
+                  ...items.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${item.productName} ×${item.quantity}',
+                              style: const TextStyle(fontSize: 14, color: Color(0xFF0B1C30)),
+                            ),
+                          ),
+                          Text(
+                            '${_currencyFmt.format(item.subtotal)}đ',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Divider(height: 24, color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Tổng cộng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30))),
+                      ),
+                      Text(
+                        '${_currencyFmt.format(invoice.totalAmount)}đ',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.primary),
+                      ),
+                    ],
+                  ),
+                  if (invoice.note != null && invoice.note!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text('Ghi chú', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                    const SizedBox(height: 4),
+                    Text(invoice.note!, style: const TextStyle(fontSize: 14, color: Color(0xFF0B1C30))),
+                  ],
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                  label: const Text('Đóng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

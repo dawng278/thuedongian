@@ -25,8 +25,8 @@ class _SaleView extends StatefulWidget {
 }
 
 class _SaleViewState extends State<_SaleView> {
-  // cart: productId → quantity
   final Map<String, int> _cart = {};
+  String? _selectedCategory;
 
   int get _totalAmount {
     final prods = context.read<ProductsProvider>().products;
@@ -41,7 +41,7 @@ class _SaleViewState extends State<_SaleView> {
     updatedAt: DateTime(2026),
   );
 
-  void _tap(ProductDto product) {
+  void _addToCart(ProductDto product) {
     setState(() {
       _cart[product.id] = (_cart[product.id] ?? 0) + 1;
     });
@@ -60,26 +60,42 @@ class _SaleViewState extends State<_SaleView> {
 
   void _clearCart() => setState(() => _cart.clear());
 
+  List<String> _categories(List<ProductDto> products) {
+    final cats = products
+        .where((p) => p.category != null && p.category!.isNotEmpty)
+        .map((p) => p.category!)
+        .toSet()
+        .toList();
+    return cats;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProductsProvider>();
-    final products = provider.products;
-    final color = Theme.of(context).colorScheme;
+    final allProducts = provider.products;
+    final categories = _categories(allProducts);
+    final products = _selectedCategory == null
+        ? allProducts
+        : allProducts.where((p) => p.category == _selectedCategory).toList();
     final cartCount = _cart.values.fold(0, (a, b) => a + b);
 
-    if (provider.loading && products.isEmpty) {
+    if (provider.loading && allProducts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (products.isEmpty) {
+
+    if (allProducts.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 64, color: color.outline),
+            Icon(Icons.inventory_2_outlined, size: 64, color: Theme.of(context).colorScheme.outline),
             const SizedBox(height: 16),
-            Text('Chưa có món nào', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Chưa có món nào', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
-            const Text('Thêm món trong chế độ Quản lý'),
+            Text(
+              'Thêm món trong chế độ Quản lý',
+              style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
           ],
         ),
       );
@@ -87,27 +103,56 @@ class _SaleViewState extends State<_SaleView> {
 
     return Column(
       children: [
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(8),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 180,
-              childAspectRatio: 0.85,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: products.length,
-            itemBuilder: (context, i) => _ProductTile(
-              product: products[i],
-              qty: _cart[products[i].id] ?? 0,
-              onTap: () => _tap(products[i]),
+        // Category chips
+        if (categories.isNotEmpty)
+          SizedBox(
+            height: 52,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              scrollDirection: Axis.horizontal,
+              children: [
+                _CategoryChip(
+                  label: 'Tất cả',
+                  isActive: _selectedCategory == null,
+                  onTap: () => setState(() => _selectedCategory = null),
+                ),
+                ...categories.map((cat) => _CategoryChip(
+                  label: cat,
+                  isActive: _selectedCategory == cat,
+                  onTap: () => setState(() => _selectedCategory = cat),
+                )),
+              ],
             ),
           ),
+
+        // Product grid
+        Expanded(
+          child: GridView.builder(
+            padding: EdgeInsets.fromLTRB(16, categories.isNotEmpty ? 0 : 12, 16, cartCount > 0 ? 100 : 16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, i) {
+              final p = products[i];
+              return _ProductCard(
+                product: p,
+                qty: _cart[p.id] ?? 0,
+                onAdd: () => _addToCart(p),
+                onRemove: () => _removeFromCart(p.id),
+              );
+            },
+          ),
         ),
+
+        // Cart bar
         if (cartCount > 0)
           _CartBar(
             cart: _cart,
-            products: products,
+            products: allProducts,
             total: _totalAmount,
             onRemove: _removeFromCart,
             onClear: _clearCart,
@@ -117,68 +162,301 @@ class _SaleViewState extends State<_SaleView> {
   }
 }
 
-class _ProductTile extends StatelessWidget {
-  final ProductDto product;
-  final int qty;
+// ── Category Chip ──────────────────────────────────────────────────────────
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isActive;
   final VoidCallback onTap;
 
-  const _ProductTile({required this.product, required this.qty, required this.onTap});
+  const _CategoryChip({required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    final hasQty = qty > 0;
-
-    return Card(
-      elevation: hasQty ? 4 : 1,
-      color: hasQty ? color.primaryContainer : color.surfaceContainerHighest,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (hasQty)
-                Container(
-                  width: 28, height: 28,
-                  decoration: BoxDecoration(
-                    color: color.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '$qty',
-                    style: TextStyle(color: color.onPrimary, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                )
-              else
-                Icon(Icons.fastfood_outlined, size: 28, color: color.onSurfaceVariant),
-              const SizedBox(height: 8),
-              Text(
-                product.name,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: hasQty ? FontWeight.bold : FontWeight.normal,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${_currencyFmt.format(product.price)}đ',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: hasQty ? color.primary : color.outline,
-                ),
-              ),
-            ],
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: isActive ? cs.primaryContainer : Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isActive ? cs.primaryContainer : const Color(0xFFC3C6D7),
+            ),
+            boxShadow: isActive
+                ? [BoxShadow(color: cs.primary.withValues(alpha: 0.15), blurRadius: 6, offset: const Offset(0, 2))]
+                : [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 3)],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isActive ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+              letterSpacing: 0.3,
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+// ── Product Card ───────────────────────────────────────────────────────────
+
+class _ProductCard extends StatelessWidget {
+  final ProductDto product;
+  final int qty;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  const _ProductCard({
+    required this.product,
+    required this.qty,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  static const _avatarColors = [
+    Color(0xFFDBE1FF), // blue-tinted light
+    Color(0xFFC4E7FF), // sky light
+    Color(0xFFDAE2FD), // indigo light
+    Color(0xFFE5EEFF), // primary-container
+    Color(0xFFD3E4FE), // surface-variant
+    Color(0xFFEFF4FF), // surface-container-low
+  ];
+
+  static const _avatarTextColors = [
+    Color(0xFF004AC6),
+    Color(0xFF00668A),
+    Color(0xFF3F465C),
+    Color(0xFF004AC6),
+    Color(0xFF004AC6),
+    Color(0xFF004AC6),
+  ];
+
+  Color _avatarBg() {
+    final sum = product.name.codeUnits.fold(0, (a, b) => a + b);
+    return _avatarColors[sum % _avatarColors.length];
+  }
+
+  Color _avatarTextColor() {
+    final sum = product.name.codeUnits.fold(0, (a, b) => a + b);
+    return _avatarTextColors[sum % _avatarTextColors.length];
+  }
+
+  String _initials() {
+    final parts = product.name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts.first[0] + parts.last[0]).toUpperCase();
+    }
+    return product.name.substring(0, product.name.length.clamp(1, 2)).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isSelected = qty > 0;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? cs.primaryContainer : const Color(0xFFC3C6D7),
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected
+                ? cs.primary.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.05),
+            blurRadius: isSelected ? 12 : 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image / avatar area
+              Expanded(
+                flex: 3,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                  child: Container(
+                    color: _avatarBg(),
+                    child: Center(
+                      child: Text(
+                        _initials(),
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: _avatarTextColor(),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Info area
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0B1C30),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${_currencyFmt.format(product.price)}đ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? cs.primary : cs.primary,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(height: 6),
+                        _Stepper(qty: qty, onAdd: onAdd, onRemove: onRemove),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Tap overlay for unselected
+          if (!isSelected)
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: onAdd,
+                ),
+              ),
+            ),
+
+          // Badge
+          if (isSelected)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: cs.error,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$qty',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Stepper extends StatelessWidget {
+  final int qty;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  const _Stepper({required this.qty, required this.onAdd, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      height: 28,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF4FF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          _StepBtn(icon: Icons.remove, onTap: onRemove, isAdd: false),
+          Expanded(
+            child: Center(
+              child: Text(
+                '$qty',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
+              ),
+            ),
+          ),
+          _StepBtn(icon: Icons.add, onTap: onAdd, isAdd: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isAdd;
+
+  const _StepBtn({required this.icon, required this.onTap, required this.isAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: isAdd ? cs.primary : Colors.white,
+          borderRadius: BorderRadius.circular(7),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 2)],
+        ),
+        child: Icon(
+          icon,
+          size: 14,
+          color: isAdd ? Colors.white : cs.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Cart Bar ───────────────────────────────────────────────────────────────
 
 class _CartBar extends StatelessWidget {
   final Map<String, int> cart;
@@ -197,43 +475,99 @@ class _CartBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
     final itemCount = cart.values.fold(0, (a, b) => a + b);
 
     return Container(
-      color: color.primaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF004AC6), Color(0xFF40C2FD)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF004AC6).withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Icon(Icons.shopping_cart, color: color.primary),
-          const SizedBox(width: 8),
-          Text(
-            '$itemCount món',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 24),
+              Positioned(
+                top: -4,
+                right: -6,
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFBA1A1A),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFF0053DB), width: 1.5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$itemCount',
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const Spacer(),
-          Text(
-            '${_currencyFmt.format(total)}đ',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: color.primary,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$itemCount món',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                Text(
+                  '${_currencyFmt.format(total)}đ',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: () => _showCartDialog(context),
-            icon: const Icon(Icons.receipt_outlined, size: 18),
-            label: const Text('Tính tiền'),
+          ElevatedButton.icon(
+            onPressed: () => _showCartSheet(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF004AC6),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            ),
+            icon: const Icon(Icons.arrow_forward, size: 16),
+            label: const Text(
+              'Tính tiền',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showCartDialog(BuildContext context) {
+  void _showCartSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => _CartSheet(
         cart: cart,
         products: products,
@@ -244,6 +578,8 @@ class _CartBar extends StatelessWidget {
     );
   }
 }
+
+// ── Cart Sheet ─────────────────────────────────────────────────────────────
 
 class _CartSheet extends StatelessWidget {
   final Map<String, int> cart;
@@ -262,7 +598,7 @@ class _CartSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final entries = cart.entries.toList();
 
     return DraggableScrollableSheet(
@@ -270,70 +606,167 @@ class _CartSheet extends StatelessWidget {
       maxChildSize: 0.9,
       minChildSize: 0.4,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            width: 40, height: 4,
-            decoration: BoxDecoration(color: color.outline, borderRadius: BorderRadius.circular(2)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text('Đơn hàng', style: Theme.of(context).textTheme.titleLarge),
-                const Spacer(),
-                TextButton(onPressed: () { Navigator.pop(context); onClear(); }, child: const Text('Xóa tất cả')),
-              ],
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFF8F9FF),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: entries.length,
-              itemBuilder: (context, i) {
-                final entry = entries[i];
-                final product = products.firstWhere((p) => p.id == entry.key);
-                return ListTile(
-                  title: Text(product.name),
-                  subtitle: Text('${_currencyFmt.format(product.price)}đ x ${entry.value}'),
-                  trailing: Row(
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(
+                    'Đơn hàng',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      onClear();
+                    },
+                    style: TextButton.styleFrom(foregroundColor: cs.error),
+                    child: const Text('Xóa tất cả'),
+                  ),
+                ],
+              ),
+            ),
+            // Items
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                itemCount: entries.length,
+                itemBuilder: (context, i) {
+                  final entry = entries[i];
+                  final product = products.firstWhere((p) => p.id == entry.key);
+                  return _CartItem(
+                    product: product,
+                    qty: entry.value,
+                    onRemove: () => onRemove(entry.key),
+                  );
+                },
+              ),
+            ),
+            // Footer
+            Container(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -4))],
+              ),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${_currencyFmt.format(product.price * entry.value)}đ',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        'Tổng cộng (${cart.values.fold(0, (a, b) => a + b)} món)',
+                        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () => onRemove(entry.key),
+                      Text(
+                        '${_currencyFmt.format(total)}đ',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: cs.primary,
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
+                  const Spacer(),
+                  _ConfirmSaleButton(cart: cart, products: products, total: total, onClear: onClear),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CartItem extends StatelessWidget {
+  final ProductDto product;
+  final int qty;
+  final VoidCallback onRemove;
+
+  const _CartItem({required this.product, required this.qty, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF4FF),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                product.name.isNotEmpty ? product.name[0].toUpperCase() : '?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.primary),
+              ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 16),
-            child: Row(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Tổng: ${_currencyFmt.format(total)}đ',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: color.primary, fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                _ConfirmSaleButton(cart: cart, products: products, total: total, onClear: onClear),
+                Text(product.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30))),
+                Text('${_currencyFmt.format(product.price)}đ × $qty', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
               ],
             ),
+          ),
+          Text(
+            '${_currencyFmt.format(product.price * qty)}đ',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: Icon(Icons.remove_circle_outline, size: 20, color: cs.error),
+            onPressed: onRemove,
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Confirm Button ─────────────────────────────────────────────────────────
 
 class _ConfirmSaleButton extends StatefulWidget {
   final Map<String, int> cart;
@@ -363,7 +796,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
         widget.products,
       );
       if (mounted) {
-        Navigator.pop(context); // close cart sheet
+        Navigator.pop(context);
         widget.onClear();
         final num = result.serverNumber ?? result.localNumber;
         final offline = result.serverNumber == null;
@@ -371,19 +804,17 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
           SnackBar(
             content: Text(
               offline
-                ? 'Hóa đơn #$num (offline) — ${_currencyFmt.format(widget.total)}đ'
-                : 'Hóa đơn #$num — ${_currencyFmt.format(widget.total)}đ',
+                  ? 'Hóa đơn #$num (offline) — ${_currencyFmt.format(widget.total)}đ'
+                  : 'Hóa đơn #$num — ${_currencyFmt.format(widget.total)}đ',
             ),
-            backgroundColor: offline ? Colors.orange : Colors.green,
+            backgroundColor: offline ? const Color(0xFFD97706) : const Color(0xFF059669),
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: 'Xem QR',
               textColor: Colors.white,
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => InvoiceQrScreen(invoice: result.invoice),
-                ),
+                MaterialPageRoute(builder: (_) => InvoiceQrScreen(invoice: result.invoice)),
               ),
             ),
           ),
@@ -392,7 +823,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tạo hóa đơn: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Lỗi tạo hóa đơn: $e'), backgroundColor: const Color(0xFFBA1A1A)),
         );
       }
     } finally {
@@ -404,10 +835,15 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
   Widget build(BuildContext context) {
     return FilledButton.icon(
       onPressed: _loading ? null : _confirm,
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xFF004AC6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
       icon: _loading
           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-          : const Icon(Icons.check),
-      label: const Text('Xác nhận bán'),
+          : const Icon(Icons.check_circle_outline, size: 18),
+      label: const Text('Xác nhận bán', style: TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 }

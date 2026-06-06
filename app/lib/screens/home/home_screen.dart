@@ -39,14 +39,69 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final storeName = auth.store?.name ?? 'Cửa hàng của tôi';
-    final color = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        title: Text(_isSaleMode ? storeName : 'Quản lý'),
-        backgroundColor: color.inversePrimary,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        scrolledUnderElevation: 2,
+        // Gradient bottom border line
+        flexibleSpace: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              height: 2,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF40C2FD)],
+                ),
+              ),
+            ),
+          ],
+        ),
+        title: _isSaleMode
+            ? GestureDetector(
+                onTap: () {}, // future: store picker
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      storeName,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0B1C30),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.expand_more, size: 18, color: Color(0xFF737686)),
+                  ],
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.store, size: 20, color: cs.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TaxEasy',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: cs.primary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
         actions: [
-          // Mode toggle button
+          // Mode toggle pill
           _ModeToggle(
             isSaleMode: _isSaleMode,
             onToggle: () => setState(() => _isSaleMode = !_isSaleMode),
@@ -68,11 +123,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ? null
             : TabBar(
                 controller: _tabController,
+                indicatorColor: cs.primary,
+                indicatorWeight: 2,
+                labelColor: cs.primary,
+                unselectedLabelColor: cs.onSurfaceVariant,
+                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 tabs: const [
-                  Tab(icon: Icon(Icons.analytics_outlined), text: 'Doanh thu'),
-                  Tab(icon: Icon(Icons.calculate_outlined), text: 'Thuế'),
-                  Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Sản phẩm'),
-                  Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Hóa đơn'),
+                  Tab(icon: Icon(Icons.payments_outlined, size: 20), text: 'Doanh thu'),
+                  Tab(icon: Icon(Icons.receipt_long_outlined, size: 20), text: 'Thuế'),
+                  Tab(icon: Icon(Icons.inventory_2_outlined, size: 20), text: 'Sản phẩm'),
+                  Tab(icon: Icon(Icons.history_outlined, size: 20), text: 'Hóa đơn'),
                 ],
               ),
       ),
@@ -99,22 +159,65 @@ class _ModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: TextButton.icon(
-        style: TextButton.styleFrom(
-          backgroundColor: isSaleMode
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.secondaryContainer,
-          foregroundColor: isSaleMode
-              ? Theme.of(context).colorScheme.onPrimaryContainer
-              : Theme.of(context).colorScheme.onSecondaryContainer,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: GestureDetector(
+        onTap: onToggle,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFEFF4FF),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: const Color(0xFFC3C6D7)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PillTab(
+                label: 'Bán hàng',
+                isActive: isSaleMode,
+                cs: cs,
+              ),
+              _PillTab(
+                label: 'Quản lý',
+                isActive: !isSaleMode,
+                cs: cs,
+              ),
+            ],
+          ),
         ),
-        icon: Icon(isSaleMode ? Icons.point_of_sale : Icons.manage_accounts, size: 18),
-        label: Text(isSaleMode ? 'Bán hàng' : 'Quản lý', style: const TextStyle(fontSize: 13)),
-        onPressed: onToggle,
+      ),
+    );
+  }
+}
+
+class _PillTab extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final ColorScheme cs;
+
+  const _PillTab({required this.label, required this.isActive, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? cs.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: isActive
+            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 1))]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: isActive ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -128,7 +231,7 @@ class _SyncBadge extends StatelessWidget {
     return IconButton(
       icon: Badge(
         label: Text('$pending'),
-        child: const Icon(Icons.cloud_upload_outlined),
+        child: const Icon(Icons.sync_outlined),
       ),
       tooltip: 'Đồng bộ $pending hóa đơn offline',
       onPressed: () async {
@@ -137,7 +240,7 @@ class _SyncBadge extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
-              backgroundColor: result.errors > 0 ? Colors.orange : Colors.green,
+              backgroundColor: result.errors > 0 ? const Color(0xFFD97706) : const Color(0xFF059669),
             ),
           );
         }
