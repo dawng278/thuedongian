@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/products_provider.dart';
 import '../../providers/invoices_provider.dart';
+import '../../theme/taxeasy_design.dart';
 import 'invoice_qr_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
@@ -31,13 +32,18 @@ class _SaleViewState extends State<_SaleView> {
   int get _totalAmount {
     final prods = context.read<ProductsProvider>().products;
     return _cart.entries.fold(0, (sum, e) {
-      final p = prods.firstWhere((p) => p.id == e.key, orElse: () => _emptyProduct);
+      final p =
+          prods.firstWhere((p) => p.id == e.key, orElse: () => _emptyProduct);
       return sum + p.price * e.value;
     });
   }
 
   static final _emptyProduct = ProductDto(
-    id: '', storeId: '', name: '', price: 0, isActive: false,
+    id: '',
+    storeId: '',
+    name: '',
+    price: 0,
+    isActive: false,
     updatedAt: DateTime(2026),
   );
 
@@ -88,13 +94,17 @@ class _SaleViewState extends State<_SaleView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 64, color: Theme.of(context).colorScheme.outline),
+            Icon(Icons.inventory_2_outlined,
+                size: 64, color: Theme.of(context).colorScheme.outline),
             const SizedBox(height: 16),
-            const Text('Chưa có món nào', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Text('Chưa có món nào',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             Text(
               'Thêm món trong chế độ Quản lý',
-              style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -117,10 +127,10 @@ class _SaleViewState extends State<_SaleView> {
                   onTap: () => setState(() => _selectedCategory = null),
                 ),
                 ...categories.map((cat) => _CategoryChip(
-                  label: cat,
-                  isActive: _selectedCategory == cat,
-                  onTap: () => setState(() => _selectedCategory = cat),
-                )),
+                      label: cat,
+                      isActive: _selectedCategory == cat,
+                      onTap: () => setState(() => _selectedCategory = cat),
+                    )),
               ],
             ),
           ),
@@ -128,7 +138,8 @@ class _SaleViewState extends State<_SaleView> {
         // Product grid
         Expanded(
           child: GridView.builder(
-            padding: EdgeInsets.fromLTRB(16, categories.isNotEmpty ? 0 : 12, 16, cartCount > 0 ? 100 : 16),
+            padding: EdgeInsets.fromLTRB(16, categories.isNotEmpty ? 0 : 12, 16,
+                cartCount > 0 ? 100 : 16),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 200,
               childAspectRatio: 0.75,
@@ -169,7 +180,8 @@ class _CategoryChip extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  const _CategoryChip({required this.label, required this.isActive, required this.onTap});
+  const _CategoryChip(
+      {required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -182,21 +194,30 @@ class _CategoryChip extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: isActive ? cs.primaryContainer : Colors.white,
+            color: isActive ? TaxEasyColors.surfaceLow : Colors.white,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: isActive ? cs.primaryContainer : const Color(0xFFC3C6D7),
+              color: isActive ? cs.primary : TaxEasyColors.outlineVariant,
             ),
             boxShadow: isActive
-                ? [BoxShadow(color: cs.primary.withValues(alpha: 0.15), blurRadius: 6, offset: const Offset(0, 2))]
-                : [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 3)],
+                ? [
+                    BoxShadow(
+                        color: cs.primary.withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))
+                  ]
+                : [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 3)
+                  ],
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isActive ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+              color: isActive ? cs.primary : cs.onSurfaceVariant,
               letterSpacing: 0.3,
             ),
           ),
@@ -249,12 +270,17 @@ class _ProductCard extends StatelessWidget {
     return _avatarTextColors[sum % _avatarTextColors.length];
   }
 
+  bool get _hasImage =>
+      product.imageUrl != null && product.imageUrl!.trim().isNotEmpty;
+
   String _initials() {
     final parts = product.name.trim().split(' ');
     if (parts.length >= 2) {
       return (parts.first[0] + parts.last[0]).toUpperCase();
     }
-    return product.name.substring(0, product.name.length.clamp(1, 2)).toUpperCase();
+    return product.name
+        .substring(0, product.name.length.clamp(1, 2))
+        .toUpperCase();
   }
 
   @override
@@ -266,10 +292,10 @@ class _ProductCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TaxEasyColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? cs.primaryContainer : const Color(0xFFC3C6D7),
+          color: isSelected ? cs.primary : TaxEasyColors.outlineVariant,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
@@ -291,21 +317,29 @@ class _ProductCard extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                  child: Container(
-                    color: _avatarBg(),
-                    child: Center(
-                      child: Text(
-                        _initials(),
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: _avatarTextColor(),
-                          letterSpacing: -0.5,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14)),
+                  child: _hasImage
+                      ? Image.network(
+                          product.imageUrl!.trim(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _AvatarFallback(
+                            initials: _initials(),
+                            bg: _avatarBg(),
+                            fg: _avatarTextColor(),
+                          ),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const ColoredBox(
+                                color: TaxEasyColors.surfaceLow);
+                          },
+                        )
+                      : _AvatarFallback(
+                          initials: _initials(),
+                          bg: _avatarBg(),
+                          fg: _avatarTextColor(),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
               ),
               // Info area
@@ -387,12 +421,43 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
+class _AvatarFallback extends StatelessWidget {
+  final String initials;
+  final Color bg;
+  final Color fg;
+
+  const _AvatarFallback({
+    required this.initials,
+    required this.bg,
+    required this.fg,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: bg,
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: fg,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Stepper extends StatelessWidget {
   final int qty;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
 
-  const _Stepper({required this.qty, required this.onAdd, required this.onRemove});
+  const _Stepper(
+      {required this.qty, required this.onAdd, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -431,7 +496,8 @@ class _StepBtn extends StatelessWidget {
   final VoidCallback onTap;
   final bool isAdd;
 
-  const _StepBtn({required this.icon, required this.onTap, required this.isAdd});
+  const _StepBtn(
+      {required this.icon, required this.onTap, required this.isAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +510,10 @@ class _StepBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: isAdd ? cs.primary : Colors.white,
           borderRadius: BorderRadius.circular(7),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 2)],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06), blurRadius: 2)
+          ],
         ),
         child: Icon(
           icon,
@@ -481,15 +550,11 @@ class _CartBar extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF004AC6), Color(0xFF40C2FD)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        gradient: TaxEasyGradients.horizontal,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF004AC6).withValues(alpha: 0.35),
+            color: TaxEasyColors.primary.withValues(alpha: 0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -500,7 +565,8 @@ class _CartBar extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 24),
+              const Icon(Icons.shopping_cart_outlined,
+                  color: Colors.white, size: 24),
               Positioned(
                 top: -4,
                 right: -6,
@@ -510,12 +576,16 @@ class _CartBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFBA1A1A),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFF0053DB), width: 1.5),
+                    border:
+                        Border.all(color: TaxEasyColors.primary, width: 1.5),
                   ),
                   child: Center(
                     child: Text(
                       '$itemCount',
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
                     ),
                   ),
                 ),
@@ -547,9 +617,10 @@ class _CartBar extends StatelessWidget {
             onPressed: () => _showCartSheet(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF004AC6),
+              foregroundColor: TaxEasyColors.primary,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             ),
             icon: const Icon(Icons.arrow_forward, size: 16),
@@ -631,9 +702,9 @@ class _CartSheet extends StatelessWidget {
                   Text(
                     'Đơn hàng',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                    ),
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
                   ),
                   const Spacer(),
                   TextButton(
@@ -651,7 +722,8 @@ class _CartSheet extends StatelessWidget {
             Expanded(
               child: ListView.builder(
                 controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 itemCount: entries.length,
                 itemBuilder: (context, i) {
                   final entry = entries[i];
@@ -666,11 +738,19 @@ class _CartSheet extends StatelessWidget {
             ),
             // Footer
             Container(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+              padding: EdgeInsets.fromLTRB(
+                  16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -4))],
+                border: Border(
+                    top: BorderSide(
+                        color: cs.outlineVariant.withValues(alpha: 0.5))),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, -4))
+                ],
               ),
               child: Row(
                 children: [
@@ -680,7 +760,8 @@ class _CartSheet extends StatelessWidget {
                     children: [
                       Text(
                         'Tổng cộng (${cart.values.fold(0, (a, b) => a + b)} món)',
-                        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                        style:
+                            TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                       ),
                       Text(
                         '${_currencyFmt.format(total)}đ',
@@ -693,7 +774,11 @@ class _CartSheet extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  _ConfirmSaleButton(cart: cart, products: products, total: total, onClear: onClear),
+                  _ConfirmSaleButton(
+                      cart: cart,
+                      products: products,
+                      total: total,
+                      onClear: onClear),
                 ],
               ),
             ),
@@ -709,7 +794,8 @@ class _CartItem extends StatelessWidget {
   final int qty;
   final VoidCallback onRemove;
 
-  const _CartItem({required this.product, required this.qty, required this.onRemove});
+  const _CartItem(
+      {required this.product, required this.qty, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -721,7 +807,12 @@ class _CartItem extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2))
+        ],
       ),
       child: Row(
         children: [
@@ -735,7 +826,10 @@ class _CartItem extends StatelessWidget {
             child: Center(
               child: Text(
                 product.name.isNotEmpty ? product.name[0].toUpperCase() : '?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.primary),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: cs.primary),
               ),
             ),
           ),
@@ -744,14 +838,20 @@ class _CartItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30))),
-                Text('${_currencyFmt.format(product.price)}đ × $qty', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                Text(product.name,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0B1C30))),
+                Text('${_currencyFmt.format(product.price)}đ × $qty',
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
               ],
             ),
           ),
           Text(
             '${_currencyFmt.format(product.price * qty)}đ',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
           ),
           const SizedBox(width: 4),
           IconButton(
@@ -792,9 +892,9 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
     setState(() => _loading = true);
     try {
       final result = await context.read<InvoicesProvider>().createInvoice(
-        Map.of(widget.cart),
-        widget.products,
-      );
+            Map.of(widget.cart),
+            widget.products,
+          );
       if (mounted) {
         Navigator.pop(context);
         widget.onClear();
@@ -807,14 +907,16 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
                   ? 'Hóa đơn #$num (offline) — ${_currencyFmt.format(widget.total)}đ'
                   : 'Hóa đơn #$num — ${_currencyFmt.format(widget.total)}đ',
             ),
-            backgroundColor: offline ? const Color(0xFFD97706) : const Color(0xFF059669),
+            backgroundColor:
+                offline ? const Color(0xFFD97706) : const Color(0xFF059669),
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: 'Xem QR',
               textColor: Colors.white,
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => InvoiceQrScreen(invoice: result.invoice)),
+                MaterialPageRoute(
+                    builder: (_) => InvoiceQrScreen(invoice: result.invoice)),
               ),
             ),
           ),
@@ -823,7 +925,9 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tạo hóa đơn: $e'), backgroundColor: const Color(0xFFBA1A1A)),
+          SnackBar(
+              content: Text('Lỗi tạo hóa đơn: $e'),
+              backgroundColor: const Color(0xFFBA1A1A)),
         );
       }
     } finally {
@@ -841,9 +945,14 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
       icon: _loading
-          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white))
           : const Icon(Icons.check_circle_outline, size: 18),
-      label: const Text('Xác nhận bán', style: TextStyle(fontWeight: FontWeight.w600)),
+      label: const Text('Xác nhận bán',
+          style: TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 }

@@ -8,6 +8,7 @@ import '../manage/product_manage_screen.dart';
 import '../manage/revenue_screen.dart';
 import '../manage/invoice_history_screen.dart';
 import '../manage/tax_screen.dart';
+import '../../theme/taxeasy_design.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +17,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   bool _isSaleMode = true;
   late final TabController _tabController;
 
@@ -42,64 +44,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor:
+          _isSaleMode ? TaxEasyColors.surface : TaxEasyColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: TaxEasyColors.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         scrolledUnderElevation: 2,
         // Gradient bottom border line
-        flexibleSpace: Column(
+        flexibleSpace: const Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Container(
-              height: 2,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF40C2FD)],
-                ),
-              ),
+            DecoratedBox(
+              decoration: BoxDecoration(gradient: TaxEasyGradients.horizontal),
+              child: SizedBox(height: 3, width: double.infinity),
             ),
           ],
         ),
-        title: _isSaleMode
-            ? GestureDetector(
-                onTap: () {}, // future: store picker
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      storeName,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF0B1C30),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(width: 2),
-                    const Icon(Icons.expand_more, size: 18, color: Color(0xFF737686)),
-                  ],
-                ),
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.store, size: 20, color: cs.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'TaxEasy',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: cs.primary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ],
-              ),
+        title: _StoreTitle(storeName: storeName),
         actions: [
           // Mode toggle pill
           _ModeToggle(
@@ -114,7 +77,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             itemBuilder: (_) => const [
               PopupMenuItem(
                 value: 'logout',
-                child: Row(children: [Icon(Icons.logout), SizedBox(width: 8), Text('Đăng xuất')]),
+                child: Row(children: [
+                  Icon(Icons.logout),
+                  SizedBox(width: 8),
+                  Text('Đăng xuất')
+                ]),
               ),
             ],
           ),
@@ -127,12 +94,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 indicatorWeight: 2,
                 labelColor: cs.primary,
                 unselectedLabelColor: cs.onSurfaceVariant,
-                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                labelStyle:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 tabs: const [
-                  Tab(icon: Icon(Icons.payments_outlined, size: 20), text: 'Doanh thu'),
-                  Tab(icon: Icon(Icons.receipt_long_outlined, size: 20), text: 'Thuế'),
-                  Tab(icon: Icon(Icons.inventory_2_outlined, size: 20), text: 'Sản phẩm'),
-                  Tab(icon: Icon(Icons.history_outlined, size: 20), text: 'Hóa đơn'),
+                  Tab(
+                      icon: Icon(Icons.payments_outlined, size: 20),
+                      text: 'Doanh thu'),
+                  Tab(
+                      icon: Icon(Icons.receipt_long_outlined, size: 20),
+                      text: 'Thuế'),
+                  Tab(
+                      icon: Icon(Icons.inventory_2_outlined, size: 20),
+                      text: 'Sản phẩm'),
+                  Tab(
+                      icon: Icon(Icons.history_outlined, size: 20),
+                      text: 'Hóa đơn'),
                 ],
               ),
       ),
@@ -166,9 +142,9 @@ class _ModeToggle extends StatelessWidget {
         onTap: onToggle,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF4FF),
+            color: TaxEasyColors.surfaceLow,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0xFFC3C6D7)),
+            border: Border.all(color: TaxEasyColors.outlineVariant),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -191,12 +167,72 @@ class _ModeToggle extends StatelessWidget {
   }
 }
 
+class _StoreTitle extends StatelessWidget {
+  final String storeName;
+
+  const _StoreTitle({required this.storeName});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text('Chọn / tạo thêm quán sẽ được mở ở bước tiếp theo')),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: TaxEasyColors.surfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: TaxEasyColors.outlineVariant),
+              ),
+              child: const Icon(
+                Icons.storefront_outlined,
+                size: 18,
+                color: TaxEasyColors.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                storeName,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: TaxEasyColors.textPrimary,
+                  height: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 2),
+            const Icon(Icons.keyboard_arrow_down,
+                size: 20, color: TaxEasyColors.outline),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PillTab extends StatelessWidget {
   final String label;
   final bool isActive;
   final ColorScheme cs;
 
-  const _PillTab({required this.label, required this.isActive, required this.cs});
+  const _PillTab(
+      {required this.label, required this.isActive, required this.cs});
 
   @override
   Widget build(BuildContext context) {
@@ -205,10 +241,15 @@ class _PillTab extends StatelessWidget {
       curve: Curves.easeOut,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? cs.primaryContainer : Colors.transparent,
+        color: isActive ? cs.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         boxShadow: isActive
-            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 1))]
+            ? [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1))
+              ]
             : null,
       ),
       child: Text(
@@ -216,7 +257,7 @@ class _PillTab extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: isActive ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+          color: isActive ? Colors.white : cs.onSurfaceVariant,
         ),
       ),
     );
@@ -239,8 +280,11 @@ class _SyncBadge extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
-              backgroundColor: result.errors > 0 ? const Color(0xFFD97706) : const Color(0xFF059669),
+              content: Text(
+                  'Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
+              backgroundColor: result.errors > 0
+                  ? const Color(0xFFD97706)
+                  : const Color(0xFF059669),
             ),
           );
         }

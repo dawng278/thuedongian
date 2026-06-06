@@ -1,36 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
 
-class _SectionLabel extends StatelessWidget {
-  final String label;
-  const _SectionLabel({required this.label});
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 18,
-          decoration: BoxDecoration(
-            color: cs.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-      ],
-    );
-  }
-}
+import '../../providers/auth_provider.dart';
+import '../../theme/taxeasy_design.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -42,7 +14,6 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  final _storeCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
@@ -51,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _storeCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
@@ -64,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _emailCtrl.text.trim(),
           _passCtrl.text,
           _nameCtrl.text.trim(),
-          _storeCtrl.text.trim(),
+          '',
         );
     if (!ok && mounted) {
       setState(() => _loading = false);
@@ -72,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(
               context.read<AuthProvider>().errorMessage ?? 'Đăng ký thất bại'),
-          backgroundColor: Colors.red,
+          backgroundColor: TaxEasyColors.error,
         ),
       );
     }
@@ -80,185 +50,321 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final mq = MediaQuery.of(context);
-
-    return SafeArea(
-      bottom: false,
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Column(
-          children: [
-            // ── Hero top zone ─────────────────────────────────────
-            Container(
-              height: 180,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF004AC6), Color(0xFF40C2FD)],
-                ),
-              ),
-              padding: EdgeInsets.fromLTRB(8, mq.padding.top + 8, 24, 28),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      backgroundColor: TaxEasyColors.background,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 720;
+          if (isWide) {
+            return Row(
+              children: [
+                const Expanded(
+                  flex: 5,
+                  child: TaxEasyAuthVisual(
+                    title: 'Tạo tài khoản',
+                    subtitle:
+                        'Tài khoản của bạn có thể quản lý nhiều quán, mỗi quán có sản phẩm và báo cáo riêng.',
                   ),
-                  const Expanded(
-                    child: Text(
-                      'Tạo tài khoản',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(48),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 448),
+                        child: _RegisterForm(
+                          formKey: _formKey,
+                          nameCtrl: _nameCtrl,
+                          emailCtrl: _emailCtrl,
+                          passCtrl: _passCtrl,
+                          loading: _loading,
+                          obscure: _obscure,
+                          onBack: () => Navigator.pop(context),
+                          onTogglePassword: () =>
+                              setState(() => _obscure = !_obscure),
+                          onSubmit: _submit,
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            // ── Form zone ─────────────────────────────────────────
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
                 ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    28,
-                    28,
-                    28,
-                    24 + mq.viewInsets.bottom,
+              ],
+            );
+          }
+
+          final heroHeight = (constraints.maxHeight * 0.30).clamp(190.0, 260.0);
+          return Stack(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: heroHeight,
+                child: SafeArea(
+                  bottom: false,
+                  child: Stack(
+                    children: [
+                      const Positioned.fill(
+                        child: TaxEasyAuthVisual(
+                          title: 'Tạo tài khoản',
+                          subtitle: 'Tạo tài khoản trước, thêm quán sau.',
+                          compact: true,
+                        ),
+                      ),
+                      Positioned(
+                        top: 6,
+                        left: 8,
+                        child: IconButton(
+                          tooltip: 'Quay lại',
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.arrow_back_ios_new,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // ── Section: owner info ──────────────────
-                        _SectionLabel(label: 'Thông tin chủ quán'),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _nameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Họ và tên',
-                            prefixIcon: Icon(Icons.person_outline),
-                          ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? 'Nhập họ tên' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: (v) => (v == null || !v.contains('@'))
-                              ? 'Email không hợp lệ'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: _obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Mật khẩu',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscure
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _obscure = !_obscure),
-                            ),
-                          ),
-                          validator: (v) => (v == null || v.length < 6)
-                              ? 'Mật khẩu tối thiểu 6 ký tự'
-                              : null,
-                        ),
-                        const SizedBox(height: 24),
-                        // ── Section: store info ──────────────────
-                        _SectionLabel(label: 'Thông tin cửa hàng'),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _storeCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Tên cửa hàng / quán',
-                            hintText: 'Ví dụ: Quán Phở Hà Nội',
-                            prefixIcon: Icon(Icons.storefront_outlined),
-                          ),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? 'Nhập tên cửa hàng'
-                              : null,
-                        ),
-                        const SizedBox(height: 32),
-                        // ── CTA button ───────────────────────────
-                        Container(
-                          height: 52,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF004AC6), Color(0xFF40C2FD)],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _loading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: _loading
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Đăng ký & Bắt đầu',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
+                ),
+              ),
+              Positioned.fill(
+                top: heroHeight - 28,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: TaxEasyColors.surface,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(TaxEasyRadii.hero),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 24,
+                        offset: Offset(0, -6),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        28,
+                        24,
+                        28 + MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: _RegisterForm(
+                        formKey: _formKey,
+                        nameCtrl: _nameCtrl,
+                        emailCtrl: _emailCtrl,
+                        passCtrl: _passCtrl,
+                        loading: _loading,
+                        obscure: _obscure,
+                        showHandle: true,
+                        onBack: () => Navigator.pop(context),
+                        onTogglePassword: () =>
+                            setState(() => _obscure = !_obscure),
+                        onSubmit: _submit,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
+    );
+  }
+}
+
+class _RegisterForm extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController nameCtrl;
+  final TextEditingController emailCtrl;
+  final TextEditingController passCtrl;
+  final bool loading;
+  final bool obscure;
+  final bool showHandle;
+  final VoidCallback onBack;
+  final VoidCallback onTogglePassword;
+  final VoidCallback onSubmit;
+
+  const _RegisterForm({
+    required this.formKey,
+    required this.nameCtrl,
+    required this.emailCtrl,
+    required this.passCtrl,
+    required this.loading,
+    required this.obscure,
+    required this.onBack,
+    required this.onTogglePassword,
+    required this.onSubmit,
+    this.showHandle = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showHandle) ...[
+            Center(
+              child: Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: TaxEasyColors.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ] else ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton.outlined(
+                tooltip: 'Quay lại',
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          const Text(
+            'Tạo tài khoản',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              color: TaxEasyColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Chỉ cần thông tin chủ tài khoản. Bạn có thể tạo nhiều quán sau khi đăng nhập.',
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: TaxEasyColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 28),
+          _SectionLabel(label: 'Thông tin tài khoản', color: cs.primary),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: nameCtrl,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.name],
+            decoration: const InputDecoration(
+              labelText: 'Họ và tên',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Nhập họ tên' : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+            validator: (v) =>
+                (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: passCtrl,
+            obscureText: obscure,
+            autofillHints: const [AutofillHints.newPassword],
+            decoration: InputDecoration(
+              labelText: 'Mật khẩu',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: cs.onSurfaceVariant,
+                ),
+                onPressed: onTogglePassword,
+              ),
+            ),
+            validator: (v) => (v == null || v.length < 6)
+                ? 'Mật khẩu tối thiểu 6 ký tự'
+                : null,
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: TaxEasyColors.surfaceLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: TaxEasyColors.outlineVariant),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.add_business_outlined,
+                    color: TaxEasyColors.primary, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Sau khi đăng ký, bạn có thể tạo quán đầu tiên hoặc thêm quán mới trong app.',
+                    style: TextStyle(
+                      color: TaxEasyColors.textSecondary,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          TaxEasyGradientButton(
+            onPressed: loading ? null : onSubmit,
+            icon: Icons.arrow_forward,
+            label: 'Đăng ký tài khoản',
+            loading: loading,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _SectionLabel({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: TaxEasyColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

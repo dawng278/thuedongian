@@ -56,7 +56,9 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tải lịch sử: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Lỗi tải lịch sử: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -65,7 +67,11 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() { _invoices.clear(); _page = 1; _hasMore = true; });
+    setState(() {
+      _invoices.clear();
+      _page = 1;
+      _hasMore = true;
+    });
     await _loadMore();
   }
 
@@ -80,13 +86,19 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
           : DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (picked != null) {
-      setState(() { _fromDate = picked.start; _toDate = picked.end; });
+      setState(() {
+        _fromDate = picked.start;
+        _toDate = picked.end;
+      });
       _refresh();
     }
   }
 
   void _clearFilter() {
-    setState(() { _fromDate = null; _toDate = null; });
+    setState(() {
+      _fromDate = null;
+      _toDate = null;
+    });
     _refresh();
   }
 
@@ -94,9 +106,12 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     final sb = StringBuffer();
     sb.writeln('Số HĐ,Ngày,Tổng tiền,Ghi chú,Các mặt hàng');
     for (final inv in _invoices) {
-      final items = (inv.items ?? []).map((i) => '${i.productName}x${i.quantity}').join(';');
+      final items = (inv.items ?? [])
+          .map((i) => '${i.productName}x${i.quantity}')
+          .join(';');
       final note = inv.note?.replaceAll(',', ' ') ?? '';
-      sb.writeln('${inv.invoiceNumber ?? '?'},${_dateFmtShort.format(inv.createdAt)},${inv.totalAmount},$note,"$items"');
+      sb.writeln(
+          '${inv.invoiceNumber ?? '?'},${_dateFmtShort.format(inv.createdAt)},${inv.totalAmount},$note,"$items"');
     }
     try {
       final dir = await getTemporaryDirectory();
@@ -109,7 +124,9 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi xuất báo cáo: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Lỗi xuất báo cáo: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -142,7 +159,8 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.calendar_today_outlined, size: 16, color: cs.onSurfaceVariant),
+                        Icon(Icons.calendar_today_outlined,
+                            size: 16, color: cs.onSurfaceVariant),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -152,18 +170,22 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: hasFilter ? cs.onSurface : cs.onSurfaceVariant,
+                              color: hasFilter
+                                  ? cs.onSurface
+                                  : cs.onSurfaceVariant,
                               letterSpacing: 0.3,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Icon(Icons.expand_more, size: 16, color: cs.onSurfaceVariant),
+                        Icon(Icons.expand_more,
+                            size: 16, color: cs.onSurfaceVariant),
                         if (hasFilter) ...[
                           const SizedBox(width: 4),
                           GestureDetector(
                             onTap: _clearFilter,
-                            child: Icon(Icons.close, size: 14, color: cs.onSurfaceVariant),
+                            child: Icon(Icons.close,
+                                size: 14, color: cs.onSurfaceVariant),
                           ),
                         ],
                       ],
@@ -178,19 +200,27 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                   height: 40,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: _invoices.isEmpty ? const Color(0xFFEFF4FF) : cs.primary,
+                    color: _invoices.isEmpty
+                        ? const Color(0xFFEFF4FF)
+                        : cs.primary,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.download, size: 16, color: _invoices.isEmpty ? cs.onSurfaceVariant : Colors.white),
+                      Icon(Icons.download,
+                          size: 16,
+                          color: _invoices.isEmpty
+                              ? cs.onSurfaceVariant
+                              : Colors.white),
                       const SizedBox(width: 4),
                       Text(
                         'XUẤT CSV',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: _invoices.isEmpty ? cs.onSurfaceVariant : Colors.white,
+                          color: _invoices.isEmpty
+                              ? cs.onSurfaceVariant
+                              : Colors.white,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -211,9 +241,12 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 56, color: cs.outline),
+                  Icon(Icons.receipt_long_outlined,
+                      size: 56, color: cs.outline),
                   const SizedBox(height: 12),
-                  Text('Chưa có hóa đơn nào', style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
+                  Text('Chưa có hóa đơn nào',
+                      style:
+                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
                 ],
               ),
             ),
@@ -280,8 +313,14 @@ class _InvoiceRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+          border:
+              Border.all(color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Row(
           children: [
@@ -289,8 +328,8 @@ class _InvoiceRow extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5EEFF),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE5EEFF),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.receipt_rounded, size: 22, color: cs.primary),
@@ -303,7 +342,10 @@ class _InvoiceRow extends StatelessWidget {
                 children: [
                   Text(
                     '#INV-${num ?? '?'}',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0B1C30)),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -323,7 +365,9 @@ class _InvoiceRow extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: isOnline ? const Color(0xFF00668A) : const Color(0xFF737686),
+                        color: isOnline
+                            ? const Color(0xFF00668A)
+                            : const Color(0xFF737686),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -332,7 +376,9 @@ class _InvoiceRow extends StatelessWidget {
                       isOnline ? 'Online' : 'Offline',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isOnline ? const Color(0xFF00668A) : cs.onSurfaceVariant,
+                        color: isOnline
+                            ? const Color(0xFF00668A)
+                            : cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -340,7 +386,10 @@ class _InvoiceRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${_currencyFmt.format(invoice.totalAmount)}đ',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30)),
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0B1C30)),
                 ),
               ],
             ),
@@ -387,8 +436,11 @@ class _InvoiceDetailSheet extends StatelessWidget {
             Center(
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 40, height: 4,
-                decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: cs.outlineVariant,
+                    borderRadius: BorderRadius.circular(2)),
               ),
             ),
             Padding(
@@ -398,7 +450,10 @@ class _InvoiceDetailSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Hóa đơn #${num ?? '?'}',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30)),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0B1C30)),
                     ),
                   ),
                   IconButton(
@@ -406,7 +461,11 @@ class _InvoiceDetailSheet extends StatelessWidget {
                     tooltip: 'Xem QR',
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => InvoiceQrScreen(invoice: invoice)));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  InvoiceQrScreen(invoice: invoice)));
                     },
                   ),
                   IconButton(
@@ -439,48 +498,68 @@ class _InvoiceDetailSheet extends StatelessWidget {
                           Expanded(
                             child: Text(
                               '${item.productName} ×${item.quantity}',
-                              style: const TextStyle(fontSize: 14, color: Color(0xFF0B1C30)),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Color(0xFF0B1C30)),
                             ),
                           ),
                           Text(
                             '${_currencyFmt.format(item.subtotal)}đ',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0B1C30)),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  Divider(height: 24, color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  Divider(
+                      height: 24,
+                      color: cs.outlineVariant.withValues(alpha: 0.5)),
                   Row(
                     children: [
                       const Expanded(
-                        child: Text('Tổng cộng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30))),
+                        child: Text('Tổng cộng',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0B1C30))),
                       ),
                       Text(
                         '${_currencyFmt.format(invoice.totalAmount)}đ',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.primary),
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: cs.primary),
                       ),
                     ],
                   ),
                   if (invoice.note != null && invoice.note!.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text('Ghi chú', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                    Text('Ghi chú',
+                        style: TextStyle(
+                            fontSize: 12, color: cs.onSurfaceVariant)),
                     const SizedBox(height: 4),
-                    Text(invoice.note!, style: const TextStyle(fontSize: 14, color: Color(0xFF0B1C30))),
+                    Text(invoice.note!,
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFF0B1C30))),
                   ],
                   const SizedBox(height: 8),
                 ],
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                  20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 20),
               child: SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: FilledButton.icon(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
-                  label: const Text('Đóng', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  label: const Text('Đóng',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
             ),

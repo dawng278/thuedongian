@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/auth_provider.dart';
+import '../../theme/taxeasy_design.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(
             context.read<AuthProvider>().errorMessage ?? 'Đăng nhập thất bại',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: TaxEasyColors.error,
         ),
       );
     }
@@ -47,235 +49,259 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── Top hero zone (38% of screen height) ────────────────
-            Container(
-              height: screenHeight * 0.38,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF004AC6), Color(0xFF40C2FD)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      backgroundColor: TaxEasyColors.background,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 720;
+          if (isWide) {
+            return Row(
+              children: [
+                const Expanded(
+                  flex: 5,
+                  child: TaxEasyAuthVisual(
+                    title: 'ThueDonGian',
+                    subtitle:
+                        'Bán hàng rõ ràng, quản lý nhiều quán và theo dõi thuế trong một nơi.',
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(48),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 448),
+                        child: _LoginForm(
+                          formKey: _formKey,
+                          emailCtrl: _emailCtrl,
+                          passCtrl: _passCtrl,
+                          loading: _loading,
+                          obscure: _obscure,
+                          rememberMe: _rememberMe,
+                          onTogglePassword: () =>
+                              setState(() => _obscure = !_obscure),
+                          onRememberChanged: (value) =>
+                              setState(() => _rememberMe = value),
+                          onSubmit: _submit,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          final heroHeight = (constraints.maxHeight * 0.38).clamp(250.0, 340.0);
+          return Stack(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: heroHeight,
+                child: const TaxEasyAuthVisual(
+                  title: 'ThueDonGian',
+                  subtitle: 'Bán hàng rõ ràng. Thuế nhẹ đầu.',
+                  compact: true,
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
+              Positioned.fill(
+                top: heroHeight - 28,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: TaxEasyColors.surface,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(TaxEasyRadii.hero),
                     ),
-                    child: const Icon(
-                      Icons.receipt_long,
-                      size: 40,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'TaxEasy 2026',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Bottom form zone ─────────────────────────────────────
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Mobile drag handle
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: cs.outlineVariant,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      Text(
-                        'Đăng nhập',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tiếp tục quản lý các quán của bạn',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Email field
-                            TextFormField(
-                              controller: _emailCtrl,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: Icon(Icons.mail_outlined),
-                              ),
-                              validator: (v) =>
-                                  (v == null || !v.contains('@'))
-                                      ? 'Email không hợp lệ'
-                                      : null,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Password field
-                            TextFormField(
-                              controller: _passCtrl,
-                              obscureText: _obscure,
-                              decoration: InputDecoration(
-                                labelText: 'Mật khẩu',
-                                prefixIcon: const Icon(Icons.lock_outlined),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                ),
-                              ),
-                              validator: (v) =>
-                                  (v == null || v.length < 6)
-                                      ? 'Mật khẩu tối thiểu 6 ký tự'
-                                      : null,
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Remember me + Forgot password row
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _rememberMe,
-                                  onChanged: (val) =>
-                                      setState(() => _rememberMe = val ?? false),
-                                ),
-                                GestureDetector(
-                                  onTap: () =>
-                                      setState(() => _rememberMe = !_rememberMe),
-                                  child: Text(
-                                    'Ghi nhớ đăng nhập',
-                                    style: TextStyle(color: cs.onSurface),
-                                  ),
-                                ),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: const Text('Quên mật khẩu?'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Login button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: FilledButton.icon(
-                                onPressed: _loading ? null : _submit,
-                                icon: _loading
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : const Icon(Icons.arrow_forward),
-                                label: _loading
-                                    ? const SizedBox.shrink()
-                                    : const Text('Đăng nhập'),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Register link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Chưa có tài khoản?',
-                                  style: TextStyle(color: cs.onSurfaceVariant),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const RegisterScreen(),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Đăng ký ngay',
-                                    style: TextStyle(color: cs.primary),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 24,
+                        offset: Offset(0, -6),
                       ),
                     ],
                   ),
+                  child: SafeArea(
+                    top: false,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                      child: _LoginForm(
+                        formKey: _formKey,
+                        emailCtrl: _emailCtrl,
+                        passCtrl: _passCtrl,
+                        loading: _loading,
+                        obscure: _obscure,
+                        rememberMe: _rememberMe,
+                        showHandle: true,
+                        onTogglePassword: () =>
+                            setState(() => _obscure = !_obscure),
+                        onRememberChanged: (value) =>
+                            setState(() => _rememberMe = value),
+                        onSubmit: _submit,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LoginForm extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController emailCtrl;
+  final TextEditingController passCtrl;
+  final bool loading;
+  final bool obscure;
+  final bool rememberMe;
+  final bool showHandle;
+  final VoidCallback onTogglePassword;
+  final ValueChanged<bool> onRememberChanged;
+  final VoidCallback onSubmit;
+
+  const _LoginForm({
+    required this.formKey,
+    required this.emailCtrl,
+    required this.passCtrl,
+    required this.loading,
+    required this.obscure,
+    required this.rememberMe,
+    required this.onTogglePassword,
+    required this.onRememberChanged,
+    required this.onSubmit,
+    this.showHandle = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showHandle) ...[
+            Center(
+              child: Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: TaxEasyColors.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
             ),
+            const SizedBox(height: 28),
           ],
-        ),
+          const Text(
+            'Đăng nhập',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              color: TaxEasyColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tiếp tục quản lý các quán của bạn',
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: TaxEasyColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 28),
+          TextFormField(
+            controller: emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.mail_outline),
+            ),
+            validator: (v) =>
+                (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: passCtrl,
+            obscureText: obscure,
+            autofillHints: const [AutofillHints.password],
+            decoration: InputDecoration(
+              labelText: 'Mật khẩu',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: cs.onSurfaceVariant,
+                ),
+                onPressed: onTogglePassword,
+              ),
+            ),
+            validator: (v) => (v == null || v.length < 6)
+                ? 'Mật khẩu tối thiểu 6 ký tự'
+                : null,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Checkbox(
+                  value: rememberMe,
+                  onChanged: (value) => onRememberChanged(value ?? false),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onRememberChanged(!rememberMe),
+                  child: const Text(
+                    'Ghi nhớ đăng nhập',
+                    style: TextStyle(color: TaxEasyColors.textSecondary),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text('Quên mật khẩu?'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          TaxEasyGradientButton(
+            onPressed: loading ? null : onSubmit,
+            icon: Icons.login,
+            label: 'Đăng nhập',
+            loading: loading,
+          ),
+          const SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'Chưa có tài khoản?',
+                style: TextStyle(color: TaxEasyColors.textSecondary),
+              ),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                ),
+                child: const Text('Đăng ký ngay'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
