@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mã QR Hóa đơn</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Roboto+Flex:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#dce9ff",
+                      "surface": "#f8f9ff",
+                      "surface-container": "#e5eeff",
+                      "on-secondary-fixed-variant": "#004c69",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#c3c6d7",
+                      "primary-fixed": "#dbe1ff",
+                      "on-tertiary-container": "#eef0ff",
+                      "secondary-fixed": "#c4e7ff",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#40c2fd",
+                      "on-surface": "#0b1c30",
+                      "tertiary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed": "#dae2fd",
+                      "on-surface-variant": "#434655",
+                      "on-tertiary-fixed-variant": "#3f465c",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "surface-variant": "#d3e4fe",
+                      "surface-bright": "#f8f9ff",
+                      "secondary-fixed-dim": "#7bd0ff",
+                      "on-tertiary-fixed": "#131b2e",
+                      "inverse-primary": "#b4c5ff",
+                      "surface-dim": "#cbdbf5",
+                      "primary": "#004ac6",
+                      "on-primary-fixed": "#00174b",
+                      "tertiary": "#4d556b",
+                      "secondary": "#00668a",
+                      "background": "#f8f9ff",
+                      "tertiary-container": "#656d84",
+                      "surface-container-low": "#eff4ff",
+                      "outline": "#737686",
+                      "surface-tint": "#0053db",
+                      "surface-container-highest": "#d3e4fe",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#eeefff",
+                      "on-error-container": "#93000a",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-secondary-container": "#004d6a",
+                      "on-secondary-fixed": "#001e2c",
+                      "primary-container": "#2563eb",
+                      "error-container": "#ffdad6",
+                      "inverse-surface": "#213145",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "on-background": "#0b1c30",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "48px",
+                      "xs": "4px",
+                      "xl": "32px",
+                      "gutter": "24px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "title-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "data-tabular": ["Roboto Flex"]
+              },
+              "fontSize": {
+                      "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex flex-col items-center antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface text-primary font-title-md font-bold full-width top-0 sticky border-b border-primary shadow-sm flex items-center justify-between px-margin-mobile h-16 w-full z-10 max-w-screen-md mx-auto">
+<div class="flex items-center gap-md">
+<button class="cursor-pointer active:opacity-80 p-sm hover:bg-surface-container-low transition-colors rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+</button>
+<h1 class="text-title-md font-title-md">Hóa đơn điện tử</h1>
+</div>
+<div class="cursor-pointer active:opacity-80">
+<!-- User profile avatar (placeholder) -->
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant font-label-caps text-label-caps overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrTJCfOEfqHyZHwBKb4bvb8pIMbVG1x6Y-yJFXmB7RRUZfrNOv4i0T6eRXjQt6jxe2HW5s1T0br3pjj0U7Fh_wgkoinnCyzww1l1siI0tZzTotAQ54F2hPdQz97FtOskRRAIUO3opvuQUMvpkKX8LNZm5QxHqzXRSJovP5sGWd7AemMyUCb2o6hikI9gaOyC6f2YCk5C1cniMDEE6ZL4Z9Y8UT6ErA8Xno4POufHtqlGvTxILJn3Dh1L2F9oSYSy-ZimoW8NE5FvI"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 w-full max-w-screen-md mx-auto flex flex-col px-margin-mobile py-xl md:py-margin-desktop gap-xl relative pb-32">
+<!-- Header Text -->
+<div class="text-center flex flex-col gap-sm">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">Mã QR Thanh Toán</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Quét mã để lưu trữ và xác nhận hóa đơn</p>
+</div>
+<!-- QR Code Card (Level 1 Surface) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/30 p-xl flex flex-col items-center gap-lg mx-auto w-full max-w-sm">
+<div class="w-[240px] h-[240px] bg-white rounded-lg p-sm border border-outline-variant/20 shadow-sm relative flex items-center justify-center overflow-hidden group">
+<!-- Placeholder for actual QR code -->
+<img alt="QR Code" class="w-full h-full object-cover scale-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZb6YJq2SeBemM01zKbertII5wOv_9a29mt8wuzPMH_aSnibdtodVWRrSNkyhwxcCE5k3RKesA-81OY4qpd0pccpeD-7iE1VcuUtTqg2y-KD4BqEwxDM2VEJdT2pR_PnYpE6XfFr6LRahyEAp5A9vb04g5vKrr-XUvumZPd_qswSC5p3fZL22ZKc2z8U8hITOrngmS6-r5xW4P4JUBssvpQ2vTTPp7X8zGOvu1RHZKvNDjPjh8jOxSwW5CsPx2whIicFkpDc61BVk"/>
+<!-- Decorative scanner line -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-primary/50 animate-[scan_3s_ease-in-out_infinite]"></div>
+<button class="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-primary p-1.5 rounded-lg shadow-sm border border-outline-variant/30 flex items-center gap-xs transition-colors active:scale-95">
+<span class="material-symbols-outlined" style="font-size: 20px;">zoom_in</span>
+<span class="text-label-caps font-label-caps">Phóng to</span>
+</button></div>
+<div class="flex items-center gap-sm text-primary font-body-sm text-body-sm bg-primary/5 px-3 py-1.5 rounded-full">
+<span class="material-symbols-outlined" style="font-size: 16px;">verified</span>
+<span>Hóa đơn hợp lệ từ TaxEasy</span>
+</div>
+</div>
+<!-- Invoice Details Card (Level 1 Surface) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/30 p-md flex flex-col gap-md mx-auto w-full max-w-sm">
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-sm">
+<div class="flex items-center gap-sm text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">receipt</span>
+<span>Số hóa đơn:</span>
+</div>
+<span class="font-data-tabular text-data-tabular text-on-surface font-semibold">#42</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-sm">
+<div class="flex items-center gap-sm text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
+<span>Thời gian:</span>
+</div>
+<span class="font-data-tabular text-data-tabular text-on-surface">14:30 - 24/10/2026</span>
+</div>
+<div class="flex flex-col gap-sm py-sm">
+<div class="text-on-surface-variant font-label-caps text-label-caps mb-xs">DANH SÁCH MÓN</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface">Phở bò x2</span>
+<span class="font-data-tabular text-body-sm text-on-surface-variant">90.000đ</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface">Cà phê sữa x1</span>
+<span class="font-data-tabular text-body-sm text-on-surface-variant">30.000đ</span>
+</div>
+</div>
+<div class="flex justify-between items-center border-t border-outline-variant/20 pt-md mt-xs">
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">Tổng tiền:</span>
+<span class="font-data-tabular text-title-md font-title-md text-primary font-bold">120.000đ</span>
+</div>
+</div>
+</main>
+<!-- Fixed Bottom Action Area (Task-Focused: No Nav Shell) -->
+<div class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-outline-variant/20 p-margin-mobile shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20 max-w-screen-md left-1/2 -translate-x-1/2">
+<button class="w-full bg-primary hover:bg-surface-tint text-on-primary font-title-md text-title-md py-3 rounded-lg transition-colors shadow-sm active:scale-[0.98] flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+            Xong
+        </button>
+</div>
+<style>
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+</body></html>

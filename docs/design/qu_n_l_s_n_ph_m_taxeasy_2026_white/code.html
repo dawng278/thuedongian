@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Sản phẩm - TaxEasy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Roboto+Flex:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#e5eeff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f8f9ff",
+                        "secondary": "#00668a",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "on-secondary-fixed": "#001e2c",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2563eb",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-tertiary-fixed": "#131b2e",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary": "#4d556b",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "surface": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-container": "#004d6a",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#c4e7ff",
+                        "secondary-container": "#40c2fd",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "inverse-primary": "#b4c5ff",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "surface-dim": "#cbdbf5",
+                        "inverse-surface": "#213145",
+                        "background": "#f8f9ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "outline": "#737686",
+                        "on-tertiary-container": "#eef0ff",
+                        "on-primary-container": "#eeefff",
+                        "tertiary-container": "#656d84",
+                        "primary": "#004ac6",
+                        "on-surface": "#0b1c30",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-tint": "#0053db",
+                        "primary-fixed": "#dbe1ff",
+                        "on-surface-variant": "#434655",
+                        "on-primary-fixed": "#00174b",
+                        "on-background": "#0b1c30",
+                        "tertiary-fixed-dim": "#bec6e0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-tabular": ["Roboto Flex"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-tabular": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-lg text-body-lg min-h-screen pb-[96px] pt-[72px] md:pt-[88px] selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="bg-surface fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile py-sm border-b border-surface-container-low transition-all duration-300">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden shrink-0 border border-outline-variant/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">storefront</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">TaxEasy</h1>
+</div>
+<button aria-label="Đồng bộ dữ liệu" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop space-y-xl">
+<!-- Header Actions: Search & Quick Filters -->
+<section class="space-y-md sticky top-[72px] bg-surface z-40 py-sm -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 border-b border-surface-container-low/50 backdrop-blur-md bg-opacity-90">
+<div class="flex flex-col md:flex-row gap-md items-start md:items-center justify-between">
+<!-- Search Bar -->
+<div class="relative w-full md:max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-3 pl-10 pr-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant transition-all hover:border-outline" placeholder="Tìm kiếm sản phẩm, mã vạch..." type="text"/>
+</div>
+<!-- Quick Filters -->
+<div class="flex gap-sm overflow-x-auto w-full md:w-auto pb-1 scrollbar-hide">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-caps text-label-caps whitespace-nowrap transition-transform active:scale-95">Tất cả</button>
+<button class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-caps text-label-caps whitespace-nowrap transition-colors">Cà phê</button>
+<button class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-caps text-label-caps whitespace-nowrap transition-colors">Trà sữa</button>
+<button class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-caps text-label-caps whitespace-nowrap transition-colors">Đồ ăn vặt</button>
+<button class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-low font-label-caps text-label-caps whitespace-nowrap transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">filter_list</span>
+                        Lọc thêm
+                    </button>
+</div>
+</div>
+</section>
+<!-- Product Grid (Bento Style & Pure White Cards) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md md:gap-lg">
+<!-- Item 1 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-sm flex gap-md items-center hover:border-primary/50 transition-colors group">
+<div class="w-[72px] h-[72px] rounded-lg bg-surface-variant overflow-hidden shrink-0">
+<img alt="Cà phê đen đá" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A close-up shot of a glass of traditional Vietnamese iced black coffee (cà phê đá) resting on a clean, modern white cafe table. The lighting is bright and high-key, illuminating the dark rich coffee and the clear ice cubes. The aesthetic is crisp, minimalist, and professional, aligning with a light-mode corporate design system. Soft natural light creates subtle reflections on the glass." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb2Hl45P4vyzoYYC8-Zs_PEtV7RDzg6iCJms3a_-HaffWWFI9bdfYhi4JrnedfVzVUqaUVwtDBI3dmMlK0uW9x2LmsrxhST8qpGGDeRvQruXhazmh6iQaopi1cFxfqg66sZsiH7w8Elt0U8VqI5juIhe1r5UhWTvaoVXtt3eNzzgkTeFqj650XV2bPdE7VrT9DrMwlWQSS7DBvqr2nrnGfChaqt7XEqKf2ffT4qN1Btx1_gMj7-qYxxlTuq18_wVGkcDbpdgITScY"/>
+</div>
+<div class="flex-1 min-w-0 py-1 flex flex-col justify-between h-full">
+<div>
+<h3 class="font-title-md text-[16px] leading-[24px] font-semibold text-on-surface truncate">Cà phê đen đá</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Đồ uống • SP-001</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-data-tabular text-data-tabular text-primary">25,000</span>
+<span class="px-2 py-[2px] bg-surface-container text-primary font-label-caps text-[10px] rounded uppercase tracking-wider">Đang bán</span>
+</div>
+</div>
+</article>
+<!-- Item 2 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-sm flex gap-md items-center hover:border-primary/50 transition-colors group">
+<div class="w-[72px] h-[72px] rounded-lg bg-surface-variant overflow-hidden shrink-0">
+<img alt="Cà phê sữa đá" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A beautifully layered Vietnamese iced milk coffee (cà phê sữa đá) in a tall glass, set against a pristine white background. The condensed milk sits at the bottom, creating a stark contrast with the dark coffee above. The lighting is bright and even, highlighting the textures without creating harsh shadows. The mood is fresh, modern, and appetizing, suited for a clean UI catalog." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHYHZedTph3c75ibFGP7n447oEUIj3VmxaXQBKPhF-eZEUVZ4zyEkjOT8j7q4t9-xHKpzhGl-HZXWfyLYxXrT7pX7J9N-QYP2Jro1YvQpbQMu2zUYGnkKrc_LqJ84cTrk69t0hIRsV4LbSGlauWePs8fml6Yr-oStPniNJR4EeDotqZ06EAXVsGljlP4XhOLahCrVy4BRTedCYMQJIGDHvcDT4zoLFAgsgcDTF31uMToZhmQgK8gk9sayfPq7_DeyiZqOmK8pjN5w"/>
+</div>
+<div class="flex-1 min-w-0 py-1 flex flex-col justify-between h-full">
+<div>
+<h3 class="font-title-md text-[16px] leading-[24px] font-semibold text-on-surface truncate">Cà phê sữa đá</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Đồ uống • SP-002</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-data-tabular text-data-tabular text-primary">30,000</span>
+<span class="px-2 py-[2px] bg-surface-container text-primary font-label-caps text-[10px] rounded uppercase tracking-wider">Đang bán</span>
+</div>
+</div>
+</article>
+<!-- Item 3 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-sm flex gap-md items-center hover:border-primary/50 transition-colors group opacity-60">
+<div class="w-[72px] h-[72px] rounded-lg bg-surface-container overflow-hidden shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline-variant text-[32px]">local_cafe</span>
+</div>
+<div class="flex-1 min-w-0 py-1 flex flex-col justify-between h-full">
+<div>
+<h3 class="font-title-md text-[16px] leading-[24px] font-semibold text-on-surface truncate">Bạc xỉu</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Đồ uống • SP-003</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-data-tabular text-data-tabular text-on-surface-variant">35,000</span>
+<span class="px-2 py-[2px] bg-surface-variant text-on-surface-variant font-label-caps text-[10px] rounded uppercase tracking-wider">Đã ẩn</span>
+</div>
+</div>
+</article>
+<!-- Item 4 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-sm flex gap-md items-center hover:border-primary/50 transition-colors group">
+<div class="w-[72px] h-[72px] rounded-lg bg-surface-variant overflow-hidden shrink-0">
+<img alt="Trà đào cam sả" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A refreshing glass of peach iced tea garnished with fresh orange slices and a stalk of lemongrass. The drink is photographed in a high-key, bright environment with a pure white tabletop. The colors of the orange and tea are vibrant but the overall aesthetic remains clean and minimalist, matching a professional business management application interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmNdH-fwJ0xh9OBtVokWF3-hJ9iXtm02kqx2kNAS2C7g6zq1it2nIA1DQbtNL4TGxXTHd3q-EpS-0LImzCYDfESiAvlgH43vwYmvRctZeRiBtkEtO8NE6nrM_PVQJ4TH-YG-Dd2r6k7qC01HE_fmHxjXZbi6tNSR1qWHVPUDxIOSsSitYEVUM87k36bziEPImlHNFIuychFqf9wGRUTUve12lyMNm4NUIm9JSvrBZPEeviFEbzTB0NjvKwiKpldfftJxDOV1oeHDU"/>
+</div>
+<div class="flex-1 min-w-0 py-1 flex flex-col justify-between h-full">
+<div>
+<h3 class="font-title-md text-[16px] leading-[24px] font-semibold text-on-surface truncate">Trà đào cam sả</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Trà trái cây • SP-004</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-data-tabular text-data-tabular text-primary">45,000</span>
+<span class="px-2 py-[2px] bg-surface-container text-primary font-label-caps text-[10px] rounded uppercase tracking-wider">Đang bán</span>
+</div>
+</div>
+</article>
+<!-- Item 5 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-sm flex gap-md items-center hover:border-primary/50 transition-colors group">
+<div class="w-[72px] h-[72px] rounded-lg bg-surface-variant overflow-hidden shrink-0">
+<img alt="Bánh sừng trâu" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A golden, flaky croissant sitting on a minimalist white ceramic plate. The background is a stark, clean white surface, emphasizing the texture and warm tones of the pastry. The lighting is soft and diffused, creating a premium, modern aesthetic suitable for a high-end bakery point-of-sale system. No harsh shadows, purely high-key photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaIXU4SCMqAq2BSFwL_jtCF1ynOB5o3d8ebDOnfDmXr80i3AVl9OFNasohBJ1cOcSRkX74hYiDa6I6ySv6Xq5Dghae8xkdscxXVbXZ4PVSmWcP4WCDzPrlk_oxUSlR6GrNGj8ulpYj-vkS2uunUd43ry0YCXxtMwPNhO7TeQcTFIzN7Pj3OLFyqGk_RK9c10i1jBgCeIEk3zESkMbPb8QBhJ3DGUQE8MbU4Mvnmk3pTDXHKmQpqi9Fsgnnj4yF0YK8v9dptZ_Pk6M"/>
+</div>
+<div class="flex-1 min-w-0 py-1 flex flex-col justify-between h-full">
+<div>
+<h3 class="font-title-md text-[16px] leading-[24px] font-semibold text-on-surface truncate">Bánh sừng trâu</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Đồ ăn • SP-005</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="font-data-tabular text-data-tabular text-primary">28,000</span>
+<span class="px-2 py-[2px] bg-surface-container text-primary font-label-caps text-[10px] rounded uppercase tracking-wider">Đang bán</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Empty State / Load More (Optional, shown as an elegant divider here) -->
+<div class="py-lg flex justify-center">
+<div class="w-1/2 h-[1px] bg-gradient-to-r from-transparent via-outline-variant to-transparent opacity-50"></div>
+</div>
+</main>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-[96px] right-margin-mobile md:right-margin-desktop bg-primary text-on-primary rounded-2xl px-5 py-4 flex items-center gap-2 shadow-[0_8px_16px_rgba(37,99,235,0.2)] hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(37,99,235,0.3)] transition-all duration-200 z-40">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+<span class="font-title-md text-[16px] leading-[24px] tracking-wide">Thêm món</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-surface fixed bottom-0 w-full z-50 flex justify-around items-center px-margin-mobile py-base rounded-t-xl border-t border-surface-container-low md:hidden">
+<!-- Doanh thu (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity w-16 gap-1">
+<span class="material-symbols-outlined text-[24px]">payments</span>
+<span class="font-label-caps text-[10px] truncate w-full text-center">Doanh thu</span>
+</button>
+<!-- Thuế (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity w-16 gap-1">
+<span class="material-symbols-outlined text-[24px]">receipt_long</span>
+<span class="font-label-caps text-[10px] truncate w-full text-center">Thuế</span>
+</button>
+<!-- Sản phẩm (Active) -->
+<button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-5 py-1.5 transition-transform duration-150 active:scale-90 gap-0.5">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-caps text-[10px] font-bold">Sản phẩm</span>
+</button>
+<!-- Hóa đơn (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity w-16 gap-1">
+<span class="material-symbols-outlined text-[24px]">description</span>
+<span class="font-label-caps text-[10px] truncate w-full text-center">Hóa đơn</span>
+</button>
+</nav>
+</body></html>

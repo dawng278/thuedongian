@@ -9,21 +9,24 @@ class SyncService {
 
   SyncService(this._api);
 
-  Future<SyncResult> syncPending() async {
+  Future<SyncResult> syncPending(String storeId) async {
     if (_syncing) return const SyncResult(synced: 0, errors: 0);
     _syncing = true;
     int synced = 0;
     int errors = 0;
     try {
-      final pending = await LocalDb.getPendingInvoices();
+      final pending = await LocalDb.getPendingInvoices(storeId: storeId);
       if (pending.isEmpty) return const SyncResult(synced: 0, errors: 0);
 
-      final batch = pending.map((inv) => CreateInvoiceDto(
-        id: inv.id,
-        createdAt: inv.createdAt,
-        note: inv.note,
-        items: inv.items,
-      )).toList();
+      final batch = pending
+          .map((inv) => CreateInvoiceDto(
+                id: inv.id,
+                storeId: inv.storeId,
+                createdAt: inv.createdAt,
+                note: inv.note,
+                items: inv.items,
+              ))
+          .toList();
 
       final result = await _api.syncInvoices(batch);
       final results = result['results'] as List? ?? [];

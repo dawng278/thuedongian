@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request, MethodNotAllowedException, Header, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+  MethodNotAllowedException,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -24,6 +37,7 @@ export class InvoicesController {
     @Query('to') to?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('store_id') storeId?: string,
   ) {
     return this.invoicesService.findAll(
       req.user.userId,
@@ -31,6 +45,7 @@ export class InvoicesController {
       to,
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 20,
+      storeId,
     );
   }
 
@@ -50,7 +65,10 @@ export class InvoicesController {
   ) {
     const xml = await this.invoicesService.exportXml(req.user.userId, id);
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}.xml"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="invoice-${id}.xml"`,
+    );
     res.send(xml);
   }
 

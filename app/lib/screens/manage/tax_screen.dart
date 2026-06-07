@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/stores_provider.dart';
 import '../../services/api_service.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
@@ -19,19 +20,19 @@ class _TaxScreenState extends State<TaxScreen> {
   bool _loading = false;
   String? _error;
   String _period = 'month';
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  String? _storeId;
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    final storeId = _storeId;
+    if (storeId == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final api = context.read<ApiService>();
       final results = await Future.wait([
-        api.getTaxEstimate(period: _period),
+        api.getTaxEstimate(period: _period, storeId: storeId),
         api.getTaxDeadlines(),
       ]);
       setState(() {
@@ -49,6 +50,11 @@ class _TaxScreenState extends State<TaxScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final storeId = context.watch<StoresProvider>().currentStore?.id;
+    if (storeId != null && storeId != _storeId) {
+      _storeId = storeId;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    }
 
     if (_loading && _estimate == null) {
       return const Center(child: CircularProgressIndicator());
@@ -73,12 +79,15 @@ class _TaxScreenState extends State<TaxScreen> {
 
     final belowThreshold = est['below_threshold'] as bool? ?? false;
     final periodRevenue = (est['period_revenue'] as num?)?.toInt() ?? 0;
-    final exemptThreshold = (est['exempt_threshold'] as num?)?.toInt() ?? 100000000;
+    final exemptThreshold =
+        (est['exempt_threshold'] as num?)?.toInt() ?? 100000000;
     final vatAmount = (est['vat_amount'] as num?)?.toInt() ?? 0;
     final pitAmount = (est['pit_amount'] as num?)?.toInt() ?? 0;
     final vatRate = ((est['vat_rate'] as num?)?.toDouble() ?? 0.01) * 100;
     final pitRate = ((est['pit_rate'] as num?)?.toDouble() ?? 0.005) * 100;
-    final progress = exemptThreshold > 0 ? (periodRevenue / exemptThreshold).clamp(0.0, 1.0) : 0.0;
+    final progress = exemptThreshold > 0
+        ? (periodRevenue / exemptThreshold).clamp(0.0, 1.0)
+        : 0.0;
     final pctText = '${(progress * 100).round()}%';
     final isNearThreshold = progress >= 0.7;
 
@@ -100,8 +109,22 @@ class _TaxScreenState extends State<TaxScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _PeriodTab(label: 'Tháng này', value: 'month', selected: _period, onTap: (v) { setState(() => _period = v); _load(); }),
-                  _PeriodTab(label: 'Quý này', value: 'quarter', selected: _period, onTap: (v) { setState(() => _period = v); _load(); }),
+                  _PeriodTab(
+                      label: 'Tháng này',
+                      value: 'month',
+                      selected: _period,
+                      onTap: (v) {
+                        setState(() => _period = v);
+                        _load();
+                      }),
+                  _PeriodTab(
+                      label: 'Quý này',
+                      value: 'quarter',
+                      selected: _period,
+                      onTap: (v) {
+                        setState(() => _period = v);
+                        _load();
+                      }),
                 ],
               ),
             ),
@@ -128,7 +151,8 @@ class _TaxScreenState extends State<TaxScreen> {
                     icon: Icons.account_balance_wallet_rounded,
                     iconBg: cs.secondaryContainer,
                     iconFg: cs.onSecondaryContainer,
-                    label: 'Thuế GTGT ước tính (${vatRate.toStringAsFixed(0)}%)',
+                    label:
+                        'Thuế GTGT ước tính (${vatRate.toStringAsFixed(0)}%)',
                     amount: '${_currencyFmt.format(vatAmount)}đ',
                     cs: cs,
                   ),
@@ -139,7 +163,8 @@ class _TaxScreenState extends State<TaxScreen> {
                     icon: Icons.person_rounded,
                     iconBg: cs.primaryContainer,
                     iconFg: cs.onPrimaryContainer,
-                    label: 'Thuế TNCN ước tính (${pitRate.toStringAsFixed(1)}%)',
+                    label:
+                        'Thuế TNCN ước tính (${pitRate.toStringAsFixed(1)}%)',
                     amount: '${_currencyFmt.format(pitAmount)}đ',
                     cs: cs,
                   ),
@@ -163,7 +188,8 @@ class _TaxScreenState extends State<TaxScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFEFF4FF),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
+              border: Border.all(
+                  color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +200,8 @@ class _TaxScreenState extends State<TaxScreen> {
                   child: Text(
                     est['disclaimer'] as String? ??
                         'Các số liệu chỉ mang tính ước tính. Tham khảo chuyên gia kế toán trước khi nộp tờ khai.',
-                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant, height: 1.5),
+                    style: TextStyle(
+                        fontSize: 12, color: cs.onSurfaceVariant, height: 1.5),
                   ),
                 ),
               ],
@@ -198,7 +225,11 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(Icons.event_outlined, size: 18, color: cs.primary),
         const SizedBox(width: 6),
-        Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface)),
+        Text(title,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: cs.onSurface)),
       ],
     );
   }
@@ -209,7 +240,11 @@ class _PeriodTab extends StatelessWidget {
   final String value;
   final String selected;
   final ValueChanged<String> onTap;
-  const _PeriodTab({required this.label, required this.value, required this.selected, required this.onTap});
+  const _PeriodTab(
+      {required this.label,
+      required this.value,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +258,12 @@ class _PeriodTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
-          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] : null,
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)
+                ]
+              : null,
         ),
         child: Text(
           label,
@@ -259,7 +299,8 @@ class _ThresholdCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final barColor = isNear ? const Color(0xFFFBBF24) : cs.primary;
-    final borderColor = isNear ? const Color(0xFFFBBF24) : const Color(0xFFC3C6D7);
+    final borderColor =
+        isNear ? const Color(0xFFFBBF24) : const Color(0xFFC3C6D7);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -268,8 +309,18 @@ class _ThresholdCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
         boxShadow: isNear
-            ? [BoxShadow(color: const Color(0xFFFBBF24).withValues(alpha: 0.12), blurRadius: 12, offset: const Offset(0, 4))]
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4))],
+            ? [
+                BoxShadow(
+                    color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4))
+              ]
+            : [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4))
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,19 +328,27 @@ class _ThresholdCard extends StatelessWidget {
           Row(
             children: [
               if (isNear) ...[
-                const Icon(Icons.warning_amber_rounded, size: 20, color: Color(0xFFFBBF24)),
+                const Icon(Icons.warning_amber_rounded,
+                    size: 20, color: Color(0xFFFBBF24)),
                 const SizedBox(width: 6),
               ],
               Text(
                 'Trạng thái ngưỡng thuế',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurfaceVariant, letterSpacing: 0.5),
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                    letterSpacing: 0.5),
               ),
             ],
           ),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0B1C30)),
               children: [
                 TextSpan(text: belowThreshold ? 'Dưới ngưỡng ' : 'Gần ngưỡng '),
                 TextSpan(
@@ -303,10 +362,14 @@ class _ThresholdCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Doanh thu kỳ này', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+              Text('Doanh thu kỳ này',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
               Text(
                 '${_currencyFmt.format(periodRevenue)}đ / ${_currencyFmt.format(exemptThreshold)}đ',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF0B1C30)),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF0B1C30)),
               ),
             ],
           ),
@@ -358,22 +421,32 @@ class _TaxEstCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFC3C6D7)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 3))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+                color: iconBg, borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, size: 18, color: iconFg),
           ),
           const SizedBox(height: 10),
-          Text(label, style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
           const SizedBox(height: 4),
           Text(
             amount,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0B1C30)),
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0B1C30)),
           ),
         ],
       ),
@@ -394,7 +467,12 @@ class _DeadlineTimeline extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFC3C6D7)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 3))
+        ],
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -404,7 +482,10 @@ class _DeadlineTimeline extends StatelessWidget {
             Column(
               children: [
                 const SizedBox(height: 6),
-                Container(width: 2, color: const Color(0xFFDCE9FF), margin: const EdgeInsets.only(left: 7)),
+                Container(
+                    width: 2,
+                    color: const Color(0xFFDCE9FF),
+                    margin: const EdgeInsets.only(left: 7)),
               ],
             ),
             const SizedBox(width: 16),
@@ -463,28 +544,41 @@ class _TimelineItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: isActive ? cs.primary : Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: isActive ? cs.primary : const Color(0xFFC3C6D7), width: 2),
+              border: Border.all(
+                  color: isActive ? cs.primary : const Color(0xFFC3C6D7),
+                  width: 2),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: isActive
                 ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF4FF),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFC3C6D7).withValues(alpha: 0.5)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           label.toUpperCase(),
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary, letterSpacing: 0.5),
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: cs.primary,
+                              letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 2),
-                        Text(deadline, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30))),
+                        Text(deadline,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0B1C30))),
                       ],
                     ),
                   )
@@ -493,10 +587,16 @@ class _TimelineItem extends StatelessWidget {
                     children: [
                       Text(
                         label.toUpperCase(),
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurfaceVariant, letterSpacing: 0.5),
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurfaceVariant,
+                            letterSpacing: 0.5),
                       ),
                       const SizedBox(height: 2),
-                      Text(deadline, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                      Text(deadline,
+                          style: TextStyle(
+                              fontSize: 13, color: cs.onSurfaceVariant)),
                     ],
                   ),
           ),

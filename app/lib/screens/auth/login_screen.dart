@@ -251,22 +251,36 @@ class _LoginForm extends StatelessWidget {
                 : null,
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: Checkbox(
-                  value: rememberMe,
-                  onChanged: (value) => onRememberChanged(value ?? false),
-                ),
-              ),
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 190),
                 child: GestureDetector(
                   onTap: () => onRememberChanged(!rememberMe),
-                  child: const Text(
-                    'Ghi nhớ đăng nhập',
-                    style: TextStyle(color: TaxEasyColors.textSecondary),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Checkbox(
+                          value: rememberMe,
+                          onChanged: (value) =>
+                              onRememberChanged(value ?? false),
+                        ),
+                      ),
+                      const Flexible(
+                        child: Text(
+                          'Ghi nhớ đăng nhập',
+                          style: TextStyle(color: TaxEasyColors.textSecondary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -6,10 +6,19 @@ import { SyncInvoicesDto } from './dto/sync-invoices.dto';
 export class SyncService {
   constructor(private prisma: PrismaService) {}
 
-  async syncInvoices(userId: string, dto: SyncInvoicesDto) {
-    const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
+  private async resolveStore(userId: string, storeId?: string) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        owner_id: userId,
+        ...(storeId ? { id: storeId } : {}),
+      },
+      orderBy: { created_at: 'asc' },
+    });
     if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
+    return store;
+  }
 
+  async syncInvoices(userId: string, dto: SyncInvoicesDto) {
     const results: Array<{
       id: string;
       status: 'saved' | 'duplicate';
@@ -17,16 +26,32 @@ export class SyncService {
     }> = [];
 
     for (const inv of dto.invoices) {
-      const existing = await this.prisma.invoice.findUnique({ where: { id: inv.id } });
+      const existing = await this.prisma.invoice.findUnique({
+        where: { id: inv.id },
+        include: { store: true },
+      });
 
       if (existing) {
-        results.push({ id: inv.id, status: 'duplicate', invoice_number: existing.invoice_number });
+        if (existing.store.owner_id !== userId) {
+          throw new NotFoundException('Không tìm thấy hóa đơn');
+        }
+        results.push({
+          id: inv.id,
+          status: 'duplicate',
+          invoice_number: existing.invoice_number,
+        });
         continue;
       }
 
-      const count = await this.prisma.invoice.count({ where: { store_id: store.id } });
+      const store = await this.resolveStore(userId, inv.store_id);
+      const count = await this.prisma.invoice.count({
+        where: { store_id: store.id },
+      });
       const invoiceNumber = count + 1;
-      const totalAmount = inv.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const totalAmount = inv.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      );
       const createdAt = inv.created_at ? new Date(inv.created_at) : new Date();
 
       const saved = await this.prisma.invoice.create({
@@ -50,7 +75,11 @@ export class SyncService {
         },
       });
 
-      results.push({ id: inv.id, status: 'saved', invoice_number: saved.invoice_number });
+      results.push({
+        id: inv.id,
+        status: 'saved',
+        invoice_number: saved.invoice_number,
+      });
     }
 
     const saved = results.filter((r) => r.status === 'saved').length;

@@ -71,7 +71,10 @@ class InvoiceQrScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Khách quét mã để xem thông tin hóa đơn',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color.outline),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: color.outline),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -161,9 +164,9 @@ class _SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-      color: color,
-    );
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          color: color,
+        );
     return Row(
       children: [
         Text('$label: ', style: Theme.of(context).textTheme.bodySmall),

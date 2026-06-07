@@ -9,7 +9,7 @@
 ## 1. Auth — `/auth`
 
 ### POST `/auth/register`
-Đăng ký tài khoản mới (tự động tạo Store cho user).
+Đăng ký tài khoản mới. Endpoint này **không tạo quán**; sau auth app gọi `GET /stores`, nếu rỗng thì chuyển sang màn hình tạo quán đầu tiên.
 
 **Request:**
 ```json
@@ -44,8 +44,35 @@
 
 ## 2. Stores — `/stores`
 
+TaxEasy hỗ trợ mô hình **1 user -> nhiều quán**. Tất cả dữ liệu nghiệp vụ cần được scope theo `store_id` hiện tại.
+
+### GET `/stores`
+Danh sách quán thuộc user hiện tại.
+
+**Response 200:** `StoreDto[]`
+
+### POST `/stores`
+Tạo quán mới trong app.
+
+**Request:**
+```json
+{
+  "name": "Quán Phở Hà Nội",
+  "business_type": "food_beverage",
+  "tax_id": "0109990001",
+  "address": "45 Phố Huế, Hà Nội",
+  "phone": "0901234567"
+}
+```
+**Response 201:** StoreDto.
+
+### GET `/stores/:id`
+Chi tiết một quán thuộc user hiện tại.
+
+**Response 200:** StoreDto.
+
 ### GET `/stores/me`
-Thông tin cửa hàng của user hiện tại.
+Thông tin quán đầu tiên của user hiện tại. Giữ để tương thích cũ; app mới nên dùng `GET /stores`.
 
 **Response 200:**
 ```json
@@ -60,7 +87,7 @@ Thông tin cửa hàng của user hiện tại.
 ```
 
 ### PATCH `/stores/me`
-Cập nhật thông tin cửa hàng.
+Cập nhật quán đầu tiên của user hiện tại. Giữ để tương thích cũ.
 
 **Request:** subset của StoreDto (bất kỳ trường nào trong `name|tax_id|address|phone|business_type`).  
 **Response 200:** StoreDto cập nhật.
@@ -72,7 +99,7 @@ Cập nhật thông tin cửa hàng.
 ### GET `/products`
 Danh sách sản phẩm đang hoạt động.
 
-**Query params:** `?include_inactive=true` (mặc định chỉ trả is_active=true)
+**Query params:** `?store_id=<uuid>&include_inactive=true` (mặc định chỉ trả `is_active=true`)
 
 **Response 200:**
 ```json
@@ -95,7 +122,8 @@ Danh sách sản phẩm đang hoạt động.
 ### POST `/products`
 Tạo sản phẩm mới.
 
-**Request:** `{ "name": "...", "price": 55000, "unit"?: "bát", "category"?: "Món chính" }`  
+**Request:** `{ "store_id"?: "uuid", "name": "...", "price": 55000, "unit"?: "bát", "category"?: "Món chính" }`
+Nếu thiếu `store_id`, server dùng quán đầu tiên của user để tương thích cũ.
 **Response 201:** ProductDto.
 
 ### PUT `/products/:id`
@@ -120,6 +148,7 @@ Tạo hóa đơn từ server. **Thường dùng `/sync/invoices` thay thế khi 
 ```json
 {
   "id": "uuid-v4-do-client-tao",
+  "store_id": "uuid",
   "created_at": "2026-06-06T10:30:00.000Z",
   "note": "bàn 5",
   "items": [
@@ -133,7 +162,7 @@ Tạo hóa đơn từ server. **Thường dùng `/sync/invoices` thay thế khi 
 ### GET `/invoices`
 Lịch sử hóa đơn (phân trang).
 
-**Query params:** `?from=YYYY-MM-DD&to=YYYY-MM-DD&page=1&limit=20`
+**Query params:** `?store_id=<uuid>&from=YYYY-MM-DD&to=YYYY-MM-DD&page=1&limit=20`
 
 **Response 200:**
 ```json
@@ -175,6 +204,7 @@ Xuất hóa đơn dạng XML theo Thông tư 78/2021/TT-BTC.
   "invoices": [
     {
       "id": "uuid-v4",
+      "store_id": "uuid",
       "created_at": "2026-06-06T10:30:00.000Z",
       "items": [ ... ]
     }
@@ -200,7 +230,7 @@ Xuất hóa đơn dạng XML theo Thông tư 78/2021/TT-BTC.
 ### GET `/tax/estimate`
 Thuế ước tính theo kỳ. Nguồn: **Thông tư 40/2021/TT-BTC**.
 
-**Query params:** `?period=month|quarter` (mặc định: `month`)
+**Query params:** `?store_id=<uuid>&period=month|quarter` (mặc định: `month`)
 
 **Response 200:**
 ```json
@@ -248,14 +278,21 @@ Các mốc hạn kê khai thuế sắp tới.
 ### GET `/reports/revenue`
 Doanh thu tổng quan + biểu đồ theo ngày.
 
-**Query params:** `?from=YYYY-MM-DD&to=YYYY-MM-DD`
+**Query params:** `?store_id=<uuid>&from=YYYY-MM-DD&to=YYYY-MM-DD`
 
 **Response 200:**
 ```json
 {
+  "store": { "id": "uuid", "name": "Quán Phở Hà Nội", "business_type": "food_beverage" },
   "today_revenue": 1500000,
   "month_revenue": 18000000,
   "month_invoice_count": 120,
+  "tax_estimate": {
+    "business_type": "food_beverage",
+    "vat_amount": 540000,
+    "pit_amount": 270000,
+    "total_tax": 810000
+  },
   "daily": [
     { "date": "2026-06-01", "revenue": 2400000 }
   ],
@@ -268,15 +305,31 @@ Doanh thu tổng quan + biểu đồ theo ngày.
 ### GET `/reports/period`
 Tổng hợp doanh thu kỳ (dùng cho xuất báo cáo).
 
-**Query params:** `?from=YYYY-MM-DD&to=YYYY-MM-DD` (bắt buộc)
+**Query params:** `?store_id=<uuid>&from=YYYY-MM-DD&to=YYYY-MM-DD` (bắt buộc)
 
 **Response 200:**
 ```json
 {
+  "store": {
+    "id": "uuid",
+    "name": "Quán Phở Hà Nội",
+    "tax_id": "0109990001",
+    "address": "45 Phố Huế, Hà Nội",
+    "phone": "0901234567",
+    "business_type": "food_beverage"
+  },
   "from": "2026-06-01",
   "to": "2026-06-30",
   "total_revenue": 18000000,
   "invoice_count": 120,
+  "tax_estimate": {
+    "business_type": "food_beverage",
+    "vat_rate": 0.03,
+    "pit_rate": 0.015,
+    "vat_amount": 540000,
+    "pit_amount": 270000,
+    "total_tax": 810000
+  },
   "invoices": [ ... InvoiceDto[] ... ],
   "top_products": [ ... ]
 }
@@ -328,6 +381,7 @@ Tổng hợp doanh thu kỳ (dùng cho xuất báo cáo).
 ```typescript
 {
   id: string;            // UUID sinh ở client
+  store_id: string;
   invoice_number: number;
   total_amount: number;
   note?: string;
@@ -353,6 +407,7 @@ Tổng hợp doanh thu kỳ (dùng cho xuất báo cáo).
 ```typescript
 {
   id: string;            // UUID v4 do client tạo
+  store_id: string;
   created_at: string;    // ISO 8601
   note?: string;
   items: {
@@ -371,6 +426,7 @@ Tổng hợp doanh thu kỳ (dùng cho xuất báo cáo).
 | Quy tắc | Mô tả |
 |---|---|
 | UUID client-side | `INVOICE.id` = UUID v4 sinh ở client — chống trùng khi sync offline |
+| Store context | Products, invoices, reports, tax, sync phải có `store_id` hiện tại để không lẫn dữ liệu giữa các quán |
 | Snapshot bất biến | `InvoiceItem.product_name` + `price` không thay đổi dù sản phẩm bị xóa/sửa giá |
 | Soft delete | Xóa sản phẩm = `is_active=false`, không xóa thật |
 | Hóa đơn bất biến | PATCH/DELETE `/invoices/:id` → 405 |

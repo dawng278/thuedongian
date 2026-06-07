@@ -28,11 +28,6 @@ export class AuthService {
         email: dto.email,
         password_hash: hash,
         name: dto.name,
-        stores: {
-          create: {
-            name: dto.store_name ?? `Cửa hàng của ${dto.name}`,
-          },
-        },
       },
     });
 
@@ -43,10 +38,12 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-    if (!user) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    if (!user)
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
     const valid = await bcrypt.compare(dto.password, user.password_hash);
-    if (!valid) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    if (!valid)
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
     return this.issueTokens(user);
   }

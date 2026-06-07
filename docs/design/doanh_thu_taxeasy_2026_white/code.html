@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Doanh thu - TaxEasy 2026</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Roboto+Flex:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container-highest": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#656d84",
+                        "on-secondary-container": "#004d6a",
+                        "surface-tint": "#0053db",
+                        "on-background": "#0b1c30",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-primary-fixed": "#00174b",
+                        "on-secondary-fixed": "#001e2c",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "primary": "#004ac6",
+                        "secondary": "#00668a",
+                        "inverse-surface": "#213145",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-container": "#40c2fd",
+                        "surface": "#f8f9ff",
+                        "background": "#f8f9ff",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed": "#131b2e",
+                        "inverse-primary": "#b4c5ff",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed": "#dae2fd",
+                        "outline": "#737686",
+                        "on-tertiary-container": "#eef0ff",
+                        "on-surface": "#0b1c30",
+                        "tertiary": "#4d556b",
+                        "on-surface-variant": "#434655",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#2563eb",
+                        "on-primary-container": "#eeefff",
+                        "surface-container": "#e5eeff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#004c69"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1rem"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "18": "4.5rem",
+                        "22": "5.5rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "data-tabular": ["Roboto Flex"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #F8FAFC; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E2E8F0;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .pb-nav { padding-bottom: calc(5rem + 16px); }
+        }
+        .blue-gradient-text {
+            background: linear-gradient(135deg, #004ac6 0%, #40c2fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased text-on-surface pb-nav">
+<!-- TopAppBar (Web & Mobile Hybrid Concept) -->
+<header class="bg-surface border-b border-outline-variant flex items-center justify-between px-margin-mobile w-full h-16 sticky top-0 z-40 transition-all active:scale-95 shadow-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">store</span>
+<h1 class="text-title-md font-title-md text-primary font-bold tracking-tight">TaxEasy 2026</h1>
+</div>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-xl">
+<!-- Header Section -->
+<div class="mb-lg flex justify-between items-end">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">Tổng quan kinh doanh</p>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface tracking-tight">Quản lý Doanh thu</h2>
+</div>
+<div class="hidden md:flex gap-sm">
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm px-4 py-2 rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    Hôm nay
+                </button>
+<button class="bg-primary text-on-primary font-body-sm text-body-sm px-4 py-2 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-xs shadow-sm">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Xuất báo cáo
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="bento-grid">
+<!-- Hero Card: Doanh thu Hôm nay -->
+<div class="glass-card rounded-2xl p-lg flex flex-col justify-between md:col-span-2 md:row-span-2 shadow-[0_4px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group">
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary-fixed opacity-50 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+<div>
+<div class="flex justify-between items-start mb-sm relative z-10">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary bg-primary-container p-1.5 rounded-lg text-sm">payments</span>
+<h3 class="font-body-sm text-body-sm font-medium">Doanh thu Hôm nay</h3>
+</div>
+<span class="inline-flex items-center gap-1 bg-surface-container-lowest border border-surface-dim text-secondary font-label-caps text-label-caps px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                            +12%
+                        </span>
+</div>
+<div class="mt-md relative z-10">
+<p class="font-data-tabular text-[36px] md:text-[48px] font-bold text-on-surface leading-none tracking-tight">
+                            4.250.000<span class="text-xl text-outline ml-1 align-top">đ</span>
+</p>
+</div>
+</div>
+<div class="mt-lg pt-md border-t border-surface-dim flex gap-lg relative z-10">
+<div>
+<p class="font-body-sm text-[12px] text-on-surface-variant mb-1">Tiền mặt</p>
+<p class="font-data-tabular text-data-tabular text-on-surface">1.250.000đ</p>
+</div>
+<div>
+<p class="font-body-sm text-[12px] text-on-surface-variant mb-1">Chuyển khoản</p>
+<p class="font-data-tabular text-data-tabular text-on-surface">3.000.000đ</p>
+</div>
+</div>
+</div>
+<!-- Stat Card 1: Tháng này -->
+<div class="glass-card rounded-2xl p-md flex flex-col justify-center shadow-[0_4px_12px_rgba(0,0,0,0.02)] md:col-span-1">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-outline text-[18px]">calendar_month</span>
+<h3 class="font-body-sm text-body-sm text-on-surface-variant">Tháng này</h3>
+</div>
+<p class="font-data-tabular text-title-md text-on-surface font-semibold">120.000.000đ</p>
+<div class="mt-2 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 75%"></div>
+</div>
+<p class="font-body-sm text-[11px] text-outline mt-2 text-right">75% mục tiêu</p>
+</div>
+<!-- Stat Card 2: Số hóa đơn -->
+<div class="glass-card rounded-2xl p-md flex flex-col justify-center shadow-[0_4px_12px_rgba(0,0,0,0.02)] md:col-span-1">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-outline text-[18px]">receipt_long</span>
+<h3 class="font-body-sm text-body-sm text-on-surface-variant">Số hóa đơn (Hôm nay)</h3>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="font-data-tabular text-title-md text-on-surface font-semibold">420</p>
+<p class="font-body-sm text-[12px] text-secondary flex items-center"><span class="material-symbols-outlined text-[12px]">arrow_upward</span> 5%</p>
+</div>
+</div>
+<!-- Chart Card -->
+<div class="glass-card rounded-2xl p-lg md:col-span-3 shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[240px] flex flex-col">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-title-md text-body-lg font-semibold text-on-surface">Biểu đồ doanh thu</h3>
+<select class="bg-transparent border-none text-body-sm font-body-sm text-on-surface-variant focus:ring-0 cursor-pointer">
+<option>7 ngày qua</option>
+<option>30 ngày qua</option>
+</select>
+</div>
+<!-- SVG Chart Placeholder simulating Blue 600 line chart -->
+<div class="flex-grow relative w-full h-full min-h-[150px] mt-2 border-l border-b border-surface-dim pl-2 pb-2">
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,90 Q10,80 20,85 T40,60 T60,70 T80,30 T100,10" fill="none" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M0,90 Q10,80 20,85 T40,60 T60,70 T80,30 T100,10 L100,100 L0,100 Z" fill="url(#gradientBlue)" opacity="0.1"></path>
+<defs>
+<lineargradient id="gradientBlue" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#2563eb"></stop>
+<stop offset="100%" stop-color="#2563eb" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Data Points -->
+<circle cx="20" cy="85" fill="#2563eb" r="2"></circle>
+<circle cx="40" cy="60" fill="#2563eb" r="2"></circle>
+<circle cx="60" cy="70" fill="#2563eb" r="2"></circle>
+<circle cx="80" cy="30" fill="#2563eb" r="2"></circle>
+<circle cx="100" cy="10" fill="#ffffff" r="3" stroke="#2563eb" stroke-width="1.5"></circle>
+</svg>
+<!-- Y Axis Labels -->
+<div class="absolute left-[-30px] bottom-0 h-full flex flex-col justify-between text-[10px] text-outline font-data-tabular pb-2">
+<span>10M</span>
+<span>5M</span>
+<span>0</span>
+</div>
+</div>
+</div>
+<!-- List Card: Món bán chạy -->
+<div class="glass-card rounded-2xl p-md md:col-span-1 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-center mb-md pb-sm border-b border-surface-dim">
+<h3 class="font-title-md text-body-lg font-semibold text-on-surface">Món bán chạy</h3>
+<span class="material-symbols-outlined text-outline text-[18px]">local_dining</span>
+</div>
+<ul class="space-y-4">
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary font-label-caps text-[10px]">#1</div>
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface">Phở bò</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">120 suất</p>
+</div>
+</div>
+<p class="font-data-tabular text-body-sm font-medium text-on-surface">6.000k</p>
+</li>
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-label-caps text-[10px]">#2</div>
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface">Bún chả</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">95 suất</p>
+</div>
+</div>
+<p class="font-data-tabular text-body-sm font-medium text-on-surface">4.750k</p>
+</li>
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-label-caps text-[10px]">#3</div>
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface">Trà đá</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">210 cốc</p>
+</div>
+</div>
+<p class="font-data-tabular text-body-sm font-medium text-on-surface">1.050k</p>
+</li>
+</ul>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only per Semantic Shell Mandate) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg">
+<!-- Active Tab: Revenue (Doanh thu) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-4 py-1 transition-transform active:scale-90 w-16" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-caps text-[10px] mt-1 leading-none">Revenue</span>
+</a>
+<!-- Inactive Tab: Tax -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-xl w-16" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-caps text-[10px] mt-1 leading-none">Tax</span>
+</a>
+<!-- Inactive Tab: Products -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-xl w-16" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-[10px] mt-1 leading-none">Products</span>
+</a>
+<!-- Inactive Tab: Invoices -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-xl w-16" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-[10px] mt-1 leading-none">Invoices</span>
+</a>
+</nav>
+<!-- Desktop Side Nav Overlay for wide screens (Hybrid Approach based on logic rules, mostly represented by Top Nav in this simple layout, but adding side context if needed. Keeping simple Top Nav per standard web dashboard pattern for this iteration). -->
+</body></html>

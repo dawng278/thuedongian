@@ -34,7 +34,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _emailCtrl.text.trim(),
           _passCtrl.text,
           _nameCtrl.text.trim(),
-          '',
         );
     if (!ok && mounted) {
       setState(() => _loading = false);

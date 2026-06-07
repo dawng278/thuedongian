@@ -36,6 +36,7 @@ class InvoiceItemDto {
 
 class InvoiceDto {
   final String id;
+  final String? storeId;
   final int? invoiceNumber;
   final int totalAmount;
   final String? note;
@@ -45,6 +46,7 @@ class InvoiceDto {
 
   const InvoiceDto({
     required this.id,
+    this.storeId,
     this.invoiceNumber,
     required this.totalAmount,
     this.note,
@@ -55,6 +57,7 @@ class InvoiceDto {
 
   factory InvoiceDto.fromJson(Map<String, dynamic> json) => InvoiceDto(
         id: json['id'] as String,
+        storeId: json['store_id'] as String?,
         invoiceNumber: json['invoice_number'] as int?,
         totalAmount: (json['total_amount'] as num).toInt(),
         note: json['note'] as String?,
@@ -69,6 +72,7 @@ class InvoiceDto {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        if (storeId != null) 'store_id': storeId,
         if (invoiceNumber != null) 'invoice_number': invoiceNumber,
         'total_amount': totalAmount,
         if (note != null) 'note': note,
@@ -101,12 +105,14 @@ class CreateInvoiceItemInput {
 
 class CreateInvoiceDto {
   final String id;
+  final String storeId;
   final DateTime createdAt;
   final String? note;
   final List<CreateInvoiceItemInput> items;
 
   const CreateInvoiceDto({
     required this.id,
+    required this.storeId,
     required this.createdAt,
     this.note,
     required this.items,
@@ -114,6 +120,7 @@ class CreateInvoiceDto {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'store_id': storeId,
         'created_at': createdAt.toIso8601String(),
         if (note != null) 'note': note,
         'items': items.map((e) => e.toJson()).toList(),

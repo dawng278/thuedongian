@@ -12,8 +12,9 @@ export class ReportsController {
     @Request() req: { user: { userId: string } },
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('store_id') storeId?: string,
   ) {
-    return this.reportsService.getRevenue(req.user.userId, from, to);
+    return this.reportsService.getRevenue(req.user.userId, from, to, storeId);
   }
 
   @Get('period')
@@ -21,7 +22,13 @@ export class ReportsController {
     @Request() req: { user: { userId: string } },
     @Query('from') from: string,
     @Query('to') to: string,
+    @Query('store_id') storeId?: string,
   ) {
-    return this.reportsService.getPeriodReport(req.user.userId, from, to);
+    return this.reportsService.getPeriodReport(
+      req.user.userId,
+      from,
+      to,
+      storeId,
+    );
   }
 }

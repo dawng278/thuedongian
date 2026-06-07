@@ -16,16 +16,27 @@ const EXEMPT_THRESHOLD = 100_000_000;
 export class TaxService {
   constructor(private prisma: PrismaService) {}
 
-  private async getStore(userId: string) {
-    const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
+  private async getStore(userId: string, storeId?: string) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        owner_id: userId,
+        ...(storeId ? { id: storeId } : {}),
+      },
+      orderBy: { created_at: 'asc' },
+    });
     if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
     return store;
   }
 
-  async estimate(userId: string, period?: string) {
-    const store = await this.getStore(userId);
-    const businessType = (store as Record<string, unknown>)['business_type'] as string | undefined;
-    const rateKey = businessType && businessType in TAX_RATES ? businessType : 'food_beverage';
+  async estimate(userId: string, period?: string, storeId?: string) {
+    const store = await this.getStore(userId, storeId);
+    const businessType = (store as Record<string, unknown>)['business_type'] as
+      | string
+      | undefined;
+    const rateKey =
+      businessType && businessType in TAX_RATES
+        ? businessType
+        : 'food_beverage';
     const rates = TAX_RATES[rateKey];
 
     const now = new Date();
@@ -40,7 +51,14 @@ export class TaxService {
       periodLabel = `Quý ${quarter + 1}/${now.getFullYear()}`;
     } else {
       periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      periodEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+      );
       periodLabel = `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`;
     }
 
@@ -52,15 +70,22 @@ export class TaxService {
       select: { total_amount: true },
     });
 
-    const periodRevenue = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
+    const periodRevenue = invoices.reduce(
+      (s, i) => s + Number(i.total_amount),
+      0,
+    );
 
     // Annualise to check threshold
     const monthsInPeriod = period === 'quarter' ? 3 : 1;
     const annualisedRevenue = (periodRevenue / monthsInPeriod) * 12;
     const belowThreshold = annualisedRevenue < EXEMPT_THRESHOLD;
 
-    const vatAmount = belowThreshold ? 0 : Math.round(periodRevenue * rates.vat);
-    const pitAmount = belowThreshold ? 0 : Math.round(periodRevenue * rates.pit);
+    const vatAmount = belowThreshold
+      ? 0
+      : Math.round(periodRevenue * rates.vat);
+    const pitAmount = belowThreshold
+      ? 0
+      : Math.round(periodRevenue * rates.pit);
     const totalTax = vatAmount + pitAmount;
 
     return {
@@ -79,15 +104,20 @@ export class TaxService {
       pit_amount: pitAmount,
       total_tax: totalTax,
       source: 'Thông tư 40/2021/TT-BTC',
-      disclaimer: 'Số liệu ước tính tham khảo — không thay thế tư vấn thuế chính thức.',
+      disclaimer:
+        'Số liệu ước tính tham khảo — không thay thế tư vấn thuế chính thức.',
     };
   }
 
   getDeadlines(now = new Date()) {
     const year = now.getFullYear();
-    const month = now.getMonth(); // 0-indexed
 
-    const upcoming: Array<{ label: string; deadline: string; daysLeft: number; urgent: boolean }> = [];
+    const upcoming: Array<{
+      label: string;
+      deadline: string;
+      daysLeft: number;
+      urgent: boolean;
+    }> = [];
 
     // Quarterly deadlines: 30th of month after quarter end
     const quarterDeadlines = [
@@ -101,7 +131,9 @@ export class TaxService {
       const deadlineYear = d.nextYear ? year + 1 : year;
       const deadline = new Date(deadlineYear, d.month, d.day, 23, 59, 59);
       if (deadline >= now) {
-        const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / 86400000);
+        const daysLeft = Math.ceil(
+          (deadline.getTime() - now.getTime()) / 86400000,
+        );
         upcoming.push({
           label: d.nextYear ? `${d.label} (${year})` : `${d.label} (${year})`,
           deadline: deadline.toISOString().substring(0, 10),

@@ -7,6 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/products_provider.dart';
 import 'providers/invoices_provider.dart';
 import 'providers/revenue_provider.dart';
+import 'providers/stores_provider.dart';
 import 'services/api_service.dart';
 import 'services/http_api_service.dart';
 import 'screens/auth/login_screen.dart';
@@ -20,12 +21,17 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  final api = HttpApiService(baseUrl: 'http://localhost:3000');
+  const apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:3000',
+  );
+  final api = HttpApiService(baseUrl: apiBaseUrl);
   runApp(
     MultiProvider(
       providers: [
         Provider<ApiService>.value(value: api),
         ChangeNotifierProvider(create: (_) => AuthProvider(api)),
+        ChangeNotifierProvider(create: (_) => StoresProvider(api)),
         ChangeNotifierProvider(create: (_) => ProductsProvider(api)),
         ChangeNotifierProvider(create: (_) => InvoicesProvider(api)),
         ChangeNotifierProvider(create: (_) => RevenueProvider(api)),

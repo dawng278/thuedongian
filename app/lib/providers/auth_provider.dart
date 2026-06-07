@@ -38,7 +38,11 @@ class AuthProvider extends ChangeNotifier {
     }
     (_api as HttpApiService).setToken(token);
     try {
-      _store = await _api.getMyStore();
+      try {
+        _store = await _api.getMyStore();
+      } catch (_) {
+        _store = null;
+      }
       _status = AuthStatus.authenticated;
     } catch (_) {
       await _clearTokens();
@@ -54,7 +58,11 @@ class AuthProvider extends ChangeNotifier {
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
       _user = res.user;
-      _store = await _api.getMyStore();
+      try {
+        _store = await _api.getMyStore();
+      } catch (_) {
+        _store = null;
+      }
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
@@ -65,14 +73,18 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String email, String password, String name, String storeName) async {
+  Future<bool> register(String email, String password, String name) async {
     _errorMessage = null;
     try {
       final res = await _api.register(email, password, name);
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
       _user = res.user;
-      _store = await _api.getMyStore();
+      try {
+        _store = await _api.getMyStore();
+      } catch (_) {
+        _store = null;
+      }
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;

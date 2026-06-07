@@ -14,6 +14,7 @@ class InvoicesProvider extends ChangeNotifier {
   final List<InvoiceDto> _invoices = [];
   bool _creating = false;
   int _pendingCount = 0;
+  String? _storeId;
 
   List<InvoiceDto> get invoices => _invoices;
   bool get creating => _creating;
@@ -21,18 +22,26 @@ class InvoicesProvider extends ChangeNotifier {
 
   InvoicesProvider(this._api) {
     _sync = SyncService(_api);
-    _refreshPendingCount();
+  }
+
+  Future<void> setStore(String storeId) async {
+    if (_storeId == storeId) return;
+    _storeId = storeId;
+    await _refreshPendingCount();
   }
 
   Future<void> _refreshPendingCount() async {
-    final pending = await LocalDb.getPendingInvoices();
+    final storeId = _storeId;
+    if (storeId == null) return;
+    final pending = await LocalDb.getPendingInvoices(storeId: storeId);
     _pendingCount = pending.length;
     notifyListeners();
   }
 
   /// Create invoice: always save to SQLite first, then try to sync.
   /// Returns localNumber, optional serverNumber, and the full InvoiceDto for QR display.
-  Future<({int localNumber, int? serverNumber, InvoiceDto invoice})> createInvoice(
+  Future<({int localNumber, int? serverNumber, InvoiceDto invoice})>
+      createInvoice(
     Map<String, int> cart,
     List<ProductDto> products, {
     String? note,
@@ -43,6 +52,10 @@ class InvoicesProvider extends ChangeNotifier {
     try {
       final now = DateTime.now();
       final invoiceId = _uuid.v4();
+      final storeId = _storeId;
+      if (storeId == null) {
+        throw StateError('Chưa chọn quán');
+      }
 
       final items = cart.entries.map((e) {
         final product = products.firstWhere((p) => p.id == e.key);
@@ -56,6 +69,7 @@ class InvoicesProvider extends ChangeNotifier {
 
       final dto = CreateInvoiceDto(
         id: invoiceId,
+        storeId: storeId,
         createdAt: now,
         note: note,
         items: items,
@@ -84,6 +98,7 @@ class InvoicesProvider extends ChangeNotifier {
 
       final invoiceDto = InvoiceDto(
         id: invoiceId,
+        storeId: storeId,
         invoiceNumber: serverNumber ?? local.localNumber,
         totalAmount: items.fold(0, (s, i) => s + i.price * i.quantity),
         note: note,
@@ -100,7 +115,11 @@ class InvoicesProvider extends ChangeNotifier {
             .toList(),
       );
 
-      return (localNumber: local.localNumber, serverNumber: serverNumber, invoice: invoiceDto);
+      return (
+        localNumber: local.localNumber,
+        serverNumber: serverNumber,
+        invoice: invoiceDto
+      );
     } finally {
       _creating = false;
       notifyListeners();
@@ -109,7 +128,9 @@ class InvoicesProvider extends ChangeNotifier {
 
   /// Sync all pending invoices (call when network comes back)
   Future<SyncResult> syncPending() async {
-    final result = await _sync.syncPending();
+    final storeId = _storeId;
+    if (storeId == null) return const SyncResult(synced: 0, errors: 1);
+    final result = await _sync.syncPending(storeId);
     await _refreshPendingCount();
     return result;
   }

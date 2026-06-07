@@ -25,14 +25,31 @@ class HttpApiService implements ApiService {
 
   @override
   Future<AuthResponseDto> login(String email, String password) async {
-    final res = await _dio.post('/auth/login', data: {'email': email, 'password': password});
+    final res = await _dio
+        .post('/auth/login', data: {'email': email, 'password': password});
     return AuthResponseDto.fromJson(res.data as Map<String, dynamic>);
   }
 
   @override
-  Future<AuthResponseDto> register(String email, String password, String name) async {
-    final res = await _dio.post('/auth/register', data: {'email': email, 'password': password, 'name': name});
+  Future<AuthResponseDto> register(
+      String email, String password, String name) async {
+    final res = await _dio.post('/auth/register',
+        data: {'email': email, 'password': password, 'name': name});
     return AuthResponseDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<StoreDto>> getStores() async {
+    final res = await _dio.get('/stores');
+    return (res.data as List)
+        .map((e) => StoreDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<StoreDto> createStore(Map<String, dynamic> data) async {
+    final res = await _dio.post('/stores', data: data);
+    return StoreDto.fromJson(res.data as Map<String, dynamic>);
   }
 
   @override
@@ -48,20 +65,26 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<List<ProductDto>> getProducts({bool includeInactive = false}) async {
+  Future<List<ProductDto>> getProducts(
+      {bool includeInactive = false, String? storeId}) async {
     final res = await _dio.get('/products', queryParameters: {
       if (includeInactive) 'include_inactive': 'true',
+      if (storeId != null) 'store_id': storeId,
     });
-    return (res.data as List).map((e) => ProductDto.fromJson(e as Map<String, dynamic>)).toList();
+    return (res.data as List)
+        .map((e) => ProductDto.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<ProductDto> createProduct(String name, int price, {String? unit, String? category}) async {
+  Future<ProductDto> createProduct(String name, int price,
+      {String? unit, String? category, String? storeId}) async {
     final res = await _dio.post('/products', data: {
       'name': name,
       'price': price,
       if (unit != null) 'unit': unit,
       if (category != null) 'category': category,
+      if (storeId != null) 'store_id': storeId,
     });
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
   }
@@ -84,15 +107,23 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<List<InvoiceDto>> getInvoices({DateTime? from, DateTime? to, int page = 1, int limit = 20}) async {
+  Future<List<InvoiceDto>> getInvoices(
+      {DateTime? from,
+      DateTime? to,
+      int page = 1,
+      int limit = 20,
+      String? storeId}) async {
     final res = await _dio.get('/invoices', queryParameters: {
       if (from != null) 'from': from.toIso8601String().substring(0, 10),
       if (to != null) 'to': to.toIso8601String().substring(0, 10),
+      if (storeId != null) 'store_id': storeId,
       'page': page,
       'limit': limit,
     });
     final data = res.data as Map<String, dynamic>;
-    return (data['data'] as List).map((e) => InvoiceDto.fromJson(e as Map<String, dynamic>)).toList();
+    return (data['data'] as List)
+        .map((e) => InvoiceDto.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -102,7 +133,8 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> syncInvoices(List<CreateInvoiceDto> invoices) async {
+  Future<Map<String, dynamic>> syncInvoices(
+      List<CreateInvoiceDto> invoices) async {
     final res = await _dio.post('/sync/invoices', data: {
       'invoices': invoices.map((i) => i.toJson()).toList(),
     });
@@ -110,17 +142,34 @@ class HttpApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> getRevenue({DateTime? from, DateTime? to}) async {
+  Future<Map<String, dynamic>> getRevenue(
+      {DateTime? from, DateTime? to, String? storeId}) async {
     final res = await _dio.get('/reports/revenue', queryParameters: {
       if (from != null) 'from': from.toIso8601String().substring(0, 10),
       if (to != null) 'to': to.toIso8601String().substring(0, 10),
+      if (storeId != null) 'store_id': storeId,
     });
     return res.data as Map<String, dynamic>;
   }
 
   @override
-  Future<Map<String, dynamic>> getTaxEstimate({String period = 'month'}) async {
-    final res = await _dio.get('/tax/estimate', queryParameters: {'period': period});
+  Future<Map<String, dynamic>> getPeriodReport(
+      {required DateTime from, required DateTime to, String? storeId}) async {
+    final res = await _dio.get('/reports/period', queryParameters: {
+      'from': from.toIso8601String().substring(0, 10),
+      'to': to.toIso8601String().substring(0, 10),
+      if (storeId != null) 'store_id': storeId,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaxEstimate(
+      {String period = 'month', String? storeId}) async {
+    final res = await _dio.get('/tax/estimate', queryParameters: {
+      'period': period,
+      if (storeId != null) 'store_id': storeId,
+    });
     return res.data as Map<String, dynamic>;
   }
 

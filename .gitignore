@@ -1,7 +1,7 @@
 # Task plan & docs nội bộ (không đẩy lên repo)
 .docx/
-docs/design/
 CLAUDE.md
+.claude/settings.local.json
 
 # OS
 .DS_Store
@@ -10,6 +10,7 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+*.iml
 *.swp
 *.swo
 

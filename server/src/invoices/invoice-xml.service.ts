@@ -31,22 +31,25 @@ export class InvoiceXmlService {
   buildXml(data: InvoiceXmlData): string {
     // Validate mandatory fields per TT 78/2021
     if (!data.storeName) {
-      throw new UnprocessableEntityException('Thiếu tên cửa hàng — không thể xuất XML');
+      throw new UnprocessableEntityException(
+        'Thiếu tên cửa hàng — không thể xuất XML',
+      );
     }
     if (!data.storeTaxId) {
-      throw new UnprocessableEntityException('Thiếu MST cửa hàng — không thể xuất XML');
+      throw new UnprocessableEntityException(
+        'Thiếu MST cửa hàng — không thể xuất XML',
+      );
     }
 
     const vatBase = Math.round(data.totalAmount / (1 + this.VAT_RATE));
     const vatAmount = data.totalAmount - vatBase;
     const ngayLap = data.createdAt.toISOString().substring(0, 10);
 
-    const root = create({ version: '1.0', encoding: 'UTF-8' })
-      .ele('HDon', {
-        xmlns: 'http://hoadon.gdt.gov.vn/schema/2.0',
-        'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        version: '2.0',
-      });
+    const root = create({ version: '1.0', encoding: 'UTF-8' }).ele('HDon', {
+      xmlns: 'http://hoadon.gdt.gov.vn/schema/2.0',
+      'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+      version: '2.0',
+    });
 
     // ── Invoice header ──
     const dLHDon = root.ele('DLHDon');

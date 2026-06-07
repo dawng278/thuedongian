@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đăng nhập - TaxEasy 2026</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container-highest": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#656d84",
+                        "on-secondary-container": "#004d6a",
+                        "surface-tint": "#0053db",
+                        "on-background": "#0b1c30",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-primary-fixed": "#00174b",
+                        "on-secondary-fixed": "#001e2c",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "primary": "#004ac6",
+                        "secondary": "#00668a",
+                        "inverse-surface": "#213145",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-container": "#40c2fd",
+                        "surface": "#f8f9ff",
+                        "background": "#f8f9ff",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed": "#131b2e",
+                        "inverse-primary": "#b4c5ff",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed": "#dae2fd",
+                        "outline": "#737686",
+                        "on-tertiary-container": "#eef0ff",
+                        "on-surface": "#0b1c30",
+                        "tertiary": "#4d556b",
+                        "on-surface-variant": "#434655",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#2563eb",
+                        "on-primary-container": "#eeefff",
+                        "surface-container": "#e5eeff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#004c69"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "data-tabular": ["Roboto Flex"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.75) 0%, rgba(56, 189, 248, 0.75) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased h-screen w-screen overflow-hidden flex flex-col md:flex-row">
+<!-- Visual Hero Section (Mobile: Top 38%, Desktop: Left 50%) -->
+<div class="relative w-full h-[335px] md:h-full md:w-1/2 flex-shrink-0">
+<!-- Background Image -->
+<img alt="Retail counter background" class="absolute inset-0 w-full h-full object-cover" data-alt="A bright, modern retail coffee shop counter scene during daytime. The environment is well-lit with natural sunlight, showcasing a clean, professional small business setting. The overall aesthetic aligns with a high-key, crisp corporate light-mode style, featuring subtle blue accents that match a refined financial tool's branding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLpXG5Y2AwIcOZhuK_mjhmx5avX-xt3kRQbRDRZ-42tj9tgaRrPfJvx0tla6bziTRhLUhgIccQZjf9kOHNa_sbNwsUZfd2hsf5Y2BfNAnB4G-vkzxbAIKVDX_FIdzKk2Co_PDgOAMayDLzT6EtQIN3ZwflW-0zf4ZlU_JU1wmhvXVamx4iFPkNR7GK4VmOUyirh_s3CP4nPka143zmV-_FuyFgUnKuUNGJvhdCKCgLCHNccPHk4i8CXRtwYaxJbE_gDzW8oEKyqZ8"/>
+<!-- Gradient Overlay -->
+<div class="absolute inset-0 hero-gradient"></div>
+<!-- Logo/Branding -->
+<div class="absolute inset-0 flex flex-col items-center justify-center p-lg">
+<div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-lg mb-md">
+<span class="material-symbols-outlined text-white text-[40px] fill" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white text-center drop-shadow-sm">
+                TaxEasy 2026
+            </h1>
+</div>
+</div>
+<!-- Form Section (Mobile: Bottom 62%, Desktop: Right 50%) -->
+<div class="relative w-full h-[548px] md:h-full md:w-1/2 bg-surface-container-lowest flex-grow flex flex-col pt-xl px-margin-mobile md:px-margin-desktop md:justify-center rounded-t-[32px] md:rounded-none md:rounded-l-[32px] -mt-6 md:mt-0 z-10 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] md:shadow-[-8px_0_24px_rgba(0,0,0,0.05)] overflow-y-auto">
+<!-- Mobile drag handle -->
+<div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-lg md:hidden"></div>
+<div class="max-w-md w-full mx-auto pb-lg">
+<!-- Header -->
+<div class="mb-xl text-center md:text-left">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-sm">
+                    Đăng nhập
+                </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Tiếp tục quản lý các quán của bạn
+                </p>
+</div>
+<!-- Form -->
+<form class="space-y-md" onsubmit="event.preventDefault();">
+<!-- Email Input -->
+<div class="space-y-sm">
+<label class="font-body-sm text-body-sm text-on-surface-variant block" for="email">Email</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full h-12 pl-12 pr-md bg-surface border border-outline-variant rounded-[16px] font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-fixed-dim transition-all outline-none" id="email" placeholder="Nhập địa chỉ email" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-sm">
+<div class="flex justify-between items-center">
+<label class="font-body-sm text-body-sm text-on-surface-variant block" for="password">Mật khẩu</label>
+<a class="font-body-sm text-body-sm text-primary hover:text-on-primary-fixed-variant transition-colors" href="#">Quên mật khẩu?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full h-12 pl-12 pr-12 bg-surface border border-outline-variant rounded-[16px] font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-fixed-dim transition-all outline-none" id="password" placeholder="Nhập mật khẩu" type="password"/>
+<button class="absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="visibility-icon">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Remember Me (Optional addition for better UX) -->
+<div class="flex items-center pt-xs">
+<input class="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary focus:ring-offset-surface-container-lowest bg-surface" id="remember" type="checkbox"/>
+<label class="ml-2 font-body-sm text-body-sm text-on-surface-variant" for="remember">Ghi nhớ đăng nhập</label>
+</div>
+<!-- Submit Button -->
+<button class="w-full h-12 mt-xl bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-title-md text-title-md rounded-[16px] transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-sm" type="submit">
+                    Đăng nhập
+                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</form>
+<!-- Sign Up Link -->
+<div class="mt-xl text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                    Chưa có tài khoản?
+                    <a class="font-title-md text-body-lg text-primary hover:text-on-primary-fixed-variant transition-colors ml-1" href="#">Đăng ký ngay</a>
+</p>
+</div>
+</div>
+</div>
+<script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const visibilityIcon = document.getElementById('visibility-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                visibilityIcon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                visibilityIcon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body></html>

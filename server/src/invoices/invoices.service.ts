@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceXmlService } from './invoice-xml.service';
@@ -10,30 +14,43 @@ export class InvoicesService {
     private xmlService: InvoiceXmlService,
   ) {}
 
-  private async getStoreId(userId: string): Promise<string> {
-    const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
+  private async resolveStore(userId: string, storeId?: string) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        owner_id: userId,
+        ...(storeId ? { id: storeId } : {}),
+      },
+      orderBy: { created_at: 'asc' },
+    });
     if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-    return store.id;
+    return store;
   }
 
   async create(userId: string, dto: CreateInvoiceDto) {
-    const storeId = await this.getStoreId(userId);
+    const store = await this.resolveStore(userId, dto.store_id);
 
     // Check for duplicate client UUID
-    const existing = await this.prisma.invoice.findUnique({ where: { id: dto.id } });
+    const existing = await this.prisma.invoice.findUnique({
+      where: { id: dto.id },
+    });
     if (existing) throw new ConflictException('Hóa đơn đã tồn tại');
 
     // Sequential invoice number per store
-    const count = await this.prisma.invoice.count({ where: { store_id: storeId } });
+    const count = await this.prisma.invoice.count({
+      where: { store_id: store.id },
+    });
     const invoiceNumber = count + 1;
 
-    const totalAmount = dto.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalAmount = dto.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
     const createdAt = dto.created_at ? new Date(dto.created_at) : new Date();
 
     return this.prisma.invoice.create({
       data: {
         id: dto.id,
-        store_id: storeId,
+        store_id: store.id,
         invoice_number: invoiceNumber,
         total_amount: totalAmount,
         note: dto.note ?? null,
@@ -53,11 +70,18 @@ export class InvoicesService {
     });
   }
 
-  async findAll(userId: string, from?: string, to?: string, page = 1, limit = 20) {
-    const storeId = await this.getStoreId(userId);
+  async findAll(
+    userId: string,
+    from?: string,
+    to?: string,
+    page = 1,
+    limit = 20,
+    requestedStoreId?: string,
+  ) {
+    const store = await this.resolveStore(userId, requestedStoreId);
 
     const where = {
-      store_id: storeId,
+      store_id: store.id,
       ...(from || to
         ? {
             created_at: {
@@ -83,36 +107,32 @@ export class InvoicesService {
   }
 
   async findOne(userId: string, id: string) {
-    const storeId = await this.getStoreId(userId);
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
-      include: { items: true },
+      include: { items: true, store: true },
     });
-    if (!invoice || invoice.store_id !== storeId) {
+    if (!invoice || invoice.store.owner_id !== userId) {
       throw new NotFoundException('Không tìm thấy hóa đơn');
     }
     return invoice;
   }
 
   async exportXml(userId: string, id: string): Promise<string> {
-    const store = await this.prisma.store.findFirst({ where: { owner_id: userId } });
-    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
-      include: { items: true },
+      include: { items: true, store: true },
     });
-    if (!invoice || invoice.store_id !== store.id) {
+    if (!invoice || invoice.store.owner_id !== userId) {
       throw new NotFoundException('Không tìm thấy hóa đơn');
     }
 
     return this.xmlService.buildXml({
       invoiceNumber: invoice.invoice_number,
-      storeId: store.id,
-      storeName: store.name,
-      storeTaxId: store.tax_id,
-      storeAddress: store.address,
-      storePhone: store.phone,
+      storeId: invoice.store.id,
+      storeName: invoice.store.name,
+      storeTaxId: invoice.store.tax_id,
+      storeAddress: invoice.store.address,
+      storePhone: invoice.store.phone,
       createdAt: invoice.created_at,
       items: invoice.items.map((item) => ({
         productName: item.product_name,

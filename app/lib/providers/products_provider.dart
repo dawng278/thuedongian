@@ -9,6 +9,7 @@ class ProductsProvider extends ChangeNotifier {
   List<ProductDto> _products = [];
   bool _loading = false;
   String? _error;
+  String? _storeId;
 
   List<ProductDto> get products => _products;
   bool get loading => _loading;
@@ -16,10 +17,19 @@ class ProductsProvider extends ChangeNotifier {
 
   ProductsProvider(this._api);
 
+  Future<void> setStore(String storeId) async {
+    if (_storeId == storeId && _products.isNotEmpty) return;
+    _storeId = storeId;
+    _products = [];
+    await loadProducts();
+  }
+
   Future<void> loadProducts() async {
+    final storeId = _storeId;
+    if (storeId == null) return;
     // Load from cache first for instant display
     try {
-      final cached = await LocalDb.getActiveProducts();
+      final cached = await LocalDb.getActiveProducts(storeId: storeId);
       if (cached.isNotEmpty) {
         _products = cached;
         notifyListeners();
@@ -32,7 +42,7 @@ class ProductsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final fresh = await _api.getProducts();
+      final fresh = await _api.getProducts(storeId: storeId);
       _products = fresh;
       await LocalDb.upsertProducts(fresh);
     } catch (e) {
@@ -45,8 +55,12 @@ class ProductsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createProduct(String name, int price, {String? unit, String? category}) async {
-    final p = await _api.createProduct(name, price, unit: unit, category: category);
+  Future<void> createProduct(String name, int price,
+      {String? unit, String? category}) async {
+    final storeId = _storeId;
+    if (storeId == null) throw StateError('Chưa chọn quán');
+    final p = await _api.createProduct(name, price,
+        unit: unit, category: category, storeId: storeId);
     _products = [..._products, p];
     await LocalDb.upsertProducts([p]);
     notifyListeners();

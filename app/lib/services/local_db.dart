@@ -8,6 +8,7 @@ enum InvoiceStatus { pending, synced }
 
 class LocalInvoice {
   final String id;
+  final String storeId;
   final int localNumber;
   final int totalAmount;
   final String? note;
@@ -18,6 +19,7 @@ class LocalInvoice {
 
   const LocalInvoice({
     required this.id,
+    required this.storeId,
     required this.localNumber,
     required this.totalAmount,
     this.note,
@@ -40,7 +42,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'taxeasy.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -64,6 +66,7 @@ class LocalDb {
     await db.execute('''
       CREATE TABLE invoices (
         id TEXT PRIMARY KEY,
+        store_id TEXT NOT NULL,
         local_number INTEGER NOT NULL,
         total_amount INTEGER NOT NULL,
         note TEXT,
@@ -82,11 +85,13 @@ class LocalDb {
     await db.insert('invoice_counter', {'id': 1, 'counter': 0});
   }
 
-  static Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _upgrade(
+      Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS invoices (
-          id TEXT PRIMARY KEY,
+        id TEXT PRIMARY KEY,
+          store_id TEXT NOT NULL DEFAULT '',
           local_number INTEGER NOT NULL,
           total_amount INTEGER NOT NULL,
           note TEXT,
@@ -106,6 +111,11 @@ class LocalDb {
       if (rows.isEmpty) {
         await db.insert('invoice_counter', {'id': 1, 'counter': 0});
       }
+    }
+    if (oldVersion >= 2 && oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE invoices ADD COLUMN store_id TEXT NOT NULL DEFAULT ''",
+      );
     }
   }
 
@@ -135,11 +145,13 @@ class LocalDb {
     await batch.commit(noResult: true);
   }
 
-  static Future<List<ProductDto>> getActiveProducts() async {
+  static Future<List<ProductDto>> getActiveProducts({String? storeId}) async {
     final database = await db;
     final rows = await database.query(
       'products',
-      where: 'is_active = 1',
+      where:
+          storeId == null ? 'is_active = 1' : 'is_active = 1 AND store_id = ?',
+      whereArgs: storeId == null ? null : [storeId],
       orderBy: 'name ASC',
     );
     return rows.map(_rowToProduct).toList();
@@ -175,11 +187,13 @@ class LocalDb {
   static Future<LocalInvoice> insertPendingInvoice(CreateInvoiceDto dto) async {
     final database = await db;
     final localNumber = await _nextLocalNumber(database);
-    final totalAmount = dto.items.fold(0, (sum, i) => sum + i.price * i.quantity);
+    final totalAmount =
+        dto.items.fold(0, (sum, i) => sum + i.price * i.quantity);
     final itemsJson = jsonEncode(dto.items.map((i) => i.toJson()).toList());
 
     await database.insert('invoices', {
       'id': dto.id,
+      'store_id': dto.storeId,
       'local_number': localNumber,
       'total_amount': totalAmount,
       'note': dto.note,
@@ -190,6 +204,7 @@ class LocalDb {
 
     return LocalInvoice(
       id: dto.id,
+      storeId: dto.storeId,
       localNumber: localNumber,
       totalAmount: totalAmount,
       note: dto.note,
@@ -199,12 +214,13 @@ class LocalDb {
     );
   }
 
-  static Future<List<LocalInvoice>> getPendingInvoices() async {
+  static Future<List<LocalInvoice>> getPendingInvoices(
+      {String? storeId}) async {
     final database = await db;
     final rows = await database.query(
       'invoices',
-      where: 'status = ?',
-      whereArgs: ['pending'],
+      where: storeId == null ? 'status = ?' : 'status = ? AND store_id = ?',
+      whereArgs: storeId == null ? ['pending'] : ['pending', storeId],
       orderBy: 'local_number ASC',
     );
     return rows.map(_rowToLocalInvoice).toList();
@@ -222,20 +238,25 @@ class LocalDb {
 
   static LocalInvoice _rowToLocalInvoice(Map<String, dynamic> row) {
     final itemsRaw = jsonDecode(row['items_json'] as String) as List;
-    final items = itemsRaw.map((e) => CreateInvoiceItemInput(
-      productId: e['product_id'] as String?,
-      productName: e['product_name'] as String,
-      price: (e['price'] as num).toInt(),
-      quantity: (e['quantity'] as num).toInt(),
-    )).toList();
+    final items = itemsRaw
+        .map((e) => CreateInvoiceItemInput(
+              productId: e['product_id'] as String?,
+              productName: e['product_name'] as String,
+              price: (e['price'] as num).toInt(),
+              quantity: (e['quantity'] as num).toInt(),
+            ))
+        .toList();
 
     return LocalInvoice(
       id: row['id'] as String,
+      storeId: row['store_id'] as String? ?? '',
       localNumber: row['local_number'] as int,
       totalAmount: row['total_amount'] as int,
       note: row['note'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
-      status: row['status'] == 'pending' ? InvoiceStatus.pending : InvoiceStatus.synced,
+      status: row['status'] == 'pending'
+          ? InvoiceStatus.pending
+          : InvoiceStatus.synced,
       serverInvoiceNumber: row['server_invoice_number'] as int?,
       items: items,
     );

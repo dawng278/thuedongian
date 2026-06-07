@@ -11,8 +11,9 @@ export class TaxController {
   estimate(
     @Request() req: { user: { userId: string } },
     @Query('period') period?: string,
+    @Query('store_id') storeId?: string,
   ) {
-    return this.taxService.estimate(req.user.userId, period);
+    return this.taxService.estimate(req.user.userId, period, storeId);
   }
 
   @Get('deadlines')

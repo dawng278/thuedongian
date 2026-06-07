@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../providers/stores_provider.dart';
 import '../../models/invoice.dart';
 import '../../services/api_service.dart';
 import '../sale/invoice_qr_screen.dart';
@@ -30,6 +33,7 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
 
   DateTime? _fromDate;
   DateTime? _toDate;
+  String? _storeId;
 
   @override
   void initState() {
@@ -42,11 +46,14 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     setState(() => _loading = true);
     try {
       final api = context.read<ApiService>();
+      final storeId = _storeId;
+      if (storeId == null) return;
       final result = await api.getInvoices(
         from: _fromDate,
         to: _toDate,
         page: _page,
         limit: _limit,
+        storeId: storeId,
       );
       setState(() {
         _invoices.addAll(result);
@@ -102,24 +109,130 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     _refresh();
   }
 
-  Future<void> _exportCsv() async {
-    final sb = StringBuffer();
-    sb.writeln('Số HĐ,Ngày,Tổng tiền,Ghi chú,Các mặt hàng');
-    for (final inv in _invoices) {
-      final items = (inv.items ?? [])
-          .map((i) => '${i.productName}x${i.quantity}')
-          .join(';');
-      final note = inv.note?.replaceAll(',', ' ') ?? '';
-      sb.writeln(
-          '${inv.invoiceNumber ?? '?'},${_dateFmtShort.format(inv.createdAt)},${inv.totalAmount},$note,"$items"');
-    }
+  DateTimeRange _reportRange() {
+    final now = DateTime.now();
+    return DateTimeRange(
+      start: _fromDate ?? DateTime(now.year, now.month, 1),
+      end: _toDate ?? now,
+    );
+  }
+
+  String _slug(String input) {
+    final cleaned = input
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    return cleaned.isEmpty ? 'store' : cleaned;
+  }
+
+  String _businessTypeLabel(String? value) {
+    return switch (value) {
+      'goods' => 'Hang hoa',
+      'services' => 'Dich vu',
+      _ => 'An uong',
+    };
+  }
+
+  Future<void> _showReportSheet() async {
+    var format = 'pdf';
+    var range = _reportRange();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC3C6D7),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Xuất báo cáo kỳ',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2025),
+                        lastDate: DateTime.now(),
+                        initialDateRange: range,
+                      );
+                      if (picked != null) setSheetState(() => range = picked);
+                    },
+                    icon: const Icon(Icons.date_range),
+                    label: Text(
+                      '${_dateFmtShort.format(range.start)} - ${_dateFmtShort.format(range.end)}',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'pdf', label: Text('PDF')),
+                      ButtonSegment(value: 'csv', label: Text('CSV')),
+                    ],
+                    selected: {format},
+                    onSelectionChanged: (value) =>
+                        setSheetState(() => format = value.first),
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      _exportPeriodReport(range, format);
+                    },
+                    icon: const Icon(Icons.ios_share_outlined),
+                    label: Text(format == 'pdf' ? 'Tạo PDF' : 'Tạo CSV'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _exportPeriodReport(DateTimeRange range, String format) async {
+    final storeId = _storeId;
+    if (storeId == null) return;
     try {
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/taxeasy_invoices.csv');
-      await file.writeAsString(sb.toString(), flush: true);
+      final report = await context.read<ApiService>().getPeriodReport(
+            from: range.start,
+            to: range.end,
+            storeId: storeId,
+          );
+      final file = format == 'pdf'
+          ? await _writePdfReport(report, range)
+          : await _writeCsvReport(report, range);
       await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'text/csv')],
-        subject: 'Lịch sử hóa đơn TaxEasy',
+        [
+          XFile(
+            file.path,
+            mimeType: format == 'pdf' ? 'application/pdf' : 'text/csv',
+          ),
+        ],
+        subject: format == 'pdf'
+            ? 'Báo cáo PDF ThueDonGian'
+            : 'Báo cáo CSV ThueDonGian',
       );
     } catch (e) {
       if (mounted) {
@@ -132,10 +245,210 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     }
   }
 
+  Future<File> _writeCsvReport(
+    Map<String, dynamic> report,
+    DateTimeRange range,
+  ) async {
+    final sb = StringBuffer();
+    final store = (report['store'] as Map?)?.cast<String, dynamic>() ?? {};
+    final invoices = (report['invoices'] as List? ?? []);
+    sb.writeln('ThueDonGian Report');
+    sb.writeln('Store,${store['name'] ?? ''}');
+    sb.writeln('From,${_dateFmtShort.format(range.start)}');
+    sb.writeln('To,${_dateFmtShort.format(range.end)}');
+    sb.writeln('Total revenue,${report['total_revenue'] ?? 0}');
+    sb.writeln('Invoice count,${report['invoice_count'] ?? 0}');
+    sb.writeln('');
+    sb.writeln('Invoice No,Date,Total,Items');
+    for (final raw in invoices) {
+      final inv = raw as Map<String, dynamic>;
+      final items = (inv['items'] as List? ?? []).map((item) {
+        final map = item as Map<String, dynamic>;
+        return '${map['product_name']}x${map['quantity']}';
+      }).join(';');
+      sb.writeln(
+        '${inv['invoice_number'] ?? '?'},${inv['created_at'] ?? ''},${inv['total_amount'] ?? 0},"$items"',
+      );
+    }
+    final dir = await getTemporaryDirectory();
+    final file = File(
+      '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.csv',
+    );
+    await file.writeAsString(sb.toString(), flush: true);
+    return file;
+  }
+
+  Future<File> _writePdfReport(
+    Map<String, dynamic> report,
+    DateTimeRange range,
+  ) async {
+    final store = (report['store'] as Map?)?.cast<String, dynamic>() ?? {};
+    final tax = (report['tax_estimate'] as Map?)?.cast<String, dynamic>() ?? {};
+    final invoices = (report['invoices'] as List? ?? []);
+    final topProducts = (report['top_products'] as List? ?? []);
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          margin: const pw.EdgeInsets.all(32),
+          buildBackground: (_) => pw.Center(
+            child: pw.Transform.rotate(
+              angle: -0.52,
+              child: pw.Opacity(
+                opacity: 0.07,
+                child: pw.Text(
+                  'ThueDonGian',
+                  style: pw.TextStyle(
+                    fontSize: 64,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.blueGrey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        build: (_) => [
+          pw.Text(
+            'ThueDonGian',
+            style: pw.TextStyle(
+              fontSize: 24,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
+          pw.Container(
+              height: 2,
+              color: PdfColors.blue600,
+              margin: const pw.EdgeInsets.symmetric(vertical: 10)),
+          pw.Text(
+            'Bao cao doanh thu & thue uoc tinh',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Text('Store: ${store['name'] ?? ''}'),
+          pw.Text(
+              'Business type: ${_businessTypeLabel(store['business_type'] as String?)}'),
+          pw.Text('Tax ID: ${store['tax_id'] ?? '-'}'),
+          pw.Text('Address: ${store['address'] ?? '-'}'),
+          pw.Text('Phone: ${store['phone'] ?? '-'}'),
+          pw.Text(
+              'Period: ${_dateFmtShort.format(range.start)} - ${_dateFmtShort.format(range.end)}'),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            children: [
+              _pdfRow('Total revenue',
+                  '${_currencyFmt.format((report['total_revenue'] as num?)?.toInt() ?? 0)} VND'),
+              _pdfRow('Invoice count', '${report['invoice_count'] ?? 0}'),
+              _pdfRow('Estimated tax',
+                  '${_currencyFmt.format((tax['total_tax'] as num?)?.toInt() ?? 0)} VND'),
+            ],
+          ),
+          pw.SizedBox(height: 18),
+          if (topProducts.isNotEmpty) ...[
+            pw.Text('Top products',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 8),
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300),
+              columnWidths: const {
+                0: pw.FixedColumnWidth(36),
+                1: pw.FlexColumnWidth(),
+                2: pw.FixedColumnWidth(64),
+                3: pw.FixedColumnWidth(92),
+              },
+              children: [
+                _pdfHeaderRow(['#', 'Product', 'Qty', 'Revenue']),
+                ...topProducts.take(10).toList().asMap().entries.map((entry) {
+                  final item = entry.value as Map<String, dynamic>;
+                  return _pdfCells([
+                    '${entry.key + 1}',
+                    '${item['product_name'] ?? ''}',
+                    '${item['total_quantity'] ?? 0}',
+                    _currencyFmt.format(
+                      (item['total_revenue'] as num?)?.toInt() ?? 0,
+                    ),
+                  ]);
+                }),
+              ],
+            ),
+            pw.SizedBox(height: 18),
+          ],
+          pw.Text('Invoices',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FixedColumnWidth(52),
+              1: pw.FlexColumnWidth(),
+              2: pw.FixedColumnWidth(92),
+            },
+            children: [
+              _pdfHeaderRow(['No', 'Date', 'Total']),
+              ...invoices.take(80).map((raw) {
+                final inv = raw as Map<String, dynamic>;
+                return _pdfCells([
+                  '#${inv['invoice_number'] ?? '?'}',
+                  '${inv['created_at'] ?? ''}',
+                  _currencyFmt.format(
+                    (inv['total_amount'] as num?)?.toInt() ?? 0,
+                  ),
+                ]);
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final dir = await getTemporaryDirectory();
+    final file = File(
+      '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.pdf',
+    );
+    await file.writeAsBytes(await doc.save(), flush: true);
+    return file;
+  }
+
+  pw.TableRow _pdfRow(String label, String value) => _pdfCells([label, value]);
+
+  pw.TableRow _pdfHeaderRow(List<String> values) => pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.blue50),
+        children: values
+            .map(
+              (value) => pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(
+                  value,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            )
+            .toList(),
+      );
+
+  pw.TableRow _pdfCells(List<String> values) => pw.TableRow(
+        children: values
+            .map(
+              (value) => pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(value),
+              ),
+            )
+            .toList(),
+      );
+
   @override
   Widget build(BuildContext context) {
     final hasFilter = _fromDate != null || _toDate != null;
     final cs = Theme.of(context).colorScheme;
+    final storeId = context.watch<StoresProvider>().currentStore?.id;
+    if (storeId != null && storeId != _storeId) {
+      _storeId = storeId;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    }
 
     return Column(
       children: [
@@ -195,32 +508,24 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: _invoices.isEmpty ? null : _exportCsv,
+                onTap: _showReportSheet,
                 child: Container(
                   height: 40,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: _invoices.isEmpty
-                        ? const Color(0xFFEFF4FF)
-                        : cs.primary,
+                    color: cs.primary,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Icon(Icons.download,
-                          size: 16,
-                          color: _invoices.isEmpty
-                              ? cs.onSurfaceVariant
-                              : Colors.white),
-                      const SizedBox(width: 4),
+                      Icon(Icons.download, size: 16, color: Colors.white),
+                      SizedBox(width: 4),
                       Text(
-                        'XUẤT CSV',
+                        'XUẤT BC',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: _invoices.isEmpty
-                              ? cs.onSurfaceVariant
-                              : Colors.white,
+                          color: Colors.white,
                           letterSpacing: 0.5,
                         ),
                       ),

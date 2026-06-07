@@ -59,6 +59,7 @@ class RevenueProvider extends ChangeNotifier {
   RevenueData? _data;
   bool _loading = false;
   String? _error;
+  String? _storeId;
 
   RevenueData? get data => _data;
   bool get loading => _loading;
@@ -66,12 +67,20 @@ class RevenueProvider extends ChangeNotifier {
 
   RevenueProvider(this._api);
 
+  Future<void> setStore(String storeId) async {
+    if (_storeId == storeId && _data != null) return;
+    _storeId = storeId;
+    await load();
+  }
+
   Future<void> load({DateTime? from, DateTime? to}) async {
+    final storeId = _storeId;
+    if (storeId == null) return;
     _loading = true;
     _error = null;
     notifyListeners();
     try {
-      final json = await _api.getRevenue(from: from, to: to);
+      final json = await _api.getRevenue(from: from, to: to, storeId: storeId);
       _data = RevenueData.fromJson(json);
     } catch (e) {
       _error = e.toString();

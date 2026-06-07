@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Xuất báo cáo kỳ - TaxEasy 2026</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Roboto+Flex:opsz,wght@8..144,400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-container": "#40c2fd",
+                        "on-secondary-fixed": "#001e2c",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-container": "#004d6a",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary-fixed": "#131b2e",
+                        "tertiary-fixed": "#dae2fd",
+                        "secondary": "#00668a",
+                        "on-tertiary-container": "#eef0ff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "primary": "#004ac6",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#00174b",
+                        "tertiary": "#4d556b",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "surface-tint": "#0053db",
+                        "tertiary-container": "#656d84",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "on-surface-variant": "#434655",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#e5eeff",
+                        "primary-container": "#2563eb",
+                        "secondary-fixed": "#c4e7ff",
+                        "outline-variant": "#c3c6d7",
+                        "outline": "#737686",
+                        "inverse-surface": "#213145",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b4c5ff",
+                        "on-surface": "#0b1c30",
+                        "background": "#f8f9ff",
+                        "on-primary-container": "#eeefff",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "data-tabular": ["Roboto Flex"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "data-tabular": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Custom 20dp radius helper */
+        .rounded-card { border-radius: 20px; }
+
+        /* Ambient shadow for clean white-first look */
+        .ambient-shadow {
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.03), 0px 1px 2px rgba(0, 0, 0, 0.02);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg antialiased min-h-screen flex flex-col md:flex-row">
+<!-- Desktop Navigation Drawer -->
+<nav class="hidden md:flex flex-col h-full w-72 fixed left-0 top-0 bg-surface-bright shadow-lg z-40">
+<div class="px-lg py-xl flex items-center gap-md border-b border-outline-variant/30">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-primary text-2xl">storefront</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface">Store Manager</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">TaxEasy Professional</p>
+</div>
+</div>
+<div class="flex-1 py-xl flex flex-col gap-sm overflow-y-auto">
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="font-title-md text-[16px]">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">receipt_long</span>
+<span class="font-title-md text-[16px]">Tax Returns</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md bg-primary-container text-on-primary-container rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined icon-fill">analytics</span>
+<span class="font-title-md text-[16px] font-semibold">Reports</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">group</span>
+<span class="font-title-md text-[16px]">Staff Management</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">verified_user</span>
+<span class="font-title-md text-[16px]">Compliance</span>
+</a>
+</div>
+<div class="p-lg">
+<p class="font-label-caps text-label-caps text-outline text-center">v2026.1</p>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 md:ml-72 flex flex-col min-h-screen">
+<!-- TopAppBar (Mobile & Desktop Header) -->
+<header class="flex items-center justify-between px-margin-mobile md:px-margin-desktop h-16 w-full bg-surface-container-lowest sticky top-0 z-30 border-b border-outline-variant/20">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center md:hidden">
+<span class="material-symbols-outlined text-[18px]">storefront</span>
+</div>
+<h1 class="font-title-md text-title-md text-on-surface md:hidden">TaxEasy 2026</h1>
+<h1 class="font-headline-lg text-[24px] font-bold text-on-surface hidden md:block">Xuất báo cáo kỳ</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">swap_horiz</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-margin-mobile md:p-margin-desktop pb-32 md:pb-margin-desktop max-w-4xl mx-auto w-full flex flex-col gap-xl">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface md:hidden mb-sm">Xuất báo cáo kỳ</h1>
+<!-- Section 1: Context Selection -->
+<section class="flex flex-col gap-lg">
+<!-- Store Selection -->
+<div class="flex flex-col gap-xs">
+<label class="font-body-sm text-body-sm text-on-surface-variant ml-sm">Cơ sở kinh doanh</label>
+<button class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-card p-md flex items-center justify-between hover:border-primary/50 transition-colors ambient-shadow">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-low text-primary flex items-center justify-center">
+<span class="material-symbols-outlined icon-fill text-[20px]">store</span>
+</div>
+<div class="text-left">
+<p class="font-title-md text-[16px] text-on-surface">Quán Phở Hà Nội</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">CN01 - Ba Đình</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</button>
+</div>
+<!-- Date Range Selection -->
+<div class="flex flex-col gap-md">
+<div class="flex items-center justify-between ml-sm">
+<label class="font-body-sm text-body-sm text-on-surface-variant">Khoảng thời gian</label>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
+</div>
+<input class="w-full pl-12 pr-md py-md bg-surface-container-lowest border border-outline-variant/40 rounded-[16px] font-data-tabular text-data-tabular text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all ambient-shadow" readonly="" type="text" value="01/10/2026"/>
+<span class="absolute top-[-10px] left-md bg-surface-container-lowest px-1 font-label-caps text-[10px] text-outline">TỪ NGÀY</span>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
+</div>
+<input class="w-full pl-12 pr-md py-md bg-surface-container-lowest border border-outline-variant/40 rounded-[16px] font-data-tabular text-data-tabular text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all ambient-shadow" readonly="" type="text" value="31/10/2026"/>
+<span class="absolute top-[-10px] left-md bg-surface-container-lowest px-1 font-label-caps text-[10px] text-outline">ĐẾN NGÀY</span>
+</div>
+</div>
+<!-- Quick Select Pills -->
+<div class="flex flex-wrap gap-sm">
+<button class="px-md py-sm rounded-full border border-outline-variant/40 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">Hôm nay</button>
+<button class="px-md py-sm rounded-full border border-outline-variant/40 font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low transition-colors">7 ngày</button>
+<button class="px-md py-sm rounded-full bg-secondary-container text-on-secondary-container font-title-md text-[14px] font-medium border border-transparent">Tháng này</button>
+</div>
+</div>
+</section>
+<!-- Section 2: Preview Card -->
+<section class="bg-surface-container-lowest rounded-card p-lg ambient-shadow border border-outline-variant/20 flex flex-col gap-lg relative overflow-hidden">
+<!-- Decorative subtle gradient blob -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">monitoring</span>
+<h3 class="font-title-md text-title-md text-on-surface">Tóm tắt dữ liệu</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Revenue -->
+<div class="flex flex-col gap-xs">
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+                            Tổng doanh thu
+                        </p>
+<p class="font-data-tabular text-[28px] font-semibold text-on-surface leading-tight">452.500.000<span class="text-[16px] text-outline ml-1 font-normal">đ</span></p>
+</div>
+<div class="flex gap-lg md:col-span-2">
+<!-- Invoice Count -->
+<div class="flex-1 flex flex-col gap-xs border-l border-outline-variant/30 pl-lg">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Số hóa đơn</p>
+<p class="font-data-tabular text-[20px] font-medium text-on-surface">1,248</p>
+</div>
+<!-- Estimated Tax -->
+<div class="flex-1 flex flex-col gap-xs border-l border-outline-variant/30 pl-lg">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Thuế ước tính (VAT)</p>
+<p class="font-data-tabular text-[20px] font-medium text-secondary">36.200.000<span class="text-[14px] ml-1">đ</span></p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Export Configuration -->
+<section class="flex flex-col gap-md">
+<label class="font-body-sm text-body-sm text-on-surface-variant ml-sm">Định dạng xuất</label>
+<div class="bg-surface-container-low p-1 rounded-[16px] flex w-full md:w-fit">
+<button class="flex-1 md:w-32 py-md rounded-[12px] bg-surface-container-lowest shadow-sm font-title-md text-[14px] text-primary flex items-center justify-center gap-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                        PDF
+                    </button>
+<button class="flex-1 md:w-32 py-md rounded-[12px] text-on-surface-variant font-title-md text-[14px] hover:bg-surface-container-high flex items-center justify-center gap-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">table</span>
+                        CSV
+                    </button>
+</div>
+</section>
+<!-- CTA -->
+<div class="mt-auto md:mt-lg pt-lg border-t border-outline-variant/20 flex justify-end">
+<button class="w-full md:w-auto bg-primary text-on-primary font-title-md text-[16px] px-xl py-4 rounded-[16px] hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-md shadow-md shadow-primary/20">
+<span class="material-symbols-outlined">send</span>
+                    Xuất &amp; chia sẻ
+                </button>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 bg-surface-container-lowest shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-4 pb-safe border-t border-outline-variant/10">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[24px]">point_of_sale</span>
+<span class="font-label-caps text-label-caps mt-1">Sales</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[24px]">inventory_2</span>
+<span class="font-label-caps text-label-caps mt-1">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined icon-fill text-[24px]">query_stats</span>
+<span class="font-label-caps text-label-caps mt-1 font-bold">Reports</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="font-label-caps text-label-caps mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

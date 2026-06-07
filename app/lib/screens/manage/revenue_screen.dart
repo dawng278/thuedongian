@@ -39,7 +39,8 @@ class _RevenueScreenState extends State<RevenueScreen> {
           children: [
             Icon(Icons.error_outline, size: 48, color: cs.error),
             const SizedBox(height: 12),
-            Text(provider.error ?? 'Lỗi tải dữ liệu', style: TextStyle(color: cs.onSurfaceVariant)),
+            Text(provider.error ?? 'Lỗi tải dữ liệu',
+                style: TextStyle(color: cs.onSurfaceVariant)),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () => provider.load(),
@@ -66,7 +67,10 @@ class _RevenueScreenState extends State<RevenueScreen> {
             children: [
               Text(
                 'Tổng quan kinh doanh',
-                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant, letterSpacing: 0.3),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                    letterSpacing: 0.3),
               ),
               const SizedBox(height: 4),
               Text(
@@ -120,7 +124,8 @@ class _RevenueScreenState extends State<RevenueScreen> {
             _SectionHeader(title: 'Doanh thu theo ngày', cs: cs),
             const SizedBox(height: 12),
             _ChartCard(
-              child: SizedBox(height: 180, child: _RevenueChart(daily: data.daily, cs: cs)),
+              child: SizedBox(
+                  height: 180, child: _RevenueChart(daily: data.daily, cs: cs)),
             ),
           ],
 
@@ -183,7 +188,12 @@ class _ChartCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFC3C6D7)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: child,
     );
@@ -196,7 +206,11 @@ class _HeroStatCard extends StatelessWidget {
   final IconData icon;
   final ColorScheme cs;
 
-  const _HeroStatCard({required this.label, required this.value, required this.icon, required this.cs});
+  const _HeroStatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.cs});
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +220,12 @@ class _HeroStatCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFC3C6D7)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Row(
         children: [
@@ -253,7 +272,11 @@ class _HeroStatCard extends StatelessWidget {
               children: [
                 Icon(Icons.trending_up, size: 14, color: cs.secondary),
                 const SizedBox(width: 2),
-                Text('hôm nay', style: TextStyle(fontSize: 11, color: cs.secondary, fontWeight: FontWeight.w600)),
+                Text('hôm nay',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: cs.secondary,
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -269,7 +292,11 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final ColorScheme cs;
 
-  const _StatCard({required this.label, required this.value, required this.icon, required this.cs});
+  const _StatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.cs});
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +306,12 @@ class _StatCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFC3C6D7)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 3))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +325,8 @@ class _StatCard extends StatelessWidget {
             child: Icon(icon, size: 18, color: cs.primary),
           ),
           const SizedBox(height: 10),
-          Text(label, style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
           const SizedBox(height: 2),
           Text(
             value,
@@ -339,7 +372,9 @@ class _TopProductRow extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: rank == 1 ? const Color(0xFFFBBF24) : const Color(0xFFEFF4FF),
+                  color: rank == 1
+                      ? const Color(0xFFFBBF24)
+                      : const Color(0xFFEFF4FF),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -358,19 +393,29 @@ class _TopProductRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30))),
-                    Text('$count lần bán', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                    Text(name,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0B1C30))),
+                    Text('$count lần bán',
+                        style: TextStyle(
+                            fontSize: 12, color: cs.onSurfaceVariant)),
                   ],
                 ),
               ),
               Text(
                 '${_currencyFmt.format(revenue)}đ',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: cs.primary),
               ),
             ],
           ),
         ),
-        if (!isLast) Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+        if (!isLast)
+          Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
       ],
     );
   }
@@ -387,7 +432,8 @@ class _RevenueChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (daily.isEmpty) return const SizedBox.shrink();
 
-    final maxY = daily.map((d) => d.revenue.toDouble()).reduce((a, b) => a > b ? a : b);
+    final maxY =
+        daily.map((d) => d.revenue.toDouble()).reduce((a, b) => a > b ? a : b);
     final spots = daily.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.revenue.toDouble());
     }).toList();
@@ -412,11 +458,15 @@ class _RevenueChart extends StatelessWidget {
               interval: (daily.length / 5).ceilToDouble().clamp(1, 31),
               getTitlesWidget: (val, _) {
                 final idx = val.toInt();
-                if (idx < 0 || idx >= daily.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= daily.length) {
+                  return const SizedBox.shrink();
+                }
                 final day = daily[idx].date.substring(8);
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(day, style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
+                  child: Text(day,
+                      style:
+                          TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
                 );
               },
             ),
@@ -434,8 +484,10 @@ class _RevenueChart extends StatelessWidget {
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         lineBarsData: [
           LineChartBarData(
@@ -457,7 +509,10 @@ class _RevenueChart extends StatelessWidget {
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
-                colors: [cs.primary.withValues(alpha: 0.12), cs.primary.withValues(alpha: 0)],
+                colors: [
+                  cs.primary.withValues(alpha: 0.12),
+                  cs.primary.withValues(alpha: 0)
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),

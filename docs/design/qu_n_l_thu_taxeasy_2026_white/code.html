@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TaxEasy 2026 - Tax Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Roboto+Flex:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#003ea8",
+                    "surface-container-highest": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed-dim": "#bec6e0",
+                    "secondary-fixed": "#c4e7ff",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#656d84",
+                    "on-secondary-container": "#004d6a",
+                    "surface-tint": "#0053db",
+                    "on-background": "#0b1c30",
+                    "on-tertiary-fixed-variant": "#3f465c",
+                    "surface-variant": "#d3e4fe",
+                    "secondary-fixed-dim": "#7bd0ff",
+                    "on-primary-fixed": "#00174b",
+                    "on-secondary-fixed": "#001e2c",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container-high": "#dce9ff",
+                    "primary-fixed": "#dbe1ff",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff",
+                    "primary": "#004ac6",
+                    "secondary": "#00668a",
+                    "inverse-surface": "#213145",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "secondary-container": "#40c2fd",
+                    "surface": "#f8f9ff",
+                    "background": "#f8f9ff",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#cbdbf5",
+                    "on-tertiary-fixed": "#131b2e",
+                    "inverse-primary": "#b4c5ff",
+                    "outline-variant": "#c3c6d7",
+                    "surface-container-low": "#eff4ff",
+                    "tertiary-fixed": "#dae2fd",
+                    "outline": "#737686",
+                    "on-tertiary-container": "#eef0ff",
+                    "on-surface": "#0b1c30",
+                    "tertiary": "#4d556b",
+                    "on-surface-variant": "#434655",
+                    "inverse-on-surface": "#eaf1ff",
+                    "primary-container": "#2563eb",
+                    "on-primary-container": "#eeefff",
+                    "surface-container": "#e5eeff",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#004c69"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "margin-desktop": "48px"
+            },
+            "fontFamily": {
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "title-md": [
+                            "Inter"
+                    ],
+                    "data-tabular": [
+                            "Roboto Flex"
+                    ],
+                    "display-lg": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "title-md": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "data-tabular": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-24 md:pb-0">
+<!-- TopAppBar (JSON) -->
+<header class="bg-surface border-b border-outline-variant shadow-sm docked full-width top-0 sticky z-40 transition-all">
+<div class="flex items-center justify-between px-margin-mobile w-full h-16">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all active:scale-95">
+<span class="material-symbols-outlined">store</span>
+</button>
+<h1 class="font-title-md text-title-md-mobile text-primary font-extrabold tracking-tight">TaxEasy 2026</h1>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all active:scale-95">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg space-y-xl">
+<!-- Segmented Control -->
+<div class="flex justify-center mb-md">
+<div class="bg-surface-container-low rounded-lg p-1 inline-flex shadow-sm border border-outline-variant">
+<button class="px-lg py-sm rounded-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Tháng này</button>
+<button class="px-lg py-sm rounded-md font-body-sm text-body-sm bg-surface shadow-sm text-primary font-medium transition-colors">Quý này</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Left Column: Primary Metrics -->
+<div class="md:col-span-8 space-y-md">
+<!-- Tax Threshold Card -->
+<div class="bg-surface-container-lowest border border-[#fbbf24] shadow-[0_4px_12px_rgba(251,191,36,0.1)] rounded-xl p-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-9xl text-[#fbbf24]">warning</span>
+</div>
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-[#fbbf24]">error</span>
+<h2 class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider font-semibold">Trạng thái ngưỡng thuế</h2>
+</div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface font-semibold">Gần ngưỡng <span class="text-[#fbbf24]">(82%)</span></p>
+</div>
+</div>
+<div class="mt-lg relative z-10">
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant mb-xs">
+<span>Doanh thu kỳ này</span>
+<span class="font-data-tabular text-data-tabular">82.000.000đ / 100.000.000đ</span>
+</div>
+<div class="h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded-full" style="width: 82%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-sm text-sm">Chỉ còn 18.000.000đ để đạt ngưỡng chịu thuế cao hơn.</p>
+</div>
+</div>
+<!-- Tax Estimates Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- VAT Card -->
+<div class="bg-surface-container-lowest border border-outline-variant shadow-sm rounded-xl p-lg flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-sm mb-md text-secondary">
+<div class="bg-secondary-container p-2 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-weight="fill">account_balance_wallet</span>
+</div>
+<h3 class="font-body-sm text-body-sm font-medium">Thuế GTGT ước tính (1%)</h3>
+</div>
+<div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-data-tabular text-data-tabular font-semibold text-on-surface">820.000đ</p>
+</div>
+</div>
+<!-- PIT Card -->
+<div class="bg-surface-container-lowest border border-outline-variant shadow-sm rounded-xl p-lg flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-sm mb-md text-primary">
+<div class="bg-primary-container p-2 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" data-weight="fill">person</span>
+</div>
+<h3 class="font-body-sm text-body-sm font-medium">Thuế TNCN ước tính (0.5%)</h3>
+</div>
+<div>
+<p class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-data-tabular text-data-tabular font-semibold text-on-surface">410.000đ</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Timeline & Info -->
+<div class="md:col-span-4 space-y-md">
+<!-- Deadline Timeline -->
+<div class="bg-surface-container-lowest border border-outline-variant shadow-sm rounded-xl p-lg">
+<h3 class="font-title-md text-title-md-mobile md:font-title-md md:text-title-md font-semibold text-on-surface mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">event</span>
+                        Lịch nộp thuế
+                    </h3>
+<div class="relative border-l-2 border-surface-container-high ml-3 space-y-lg pb-md">
+<!-- Timeline Item 1 -->
+<div class="relative pl-6">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary ring-4 ring-surface-container-lowest"></div>
+<div class="bg-surface-container-low rounded-lg p-sm border border-outline-variant/50">
+<p class="font-label-caps text-label-caps text-primary uppercase mb-xs">Tạm nộp quý 2</p>
+<p class="font-body-lg text-body-lg text-on-surface font-medium">20/07/2026</p>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative pl-6">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface-container-high ring-4 ring-surface-container-lowest border-2 border-outline-variant"></div>
+<div class="p-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Quyết toán năm</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tháng 03/2027</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Disclaimer Box -->
+<div class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-md flex items-start gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant mt-1 text-[20px]">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs leading-relaxed">
+                        Các số liệu trên chỉ mang tính chất ước tính dựa trên dữ liệu doanh thu đã nhập. Vui lòng tham khảo ý kiến chuyên gia kế toán để có số liệu chính xác cuối cùng trước khi nộp tờ khai.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (JSON) -->
+<nav class="md:hidden bg-surface border-t border-outline-variant shadow-lg docked full-width bottom-0 fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 transition-all">
+<!-- Revenue -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">payments</span>
+<span class="font-label-caps text-label-caps mt-1 group-hover:text-primary transition-colors">Revenue</span>
+</a>
+<!-- Tax (Active based on Semantic Logic) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-4 py-1 hover:bg-surface-container-low transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-weight="fill">account_balance</span>
+<span class="font-label-caps text-label-caps mt-1">Tax</span>
+</a>
+<!-- Products -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">inventory_2</span>
+<span class="font-label-caps text-label-caps mt-1 group-hover:text-primary transition-colors">Products</span>
+</a>
+<!-- Invoices -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-container-low transition-transform active:scale-90 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">description</span>
+<span class="font-label-caps text-label-caps mt-1 group-hover:text-primary transition-colors">Invoices</span>
+</a>
+</nav>
+<!-- Desktop Sidebar Placeholder for larger screens (hidden on mobile, visible on lg) -->
+<aside class="hidden md:flex flex-col fixed left-0 top-16 bottom-0 w-64 bg-surface border-r border-outline-variant z-30 pt-lg">
+<!-- Nav Items matching JSON BottomNavBar logic for desktop context -->
+<nav class="flex flex-col gap-sm px-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-lg text-body-lg font-medium">Revenue</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-primary-container text-on-primary-container font-bold transition-colors" href="#">
+<span class="material-symbols-outlined" data-weight="fill">account_balance</span>
+<span class="font-body-lg text-body-lg">Tax</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-lg text-body-lg font-medium">Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-lg text-body-lg font-medium">Invoices</span>
+</a>
+</nav>
+</aside>
+<!-- Adjust main content padding for desktop sidebar -->
+<style>
+        @media (min-width: 768px) {
+            main {
+                padding-left: calc(16rem + 24px); /* Sidebar width + gap */
+            }
+        }
+    </style>
+</body></html>

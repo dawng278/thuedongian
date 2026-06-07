@@ -1,4 +1,14 @@
-import { IsString, IsUUID, IsNotEmpty, IsArray, ValidateNested, IsNumber, Min, IsOptional, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsUUID,
+  IsNotEmpty,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  Min,
+  IsOptional,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateInvoiceItemDto {
@@ -22,6 +32,10 @@ export class CreateInvoiceItemDto {
 export class CreateInvoiceDto {
   @IsUUID()
   id: string;
+
+  @IsUUID()
+  @IsOptional()
+  store_id?: string;
 
   @IsDateString()
   @IsOptional()
