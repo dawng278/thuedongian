@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/invoice.dart';
@@ -13,8 +16,11 @@ class InvoicesProvider extends ChangeNotifier {
 
   final List<InvoiceDto> _invoices = [];
   bool _creating = false;
+  bool _autoSyncing = false;
   int _pendingCount = 0;
   String? _storeId;
+
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
 
   List<InvoiceDto> get invoices => _invoices;
   bool get creating => _creating;
@@ -22,6 +28,36 @@ class InvoicesProvider extends ChangeNotifier {
 
   InvoicesProvider(this._api) {
     _sync = SyncService(_api);
+    _listenConnectivity();
+  }
+
+  /// Lắng nghe trạng thái mạng — khi có mạng trở lại và còn hàng đợi,
+  /// tự động đồng bộ (đúng "definition of done": bật mạng tự đồng bộ).
+  void _listenConnectivity() {
+    _connSub = Connectivity().onConnectivityChanged.listen((results) {
+      final online = results.any((r) => r != ConnectivityResult.none);
+      if (online && _pendingCount > 0) {
+        _autoSync();
+      }
+    });
+  }
+
+  Future<void> _autoSync() async {
+    if (_autoSyncing || _storeId == null) return;
+    _autoSyncing = true;
+    try {
+      await syncPending();
+    } catch (_) {
+      // Mạng chập chờn — lần kết nối sau sẽ thử lại.
+    } finally {
+      _autoSyncing = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _connSub?.cancel();
+    super.dispose();
   }
 
   Future<void> setStore(String storeId) async {
@@ -45,6 +81,7 @@ class InvoicesProvider extends ChangeNotifier {
     Map<String, int> cart,
     List<ProductDto> products, {
     String? note,
+    String paymentMethod = 'cash',
   }) async {
     _creating = true;
     notifyListeners();
@@ -72,6 +109,7 @@ class InvoicesProvider extends ChangeNotifier {
         storeId: storeId,
         createdAt: now,
         note: note,
+        paymentMethod: paymentMethod,
         items: items,
       );
 
@@ -102,6 +140,7 @@ class InvoicesProvider extends ChangeNotifier {
         invoiceNumber: serverNumber ?? local.localNumber,
         totalAmount: items.fold(0, (s, i) => s + i.price * i.quantity),
         note: note,
+        paymentMethod: paymentMethod,
         createdAt: now,
         items: items
             .map((i) => InvoiceItemDto(

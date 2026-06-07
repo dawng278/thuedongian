@@ -78,12 +78,18 @@ class HttpApiService implements ApiService {
 
   @override
   Future<ProductDto> createProduct(String name, int price,
-      {String? unit, String? category, String? storeId}) async {
+      {String? unit,
+      String? category,
+      int? stock,
+      int? costPrice,
+      String? storeId}) async {
     final res = await _dio.post('/products', data: {
       'name': name,
       'price': price,
       if (unit != null) 'unit': unit,
       if (category != null) 'category': category,
+      if (stock != null) 'stock': stock,
+      if (costPrice != null) 'cost_price': costPrice,
       if (storeId != null) 'store_id': storeId,
     });
     return ProductDto.fromJson(res.data as Map<String, dynamic>);
@@ -130,6 +136,15 @@ class HttpApiService implements ApiService {
   Future<InvoiceDto> getInvoice(String id) async {
     final res = await _dio.get('/invoices/$id');
     return InvoiceDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<String> getInvoiceXml(String id) async {
+    final res = await _dio.get<String>(
+      '/invoices/$id/xml',
+      options: Options(responseType: ResponseType.plain),
+    );
+    return res.data ?? '';
   }
 
   @override

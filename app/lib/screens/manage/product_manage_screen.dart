@@ -481,6 +481,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _priceCtrl;
+  late final TextEditingController _costPriceCtrl;
+  late final TextEditingController _stockCtrl;
   late final TextEditingController _unitCtrl;
   late final TextEditingController _categoryCtrl;
   bool _saving = false;
@@ -491,6 +493,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     final p = widget.existing;
     _nameCtrl = TextEditingController(text: p?.name);
     _priceCtrl = TextEditingController(text: p != null ? '${p.price}' : '');
+    _costPriceCtrl =
+        TextEditingController(text: p?.costPrice != null ? '${p!.costPrice}' : '');
+    _stockCtrl =
+        TextEditingController(text: p?.stock != null ? '${p!.stock}' : '');
     _unitCtrl = TextEditingController(text: p?.unit);
     _categoryCtrl = TextEditingController(text: p?.category);
   }
@@ -499,9 +505,17 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
+    _costPriceCtrl.dispose();
+    _stockCtrl.dispose();
     _unitCtrl.dispose();
     _categoryCtrl.dispose();
     super.dispose();
+  }
+
+  int? _parseIntField(TextEditingController c) {
+    final raw = c.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (raw.isEmpty) return null;
+    return int.tryParse(raw);
   }
 
   Future<void> _save() async {
@@ -511,6 +525,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       final provider = context.read<ProductsProvider>();
       final price =
           int.parse(_priceCtrl.text.replaceAll(',', '').replaceAll('.', ''));
+      final stock = _parseIntField(_stockCtrl);
+      final costPrice = _parseIntField(_costPriceCtrl);
       if (widget.existing == null) {
         await provider.createProduct(
           _nameCtrl.text.trim(),
@@ -519,6 +535,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
           category: _categoryCtrl.text.trim().isEmpty
               ? null
               : _categoryCtrl.text.trim(),
+          stock: stock,
+          costPrice: costPrice,
         );
       } else {
         await provider.updateProduct(widget.existing!.id, {
@@ -527,6 +545,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
           if (_unitCtrl.text.trim().isNotEmpty) 'unit': _unitCtrl.text.trim(),
           if (_categoryCtrl.text.trim().isNotEmpty)
             'category': _categoryCtrl.text.trim(),
+          if (stock != null) 'stock': stock,
+          if (costPrice != null) 'cost_price': costPrice,
         });
       }
       if (mounted) Navigator.pop(context);
@@ -593,7 +613,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                 if (v == null || v.isEmpty) return 'Nhập giá';
                 final n =
                     int.tryParse(v.replaceAll(',', '').replaceAll('.', ''));
-                if (n == null || n < 0) return 'Giá không hợp lệ';
+                if (n == null || n <= 0) return 'Giá phải lớn hơn 0';
                 return null;
               },
             ),
@@ -613,6 +633,30 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     controller: _categoryCtrl,
                     decoration: const InputDecoration(
                         labelText: 'Nhóm', hintText: 'Đồ uống...'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _costPriceCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        labelText: 'Giá vốn',
+                        hintText: 'để tính lợi nhuận',
+                        suffixText: 'đ'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _stockCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        labelText: 'Tồn kho', hintText: 'bỏ trống nếu không'),
                   ),
                 ),
               ],

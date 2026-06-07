@@ -195,12 +195,18 @@ class MockApiService implements ApiService {
 
   @override
   Future<ProductDto> createProduct(String name, int price,
-      {String? unit, String? category, String? storeId}) async {
+      {String? unit,
+      String? category,
+      int? stock,
+      int? costPrice,
+      String? storeId}) async {
     final p = ProductDto(
       id: _uuid.v4(),
       storeId: storeId ?? _storeId,
       name: name,
       price: price,
+      costPrice: costPrice,
+      stock: stock,
       unit: unit,
       category: category,
       isActive: true,
@@ -292,6 +298,12 @@ class MockApiService implements ApiService {
   @override
   Future<InvoiceDto> getInvoice(String id) async =>
       _invoices.firstWhere((i) => i.id == id);
+
+  @override
+  Future<String> getInvoiceXml(String id) async {
+    final inv = _invoices.firstWhere((i) => i.id == id);
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<HDon><Id>${inv.id}</Id></HDon>';
+  }
 
   @override
   Future<Map<String, dynamic>> syncInvoices(

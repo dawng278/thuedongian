@@ -15,7 +15,11 @@ abstract class ApiService {
   Future<List<ProductDto>> getProducts(
       {bool includeInactive = false, String? storeId});
   Future<ProductDto> createProduct(String name, int price,
-      {String? unit, String? category, String? storeId});
+      {String? unit,
+      String? category,
+      int? stock,
+      int? costPrice,
+      String? storeId});
   Future<ProductDto> updateProduct(String id, Map<String, dynamic> data);
   Future<void> deleteProduct(String id);
 
@@ -27,6 +31,7 @@ abstract class ApiService {
       int limit = 20,
       String? storeId});
   Future<InvoiceDto> getInvoice(String id);
+  Future<String> getInvoiceXml(String id);
 
   Future<Map<String, dynamic>> syncInvoices(List<CreateInvoiceDto> invoices);
 

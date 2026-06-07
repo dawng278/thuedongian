@@ -1,22 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SyncInvoicesDto } from './dto/sync-invoices.dto';
+import { createInvoiceAtomic } from '../invoices/create-invoice-atomic';
+import { StoresService } from '../stores/stores.service';
 
 @Injectable()
 export class SyncService {
-  constructor(private prisma: PrismaService) {}
-
-  private async resolveStore(userId: string, storeId?: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        owner_id: userId,
-        ...(storeId ? { id: storeId } : {}),
-      },
-      orderBy: { created_at: 'asc' },
-    });
-    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-    return store;
-  }
+  constructor(
+    private prisma: PrismaService,
+    private stores: StoresService,
+  ) {}
 
   async syncInvoices(userId: string, dto: SyncInvoicesDto) {
     const results: Array<{
@@ -43,36 +36,14 @@ export class SyncService {
         continue;
       }
 
-      const store = await this.resolveStore(userId, inv.store_id);
-      const count = await this.prisma.invoice.count({
-        where: { store_id: store.id },
-      });
-      const invoiceNumber = count + 1;
-      const totalAmount = inv.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0,
-      );
-      const createdAt = inv.created_at ? new Date(inv.created_at) : new Date();
-
-      const saved = await this.prisma.invoice.create({
-        data: {
-          id: inv.id,
-          store_id: store.id,
-          invoice_number: invoiceNumber,
-          total_amount: totalAmount,
-          note: inv.note ?? null,
-          created_at: createdAt,
-          synced_at: new Date(),
-          items: {
-            create: inv.items.map((item) => ({
-              product_id: item.product_id ?? null,
-              product_name: item.product_name,
-              price: item.price,
-              quantity: item.quantity,
-              subtotal: item.price * item.quantity,
-            })),
-          },
-        },
+      const store = await this.stores.resolveStore(userId, inv.store_id);
+      const saved = await createInvoiceAtomic(this.prisma, {
+        id: inv.id,
+        storeId: store.id,
+        items: inv.items,
+        note: inv.note ?? null,
+        paymentMethod: inv.payment_method,
+        createdAt: inv.created_at ? new Date(inv.created_at) : new Date(),
       });
 
       results.push({

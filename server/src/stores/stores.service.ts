@@ -49,9 +49,24 @@ export class StoresService {
   }
 
   async updateStore(userId: string, data: UpdateStoreDto) {
-    const store = await this.getMyStore(userId);
+    const existing = await this.prisma.store.findFirst({
+      where: { owner_id: userId },
+      orderBy: { created_at: 'asc' },
+    });
+    if (!existing) {
+      return this.prisma.store.create({
+        data: {
+          owner_id: userId,
+          name: (data.name ?? 'Cửa hàng của tôi').trim(),
+          business_type: data.business_type ?? 'goods',
+          tax_id: data.tax_id?.trim() || null,
+          address: data.address?.trim() || null,
+          phone: data.phone?.trim() || null,
+        },
+      });
+    }
     return this.prisma.store.update({
-      where: { id: store.id },
+      where: { id: existing.id },
       data: {
         ...(data.name !== undefined ? { name: data.name.trim() } : {}),
         ...(data.business_type !== undefined

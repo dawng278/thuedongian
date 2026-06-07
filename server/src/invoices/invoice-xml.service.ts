@@ -1,5 +1,6 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { create } from 'xmlbuilder2';
+import { resolveRate } from '../tax/tax-rules';
 
 interface InvoiceXmlData {
   invoiceNumber: number;
@@ -8,9 +9,11 @@ interface InvoiceXmlData {
   storeTaxId: string | null;
   storeAddress: string | null;
   storePhone: string | null;
+  businessType: string | null;
   createdAt: Date;
   items: Array<{
     productName: string;
+    unit: string | null;
     quantity: number;
     price: number;
     subtotal: number;
@@ -21,11 +24,9 @@ interface InvoiceXmlData {
 
 @Injectable()
 export class InvoiceXmlService {
-  // Vietnamese VAT rate for small businesses (hộ kinh doanh): 1% on revenue
-  private readonly VAT_RATE = 0.01;
-  // Invoice form code per Thông tư 78/2021/TT-BTC: 1 = GTGT, 2 = BH, K = không có thuế
+  // Mã loại hóa đơn theo Thông tư 78/2021/TT-BTC: 2 = hóa đơn bán hàng (HKD).
   private readonly MAU_SO = '2';
-  // Invoice symbol — C1 = cashier, HKD = hộ kinh doanh
+  // Ký hiệu hóa đơn — HKD = hộ kinh doanh.
   private readonly KY_HIEU = 'HKD-2026';
 
   buildXml(data: InvoiceXmlData): string {
@@ -41,7 +42,9 @@ export class InvoiceXmlService {
       );
     }
 
-    const vatBase = Math.round(data.totalAmount / (1 + this.VAT_RATE));
+    // Tỷ lệ GTGT theo loại hình HKD (hàng hóa 1%, ăn uống 3%, dịch vụ 5%).
+    const vatRate = resolveRate(data.businessType).rate.vat;
+    const vatBase = Math.round(data.totalAmount / (1 + vatRate));
     const vatAmount = data.totalAmount - vatBase;
     const ngayLap = data.createdAt.toISOString().substring(0, 10);
 
@@ -75,11 +78,11 @@ export class InvoiceXmlService {
       const hHDVu = dsHHDVu.ele('HHDVu');
       hHDVu.ele('STT').txt(String(idx + 1));
       hHDVu.ele('THHDVu').txt(item.productName);
-      hHDVu.ele('DVTinh').txt('');
+      hHDVu.ele('DVTinh').txt(item.unit ?? '');
       hHDVu.ele('SLuong').txt(String(item.quantity));
       hHDVu.ele('DGia').txt(String(item.price));
       hHDVu.ele('ThTien').txt(String(item.subtotal));
-      hHDVu.ele('TSuat').txt(String(Math.round(this.VAT_RATE * 100)) + '%');
+      hHDVu.ele('TSuat').txt(String(Math.round(vatRate * 100)) + '%');
     });
 
     // ── Totals ──

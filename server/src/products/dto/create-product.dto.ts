@@ -30,4 +30,14 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   image_url?: string;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  cost_price?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  stock?: number;
 }

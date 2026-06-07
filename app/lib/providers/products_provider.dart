@@ -56,11 +56,15 @@ class ProductsProvider extends ChangeNotifier {
   }
 
   Future<void> createProduct(String name, int price,
-      {String? unit, String? category}) async {
+      {String? unit, String? category, int? stock, int? costPrice}) async {
     final storeId = _storeId;
     if (storeId == null) throw StateError('Chưa chọn quán');
     final p = await _api.createProduct(name, price,
-        unit: unit, category: category, storeId: storeId);
+        unit: unit,
+        category: category,
+        stock: stock,
+        costPrice: costPrice,
+        storeId: storeId);
     _products = [..._products, p];
     await LocalDb.upsertProducts([p]);
     notifyListeners();

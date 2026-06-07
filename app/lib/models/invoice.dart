@@ -19,9 +19,9 @@ class InvoiceItemDto {
         id: json['id'] as String,
         productId: json['product_id'] as String?,
         productName: json['product_name'] as String,
-        price: (json['price'] as num).toInt(),
-        quantity: json['quantity'] as int,
-        subtotal: (json['subtotal'] as num).toInt(),
+        price: num.tryParse(json['price']?.toString() ?? '0')?.toInt() ?? 0,
+        quantity: num.tryParse(json['quantity']?.toString() ?? '0')?.toInt() ?? 0,
+        subtotal: num.tryParse(json['subtotal']?.toString() ?? '0')?.toInt() ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +40,7 @@ class InvoiceDto {
   final int? invoiceNumber;
   final int totalAmount;
   final String? note;
+  final String paymentMethod; // cash | transfer
   final DateTime createdAt;
   final DateTime? syncedAt;
   final List<InvoiceItemDto>? items;
@@ -50,6 +51,7 @@ class InvoiceDto {
     this.invoiceNumber,
     required this.totalAmount,
     this.note,
+    this.paymentMethod = 'cash',
     required this.createdAt,
     this.syncedAt,
     this.items,
@@ -58,9 +60,12 @@ class InvoiceDto {
   factory InvoiceDto.fromJson(Map<String, dynamic> json) => InvoiceDto(
         id: json['id'] as String,
         storeId: json['store_id'] as String?,
-        invoiceNumber: json['invoice_number'] as int?,
-        totalAmount: (json['total_amount'] as num).toInt(),
+        invoiceNumber: json['invoice_number'] != null
+            ? num.tryParse(json['invoice_number'].toString())?.toInt()
+            : null,
+        totalAmount: num.tryParse(json['total_amount']?.toString() ?? '0')?.toInt() ?? 0,
         note: json['note'] as String?,
+        paymentMethod: json['payment_method'] as String? ?? 'cash',
         createdAt: DateTime.parse(json['created_at'] as String),
         syncedAt: json['synced_at'] != null
             ? DateTime.parse(json['synced_at'] as String)
@@ -76,6 +81,7 @@ class InvoiceDto {
         if (invoiceNumber != null) 'invoice_number': invoiceNumber,
         'total_amount': totalAmount,
         if (note != null) 'note': note,
+        'payment_method': paymentMethod,
         'created_at': createdAt.toIso8601String(),
         if (syncedAt != null) 'synced_at': syncedAt!.toIso8601String(),
         if (items != null) 'items': items!.map((e) => e.toJson()).toList(),
@@ -108,6 +114,7 @@ class CreateInvoiceDto {
   final String storeId;
   final DateTime createdAt;
   final String? note;
+  final String paymentMethod; // cash | transfer
   final List<CreateInvoiceItemInput> items;
 
   const CreateInvoiceDto({
@@ -115,6 +122,7 @@ class CreateInvoiceDto {
     required this.storeId,
     required this.createdAt,
     this.note,
+    this.paymentMethod = 'cash',
     required this.items,
   });
 
@@ -123,6 +131,7 @@ class CreateInvoiceDto {
         'store_id': storeId,
         'created_at': createdAt.toIso8601String(),
         if (note != null) 'note': note,
+        'payment_method': paymentMethod,
         'items': items.map((e) => e.toJson()).toList(),
       };
 }

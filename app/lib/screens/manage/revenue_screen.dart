@@ -91,16 +91,18 @@ class _RevenueScreenState extends State<RevenueScreen> {
             label: 'Doanh thu Hôm nay',
             value: '${_currencyFmt.format(data.todayRevenue)}đ',
             icon: Icons.payments_outlined,
+            cash: data.todayCash,
+            transfer: data.todayTransfer,
+            invoiceCount: data.todayInvoiceCount,
             cs: cs,
           ),
           const SizedBox(height: 12),
-
           // Two smaller cards
           Row(
             children: [
               Expanded(
                 child: _StatCard(
-                  label: 'Tháng này',
+                  label: 'Doanh thu tháng này',
                   value: '${_currencyFmt.format(data.monthRevenue)}đ',
                   icon: Icons.calendar_month_outlined,
                   cs: cs,
@@ -109,7 +111,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
-                  label: 'Số hóa đơn',
+                  label: 'Hóa đơn tháng này',
                   value: '${data.monthInvoiceCount}',
                   icon: Icons.receipt_long_outlined,
                   cs: cs,
@@ -118,10 +120,35 @@ class _RevenueScreenState extends State<RevenueScreen> {
             ],
           ),
 
+          // Lợi nhuận tháng (chỉ hiện khi đã khai báo giá vốn)
+          if (data.monthProfit != null) ...[
+            const SizedBox(height: 12),
+            _ProfitCard(profit: data.monthProfit!, cs: cs),
+          ],
+
           // Revenue chart
           if (data.daily.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _SectionHeader(title: 'Doanh thu theo ngày', cs: cs),
+            Row(
+              children: [
+                _SectionHeader(title: 'Biểu đồ doanh thu', cs: cs),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFC3C6D7)),
+                  ),
+                  child: Text('Tháng này',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: cs.onSurface)),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             _ChartCard(
               child: SizedBox(
@@ -132,7 +159,14 @@ class _RevenueScreenState extends State<RevenueScreen> {
           // Top products
           if (data.topProducts.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _SectionHeader(title: 'Món bán chạy tháng này', cs: cs),
+            Row(
+              children: [
+                _SectionHeader(title: 'Món bán chạy', cs: cs),
+                const Spacer(),
+                Icon(Icons.restaurant_outlined,
+                    size: 18, color: cs.onSurfaceVariant),
+              ],
+            ),
             const SizedBox(height: 12),
             _ChartCard(
               child: Column(
@@ -204,12 +238,18 @@ class _HeroStatCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final int cash;
+  final int transfer;
+  final int invoiceCount;
   final ColorScheme cs;
 
   const _HeroStatCard(
       {required this.label,
       required this.value,
       required this.icon,
+      required this.cash,
+      required this.transfer,
+      required this.invoiceCount,
       required this.cs});
 
   @override
@@ -227,58 +267,145 @@ class _HeroStatCard extends StatelessWidget {
               offset: const Offset(0, 4))
         ],
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: cs.onPrimaryContainer),
+              ),
+              const SizedBox(width: 10),
+              Text(label,
+                  style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              color: cs.onSurface,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('$invoiceCount hóa đơn hôm nay',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _PayBreakdown(
+                  label: 'Tiền mặt',
+                  icon: Icons.payments_outlined,
+                  amount: cash,
+                  cs: cs,
+                ),
+              ),
+              Container(width: 1, height: 32, color: cs.outlineVariant),
+              Expanded(
+                child: _PayBreakdown(
+                  label: 'Chuyển khoản',
+                  icon: Icons.account_balance_outlined,
+                  amount: transfer,
+                  cs: cs,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PayBreakdown extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final int amount;
+  final ColorScheme cs;
+
+  const _PayBreakdown({
+    required this.label,
+    required this.icon,
+    required this.amount,
+    required this.cs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: cs.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Text(label,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('${_currencyFmt.format(amount)}đ',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfitCard extends StatelessWidget {
+  final int profit;
+  final ColorScheme cs;
+
+  const _ProfitCard({required this.profit, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    final positive = profit >= 0;
+    final color = positive ? const Color(0xFF059669) : cs.error;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: positive ? const Color(0xFFE8F5EE) : const Color(0xFFFDECEA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 24, color: cs.onPrimaryContainer),
+            child: Icon(Icons.trending_up, size: 18, color: color),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Lợi nhuận tháng này (ước tính)',
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+              const SizedBox(height: 2),
+              Text('${_currencyFmt.format(profit)}đ',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: cs.primary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Trend indicator placeholder
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF4FF),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFC3C6D7)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.trending_up, size: 14, color: cs.secondary),
-                const SizedBox(width: 2),
-                Text('hôm nay',
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: cs.secondary,
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
+                      fontSize: 20, fontWeight: FontWeight.w800, color: color)),
+            ],
           ),
         ],
       ),
@@ -316,24 +443,27 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF4FF),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: cs.primary),
+          Row(
+            children: [
+              Icon(icon, size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(label,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
-          Text(label,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
-          const SizedBox(height: 2),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: cs.primary,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0B1C30),
               letterSpacing: -0.3,
             ),
           ),

@@ -8,6 +8,7 @@ import {
   Min,
   IsOptional,
   IsDateString,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -44,6 +45,10 @@ export class CreateInvoiceDto {
   @IsString()
   @IsOptional()
   note?: string;
+
+  @IsIn(['cash', 'transfer'])
+  @IsOptional()
+  payment_method?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

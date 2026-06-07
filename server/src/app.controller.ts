@@ -1,12 +1,28 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { PrismaService } from './prisma/prisma.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  root() {
+    return { name: 'TaxEasy API', status: 'ok' };
+  }
+
+  /** Health check: xác nhận server sống và DB phản hồi. */
+  @Get('health')
+  async health() {
+    let db = 'ok';
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+    } catch {
+      db = 'down';
+    }
+    return {
+      status: db === 'ok' ? 'ok' : 'degraded',
+      db,
+      timestamp: new Date().toISOString(),
+    };
   }
 }

@@ -12,6 +12,7 @@ class LocalInvoice {
   final int localNumber;
   final int totalAmount;
   final String? note;
+  final String paymentMethod; // cash | transfer
   final DateTime createdAt;
   final InvoiceStatus status;
   final int? serverInvoiceNumber;
@@ -23,6 +24,7 @@ class LocalInvoice {
     required this.localNumber,
     required this.totalAmount,
     this.note,
+    this.paymentMethod = 'cash',
     required this.createdAt,
     required this.status,
     this.serverInvoiceNumber,
@@ -42,7 +44,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'taxeasy.db');
     return openDatabase(
       path,
-      version: 3,
+      version: 5,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -55,6 +57,8 @@ class LocalDb {
         store_id TEXT NOT NULL,
         name TEXT NOT NULL,
         price INTEGER NOT NULL,
+        cost_price INTEGER,
+        stock INTEGER,
         unit TEXT,
         category TEXT,
         image_url TEXT,
@@ -70,6 +74,7 @@ class LocalDb {
         local_number INTEGER NOT NULL,
         total_amount INTEGER NOT NULL,
         note TEXT,
+        payment_method TEXT NOT NULL DEFAULT 'cash',
         created_at TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         server_invoice_number INTEGER,
@@ -117,6 +122,15 @@ class LocalDb {
         "ALTER TABLE invoices ADD COLUMN store_id TEXT NOT NULL DEFAULT ''",
       );
     }
+    if (oldVersion >= 3 && oldVersion < 4) {
+      await db.execute(
+        "ALTER TABLE invoices ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'cash'",
+      );
+    }
+    if (oldVersion >= 4 && oldVersion < 5) {
+      await db.execute("ALTER TABLE products ADD COLUMN cost_price INTEGER");
+      await db.execute("ALTER TABLE products ADD COLUMN stock INTEGER");
+    }
   }
 
   // ── Products ──
@@ -132,6 +146,8 @@ class LocalDb {
           'store_id': p.storeId,
           'name': p.name,
           'price': p.price,
+          'cost_price': p.costPrice,
+          'stock': p.stock,
           'unit': p.unit,
           'category': p.category,
           'image_url': p.imageUrl,
@@ -163,6 +179,8 @@ class LocalDb {
       storeId: row['store_id'] as String,
       name: row['name'] as String,
       price: row['price'] as int,
+      costPrice: row['cost_price'] as int?,
+      stock: row['stock'] as int?,
       unit: row['unit'] as String?,
       category: row['category'] as String?,
       imageUrl: row['image_url'] as String?,
@@ -197,6 +215,7 @@ class LocalDb {
       'local_number': localNumber,
       'total_amount': totalAmount,
       'note': dto.note,
+      'payment_method': dto.paymentMethod,
       'created_at': dto.createdAt.toIso8601String(),
       'status': 'pending',
       'items_json': itemsJson,
@@ -208,6 +227,7 @@ class LocalDb {
       localNumber: localNumber,
       totalAmount: totalAmount,
       note: dto.note,
+      paymentMethod: dto.paymentMethod,
       createdAt: dto.createdAt,
       status: InvoiceStatus.pending,
       items: dto.items,
@@ -253,6 +273,7 @@ class LocalDb {
       localNumber: row['local_number'] as int,
       totalAmount: row['total_amount'] as int,
       note: row['note'] as String?,
+      paymentMethod: row['payment_method'] as String? ?? 'cash',
       createdAt: DateTime.parse(row['created_at'] as String),
       status: row['status'] == 'pending'
           ? InvoiceStatus.pending

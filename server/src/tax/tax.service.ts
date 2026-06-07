@@ -1,43 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { computeTax } from './tax-rules';
+import { StoresService } from '../stores/stores.service';
 
-// Tax rates per Thông tư 40/2021/TT-BTC (effective 2021-08-01)
-// HKD rates = VAT rate + PIT rate on revenue
-const TAX_RATES: Record<string, { vat: number; pit: number; label: string }> = {
-  goods: { vat: 0.01, pit: 0.005, label: 'Kinh doanh hàng hóa' },
-  food_beverage: { vat: 0.03, pit: 0.015, label: 'Ăn uống' },
-  services: { vat: 0.05, pit: 0.02, label: 'Dịch vụ' },
-};
-
-// Annual revenue threshold for VAT & PIT exemption (VND) per TT 40/2021
-const EXEMPT_THRESHOLD = 100_000_000;
+const MS_PER_DAY = 86_400_000;
 
 @Injectable()
 export class TaxService {
-  constructor(private prisma: PrismaService) {}
-
-  private async getStore(userId: string, storeId?: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        owner_id: userId,
-        ...(storeId ? { id: storeId } : {}),
-      },
-      orderBy: { created_at: 'asc' },
-    });
-    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-    return store;
-  }
+  constructor(
+    private prisma: PrismaService,
+    private stores: StoresService,
+  ) {}
 
   async estimate(userId: string, period?: string, storeId?: string) {
-    const store = await this.getStore(userId, storeId);
-    const businessType = (store as Record<string, unknown>)['business_type'] as
-      | string
-      | undefined;
-    const rateKey =
-      businessType && businessType in TAX_RATES
-        ? businessType
-        : 'food_beverage';
-    const rates = TAX_RATES[rateKey];
+    const store = await this.stores.resolveStore(userId, storeId);
 
     const now = new Date();
     let periodStart: Date;
@@ -75,35 +51,15 @@ export class TaxService {
       0,
     );
 
-    // Annualise to check threshold
     const monthsInPeriod = period === 'quarter' ? 3 : 1;
-    const annualisedRevenue = (periodRevenue / monthsInPeriod) * 12;
-    const belowThreshold = annualisedRevenue < EXEMPT_THRESHOLD;
-
-    const vatAmount = belowThreshold
-      ? 0
-      : Math.round(periodRevenue * rates.vat);
-    const pitAmount = belowThreshold
-      ? 0
-      : Math.round(periodRevenue * rates.pit);
-    const totalTax = vatAmount + pitAmount;
+    const tax = computeTax(store.business_type, periodRevenue, monthsInPeriod);
 
     return {
       period_label: periodLabel,
       period_start: periodStart.toISOString().substring(0, 10),
       period_end: periodEnd.toISOString().substring(0, 10),
       period_revenue: periodRevenue,
-      annualised_revenue: Math.round(annualisedRevenue),
-      below_threshold: belowThreshold,
-      exempt_threshold: EXEMPT_THRESHOLD,
-      business_type: rateKey,
-      business_type_label: rates.label,
-      vat_rate: rates.vat,
-      pit_rate: rates.pit,
-      vat_amount: vatAmount,
-      pit_amount: pitAmount,
-      total_tax: totalTax,
-      source: 'Thông tư 40/2021/TT-BTC',
+      ...tax,
       disclaimer:
         'Số liệu ước tính tham khảo — không thay thế tư vấn thuế chính thức.',
     };
@@ -119,23 +75,33 @@ export class TaxService {
       urgent: boolean;
     }> = [];
 
-    // Quarterly deadlines: 30th of month after quarter end
+    // Hạn nộp tờ khai thuế quý (HKD kê khai): chậm nhất ngày cuối cùng của
+    // tháng đầu quý kế tiếp (TT 40/2021, Điều 11). Dùng "ngày 0 của tháng sau"
+    // để lấy đúng ngày cuối tháng (30 hoặc 31), không hardcode 30.
+    // Q1 → 30/4, Q2 → 31/7, Q3 → 31/10, Q4 → 31/1 năm sau.
     const quarterDeadlines = [
-      { label: 'Kê khai thuế Q1', month: 3, day: 30 }, // Apr 30
-      { label: 'Kê khai thuế Q2', month: 6, day: 30 }, // Jul 30
-      { label: 'Kê khai thuế Q3', month: 9, day: 30 }, // Oct 30
-      { label: 'Kê khai thuế Q4', month: 0, day: 30, nextYear: true }, // Jan 30 next year
+      { label: 'Kê khai thuế Q1', firstMonthOfNextQuarter: 3, year }, // tháng 4 → 30/4
+      { label: 'Kê khai thuế Q2', firstMonthOfNextQuarter: 6, year }, // tháng 7 → 31/7
+      { label: 'Kê khai thuế Q3', firstMonthOfNextQuarter: 9, year }, // tháng 10 → 31/10
+      { label: 'Kê khai thuế Q4', firstMonthOfNextQuarter: 12, year }, // tháng 1 năm sau → 31/1
     ];
 
     for (const d of quarterDeadlines) {
-      const deadlineYear = d.nextYear ? year + 1 : year;
-      const deadline = new Date(deadlineYear, d.month, d.day, 23, 59, 59);
+      // Ngày cuối tháng đầu quý sau = ngày 0 của tháng kế tiếp tháng đó.
+      const deadline = new Date(
+        d.year,
+        d.firstMonthOfNextQuarter + 1,
+        0,
+        23,
+        59,
+        59,
+      );
       if (deadline >= now) {
         const daysLeft = Math.ceil(
-          (deadline.getTime() - now.getTime()) / 86400000,
+          (deadline.getTime() - now.getTime()) / MS_PER_DAY,
         );
         upcoming.push({
-          label: d.nextYear ? `${d.label} (${year})` : `${d.label} (${year})`,
+          label: `${d.label} (${year})`,
           deadline: deadline.toISOString().substring(0, 10),
           daysLeft,
           urgent: daysLeft <= 14,
@@ -143,10 +109,10 @@ export class TaxService {
       }
     }
 
-    // Monthly license fee (lệ phí môn bài): Jan 30 each year
+    // Lệ phí môn bài: chậm nhất 30/1 hằng năm (Nghị định 22/2020/NĐ-CP).
     const monBai = new Date(year, 0, 30, 23, 59, 59);
     if (monBai >= now) {
-      const daysLeft = Math.ceil((monBai.getTime() - now.getTime()) / 86400000);
+      const daysLeft = Math.ceil((monBai.getTime() - now.getTime()) / MS_PER_DAY);
       upcoming.push({
         label: `Lệ phí môn bài (${year})`,
         deadline: monBai.toISOString().substring(0, 10),

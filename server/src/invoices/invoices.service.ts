@@ -6,28 +6,31 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceXmlService } from './invoice-xml.service';
+import { createInvoiceAtomic } from './create-invoice-atomic';
+import { StoresService } from '../stores/stores.service';
 
 @Injectable()
 export class InvoicesService {
   constructor(
     private prisma: PrismaService,
     private xmlService: InvoiceXmlService,
+    private stores: StoresService,
   ) {}
 
-  private async resolveStore(userId: string, storeId?: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        owner_id: userId,
-        ...(storeId ? { id: storeId } : {}),
-      },
-      orderBy: { created_at: 'asc' },
-    });
-    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-    return store;
+  private serializeInvoice(invoice: any) {
+    return {
+      ...invoice,
+      total_amount: Number(invoice.total_amount),
+      items: invoice.items?.map((item: any) => ({
+        ...item,
+        price: Number(item.price),
+        subtotal: Number(item.subtotal),
+      })),
+    };
   }
 
   async create(userId: string, dto: CreateInvoiceDto) {
-    const store = await this.resolveStore(userId, dto.store_id);
+    const store = await this.stores.resolveStore(userId, dto.store_id);
 
     // Check for duplicate client UUID
     const existing = await this.prisma.invoice.findUnique({
@@ -35,39 +38,15 @@ export class InvoicesService {
     });
     if (existing) throw new ConflictException('Hóa đơn đã tồn tại');
 
-    // Sequential invoice number per store
-    const count = await this.prisma.invoice.count({
-      where: { store_id: store.id },
+    const created = await createInvoiceAtomic(this.prisma, {
+      id: dto.id,
+      storeId: store.id,
+      items: dto.items,
+      note: dto.note ?? null,
+      paymentMethod: dto.payment_method,
+      createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
     });
-    const invoiceNumber = count + 1;
-
-    const totalAmount = dto.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-    const createdAt = dto.created_at ? new Date(dto.created_at) : new Date();
-
-    return this.prisma.invoice.create({
-      data: {
-        id: dto.id,
-        store_id: store.id,
-        invoice_number: invoiceNumber,
-        total_amount: totalAmount,
-        note: dto.note ?? null,
-        created_at: createdAt,
-        synced_at: new Date(),
-        items: {
-          create: dto.items.map((item) => ({
-            product_id: item.product_id ?? null,
-            product_name: item.product_name,
-            price: item.price,
-            quantity: item.quantity,
-            subtotal: item.price * item.quantity,
-          })),
-        },
-      },
-      include: { items: true },
-    });
+    return this.serializeInvoice(created);
   }
 
   async findAll(
@@ -78,7 +57,7 @@ export class InvoicesService {
     limit = 20,
     requestedStoreId?: string,
   ) {
-    const store = await this.resolveStore(userId, requestedStoreId);
+    const store = await this.stores.resolveStore(userId, requestedStoreId);
 
     const where = {
       store_id: store.id,
@@ -103,7 +82,7 @@ export class InvoicesService {
       }),
     ]);
 
-    return { total, page, limit, data };
+    return { total, page, limit, data: data.map((inv) => this.serializeInvoice(inv)) };
   }
 
   async findOne(userId: string, id: string) {
@@ -114,13 +93,13 @@ export class InvoicesService {
     if (!invoice || invoice.store.owner_id !== userId) {
       throw new NotFoundException('Không tìm thấy hóa đơn');
     }
-    return invoice;
+    return this.serializeInvoice(invoice);
   }
 
   async exportXml(userId: string, id: string): Promise<string> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
-      include: { items: true, store: true },
+      include: { items: { include: { product: true } }, store: true },
     });
     if (!invoice || invoice.store.owner_id !== userId) {
       throw new NotFoundException('Không tìm thấy hóa đơn');
@@ -133,9 +112,11 @@ export class InvoicesService {
       storeTaxId: invoice.store.tax_id,
       storeAddress: invoice.store.address,
       storePhone: invoice.store.phone,
+      businessType: invoice.store.business_type,
       createdAt: invoice.created_at,
       items: invoice.items.map((item) => ({
         productName: item.product_name,
+        unit: item.product?.unit ?? null,
         quantity: item.quantity,
         price: Number(item.price),
         subtotal: Number(item.subtotal),

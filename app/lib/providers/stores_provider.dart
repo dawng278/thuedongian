@@ -63,7 +63,7 @@ class StoresProvider extends ChangeNotifier {
     String? address,
     String? phone,
   }) async {
-    final store = await _api.createStore({
+    final store = await _api.updateStore({
       'name': name.trim(),
       'business_type': businessType,
       if (taxId != null && taxId.trim().isNotEmpty) 'tax_id': taxId.trim(),
@@ -71,8 +71,32 @@ class StoresProvider extends ChangeNotifier {
         'address': address.trim(),
       if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
     });
-    _stores = [..._stores, store];
+    if (!_stores.any((s) => s.id == store.id)) {
+      _stores = [..._stores, store];
+    }
     await switchStore(store);
     return store;
+  }
+
+  /// Cập nhật thông tin quán hiện tại (tên, loại hình, MST, địa chỉ, SĐT).
+  Future<StoreDto> updateCurrentStore({
+    required String name,
+    required String businessType,
+    String? taxId,
+    String? address,
+    String? phone,
+  }) async {
+    final updated = await _api.updateStore({
+      'name': name.trim(),
+      'business_type': businessType,
+      'tax_id': (taxId != null && taxId.trim().isNotEmpty) ? taxId.trim() : null,
+      'address':
+          (address != null && address.trim().isNotEmpty) ? address.trim() : null,
+      'phone': (phone != null && phone.trim().isNotEmpty) ? phone.trim() : null,
+    });
+    _stores = _stores.map((s) => s.id == updated.id ? updated : s).toList();
+    _currentStore = updated;
+    notifyListeners();
+    return updated;
   }
 }

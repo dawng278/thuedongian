@@ -71,7 +71,8 @@ class _SaleViewState extends State<_SaleView> {
         .where((p) => p.category != null && p.category!.isNotEmpty)
         .map((p) => p.category!)
         .toSet()
-        .toList();
+        .toList()
+      ..sort();
     return cats;
   }
 
@@ -370,6 +371,23 @@ class _ProductCard extends StatelessWidget {
                           color: isSelected ? cs.primary : cs.primary,
                         ),
                       ),
+                      if (product.stock != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          product.stock! <= 0
+                              ? 'Hết hàng'
+                              : 'Còn ${product.stock}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: product.stock! <= 0
+                                ? cs.error
+                                : (product.stock! <= 5
+                                    ? const Color(0xFFD97706)
+                                    : cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
                       if (isSelected) ...[
                         const SizedBox(height: 6),
                         _Stepper(qty: qty, onAdd: onAdd, onRemove: onRemove),
@@ -652,7 +670,7 @@ class _CartBar extends StatelessWidget {
 
 // ── Cart Sheet ─────────────────────────────────────────────────────────────
 
-class _CartSheet extends StatelessWidget {
+class _CartSheet extends StatefulWidget {
   final Map<String, int> cart;
   final List<ProductDto> products;
   final int total;
@@ -668,8 +686,31 @@ class _CartSheet extends StatelessWidget {
   });
 
   @override
+  State<_CartSheet> createState() => _CartSheetState();
+}
+
+class _CartSheetState extends State<_CartSheet> {
+  String _paymentMethod = 'cash';
+  final _tenderedCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _tenderedCtrl.dispose();
+    super.dispose();
+  }
+
+  int? get _tendered {
+    final raw = _tenderedCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (raw.isEmpty) return null;
+    return int.tryParse(raw);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final cart = widget.cart;
+    final products = widget.products;
+    final total = widget.total;
     final entries = cart.entries.toList();
 
     return DraggableScrollableSheet(
@@ -710,7 +751,7 @@ class _CartSheet extends StatelessWidget {
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      onClear();
+                      widget.onClear();
                     },
                     style: TextButton.styleFrom(foregroundColor: cs.error),
                     child: const Text('Xóa tất cả'),
@@ -731,7 +772,7 @@ class _CartSheet extends StatelessWidget {
                   return _CartItem(
                     product: product,
                     qty: entry.value,
-                    onRemove: () => onRemove(entry.key),
+                    onRemove: () => widget.onRemove(entry.key),
                   );
                 },
               ),
@@ -752,36 +793,158 @@ class _CartSheet extends StatelessWidget {
                       offset: const Offset(0, -4))
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  // Chọn phương thức thanh toán
+                  Row(
                     children: [
-                      Text(
-                        'Tổng cộng (${cart.values.fold(0, (a, b) => a + b)} món)',
-                        style:
-                            TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      Expanded(
+                        child: _PayMethodChip(
+                          label: 'Tiền mặt',
+                          icon: Icons.payments_outlined,
+                          selected: _paymentMethod == 'cash',
+                          onTap: () =>
+                              setState(() => _paymentMethod = 'cash'),
+                        ),
                       ),
-                      Text(
-                        '${_currencyFmt.format(total)}đ',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: cs.primary,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _PayMethodChip(
+                          label: 'Chuyển khoản',
+                          icon: Icons.account_balance_outlined,
+                          selected: _paymentMethod == 'transfer',
+                          onTap: () =>
+                              setState(() => _paymentMethod = 'transfer'),
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  _ConfirmSaleButton(
-                      cart: cart,
-                      products: products,
-                      total: total,
-                      onClear: onClear),
+                  // Tiền khách đưa + thối lại (chỉ khi tiền mặt)
+                  if (_paymentMethod == 'cash') ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _tenderedCtrl,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                      decoration: const InputDecoration(
+                        labelText: 'Khách đưa',
+                        suffixText: 'đ',
+                        isDense: true,
+                        prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                      ),
+                    ),
+                    if (_tendered != null) ...[
+                      const SizedBox(height: 6),
+                      Builder(builder: (context) {
+                        final change = _tendered! - total;
+                        final enough = change >= 0;
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(enough ? 'Tiền thối' : 'Còn thiếu',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: cs.onSurfaceVariant)),
+                            Text(
+                              '${_currencyFmt.format(change.abs())}đ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: enough
+                                    ? const Color(0xFF059669)
+                                    : cs.error,
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ],
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Tổng cộng (${cart.values.fold(0, (a, b) => a + b)} món)',
+                            style: TextStyle(
+                                fontSize: 12, color: cs.onSurfaceVariant),
+                          ),
+                          Text(
+                            '${_currencyFmt.format(total)}đ',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      _ConfirmSaleButton(
+                          cart: cart,
+                          products: products,
+                          total: total,
+                          paymentMethod: _paymentMethod,
+                          onClear: widget.onClear),
+                    ],
+                  ),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PayMethodChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PayMethodChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? cs.primaryContainer : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outlineVariant,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 18,
+                color: selected ? cs.primary : cs.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? cs.primary : cs.onSurface,
+                )),
           ],
         ),
       ),
@@ -872,12 +1035,14 @@ class _ConfirmSaleButton extends StatefulWidget {
   final Map<String, int> cart;
   final List<ProductDto> products;
   final int total;
+  final String paymentMethod;
   final VoidCallback onClear;
 
   const _ConfirmSaleButton({
     required this.cart,
     required this.products,
     required this.total,
+    required this.paymentMethod,
     required this.onClear,
   });
 
@@ -894,6 +1059,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
       final result = await context.read<InvoicesProvider>().createInvoice(
             Map.of(widget.cart),
             widget.products,
+            paymentMethod: widget.paymentMethod,
           );
       if (mounted) {
         Navigator.pop(context);

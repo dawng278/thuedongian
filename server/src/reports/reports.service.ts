@@ -1,68 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-
-const TAX_RATES: Record<
-  string,
-  { label: string; vat: number; pit: number; exemptThreshold: number }
-> = {
-  goods: {
-    label: 'Hàng hóa',
-    vat: 0.01,
-    pit: 0.005,
-    exemptThreshold: 100_000_000,
-  },
-  food_beverage: {
-    label: 'Ăn uống',
-    vat: 0.03,
-    pit: 0.015,
-    exemptThreshold: 100_000_000,
-  },
-  services: {
-    label: 'Dịch vụ',
-    vat: 0.05,
-    pit: 0.02,
-    exemptThreshold: 100_000_000,
-  },
-};
+import { computeTax } from '../tax/tax-rules';
+import { StoresService } from '../stores/stores.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
-
-  private async resolveStore(userId: string, storeId?: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        owner_id: userId,
-        ...(storeId ? { id: storeId } : {}),
-      },
-      orderBy: { created_at: 'asc' },
-    });
-    if (!store) throw new NotFoundException('Không tìm thấy cửa hàng');
-    return store;
-  }
-
-  private buildTaxEstimate(
-    store: { business_type: string | null },
-    revenue: number,
-  ) {
-    const businessType = store.business_type ?? 'food_beverage';
-    const rates = TAX_RATES[businessType] ?? TAX_RATES.food_beverage;
-    const belowThreshold = revenue < rates.exemptThreshold;
-    const vatAmount = belowThreshold ? 0 : Math.round(revenue * rates.vat);
-    const pitAmount = belowThreshold ? 0 : Math.round(revenue * rates.pit);
-    return {
-      business_type: businessType,
-      business_type_label: rates.label,
-      exempt_threshold: rates.exemptThreshold,
-      below_threshold: belowThreshold,
-      vat_rate: rates.vat,
-      pit_rate: rates.pit,
-      vat_amount: vatAmount,
-      pit_amount: pitAmount,
-      total_tax: vatAmount + pitAmount,
-      source: 'Thông tư 40/2021/TT-BTC',
-    };
-  }
+  constructor(
+    private prisma: PrismaService,
+    private stores: StoresService,
+  ) {}
 
   async getRevenue(
     userId: string,
@@ -70,7 +16,7 @@ export class ReportsService {
     to?: string,
     requestedStoreId?: string,
   ) {
-    const store = await this.resolveStore(userId, requestedStoreId);
+    const store = await this.stores.resolveStore(userId, requestedStoreId);
 
     const now = new Date();
     const todayStart = new Date(
@@ -83,12 +29,12 @@ export class ReportsService {
     const fromDate = from ? new Date(from) : monthStart;
     const toDate = to ? new Date(to + 'T23:59:59') : now;
 
-    const [todayInvoices, monthInvoices, rangeInvoices, topProducts] =
+    const [todayInvoices, monthInvoices, rangeInvoices, topProducts, monthItems] =
       await Promise.all([
-        // Today revenue
+        // Today revenue (kèm phương thức để chốt ca)
         this.prisma.invoice.findMany({
           where: { store_id: store.id, created_at: { gte: todayStart } },
-          select: { total_amount: true },
+          select: { total_amount: true, payment_method: true },
         }),
         // This month revenue
         this.prisma.invoice.findMany({
@@ -117,17 +63,50 @@ export class ReportsService {
           orderBy: { _sum: { subtotal: 'desc' } },
           take: 5,
         }),
+        // Items tháng này kèm giá vốn sản phẩm (để ước tính lợi nhuận)
+        this.prisma.invoiceItem.findMany({
+          where: {
+            invoice: { store_id: store.id, created_at: { gte: monthStart } },
+          },
+          select: {
+            quantity: true,
+            subtotal: true,
+            product: { select: { cost_price: true } },
+          },
+        }),
       ]);
 
     const todayRevenue = todayInvoices.reduce(
       (s, i) => s + Number(i.total_amount),
       0,
     );
+    // Chốt ca: tổng theo phương thức thanh toán trong ngày.
+    const todayCash = todayInvoices
+      .filter((i) => i.payment_method !== 'transfer')
+      .reduce((s, i) => s + Number(i.total_amount), 0);
+    const todayTransfer = todayInvoices
+      .filter((i) => i.payment_method === 'transfer')
+      .reduce((s, i) => s + Number(i.total_amount), 0);
     const monthRevenue = monthInvoices.reduce(
       (s, i) => s + Number(i.total_amount),
       0,
     );
     const monthInvoiceCount = monthInvoices.length;
+
+    // Lợi nhuận ước tính tháng này = doanh thu - giá vốn (chỉ tính món có giá vốn).
+    // hasCost: có ít nhất 1 món khai báo giá vốn thì mới hiển thị lợi nhuận.
+    let monthCogs = 0; // giá vốn hàng bán
+    let monthRevenueWithCost = 0; // doanh thu của riêng món có giá vốn
+    let hasCost = false;
+    for (const it of monthItems) {
+      const cost = it.product?.cost_price;
+      if (cost != null) {
+        hasCost = true;
+        monthCogs += Number(cost) * it.quantity;
+        monthRevenueWithCost += Number(it.subtotal);
+      }
+    }
+    const monthProfit = hasCost ? monthRevenueWithCost - monthCogs : null;
 
     // Group by date for chart
     const dailyMap = new Map<string, number>();
@@ -156,11 +135,17 @@ export class ReportsService {
         business_type: store.business_type,
       },
       today_revenue: todayRevenue,
+      today_cash: todayCash,
+      today_transfer: todayTransfer,
+      today_invoice_count: todayInvoices.length,
       month_revenue: monthRevenue,
       month_invoice_count: monthInvoiceCount,
+      month_profit: monthProfit,
+      month_cogs: hasCost ? monthCogs : null,
       daily,
       top_products: topItems,
-      tax_estimate: this.buildTaxEstimate(store, monthRevenue),
+      // Doanh thu 1 tháng → computeTax tự quy đổi cả năm để so ngưỡng miễn thuế.
+      tax_estimate: computeTax(store.business_type, monthRevenue, 1),
     };
   }
 
@@ -170,7 +155,7 @@ export class ReportsService {
     to: string,
     requestedStoreId?: string,
   ) {
-    const store = await this.resolveStore(userId, requestedStoreId);
+    const store = await this.stores.resolveStore(userId, requestedStoreId);
     const fromDate = new Date(from);
     const toDate = new Date(to + 'T23:59:59');
 
@@ -202,6 +187,13 @@ export class ReportsService {
       0,
     );
 
+    // Số tháng của kỳ báo cáo (tối thiểu 1) để quy đổi doanh thu cả năm.
+    const days = Math.max(
+      1,
+      (toDate.getTime() - fromDate.getTime()) / 86_400_000,
+    );
+    const monthsInPeriod = Math.max(1, days / 30);
+
     return {
       store: {
         id: store.id,
@@ -215,7 +207,7 @@ export class ReportsService {
       to,
       total_revenue: totalRevenue,
       invoice_count: invoices.length,
-      tax_estimate: this.buildTaxEstimate(store, totalRevenue),
+      tax_estimate: computeTax(store.business_type, totalRevenue, monthsInPeriod),
       invoices: invoices.map((inv) => ({
         id: inv.id,
         invoice_number: inv.invoice_number,

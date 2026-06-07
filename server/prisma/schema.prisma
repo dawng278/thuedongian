@@ -34,6 +34,7 @@ model Store {
   products Product[]
   invoices Invoice[]
 
+  @@index([owner_id])
   @@map("stores")
 }
 
@@ -42,6 +43,8 @@ model Product {
   store_id   String
   name       String
   price      Decimal  @db.Decimal(12, 0)
+  cost_price Decimal? @db.Decimal(12, 0) // giá vốn — tính lợi nhuận; null = chưa nhập
+  stock      Int? // tồn kho; null = không theo dõi kho
   unit       String?
   category   String?
   image_url  String?
@@ -52,6 +55,7 @@ model Product {
   store        Store         @relation(fields: [store_id], references: [id])
   invoice_items InvoiceItem[]
 
+  @@index([store_id, is_active])
   @@map("products")
 }
 
@@ -61,6 +65,7 @@ model Invoice {
   store_id       String
   invoice_number Int
   total_amount   Decimal   @db.Decimal(12, 0)
+  payment_method String    @default("cash") // cash | transfer
   note           String?
   created_at     DateTime  @default(now())
   synced_at      DateTime?
@@ -69,6 +74,7 @@ model Invoice {
   items InvoiceItem[]
 
   @@unique([store_id, invoice_number])
+  @@index([store_id, created_at])
   @@map("invoices")
 }
 
@@ -85,5 +91,7 @@ model InvoiceItem {
   invoice Invoice  @relation(fields: [invoice_id], references: [id])
   product Product? @relation(fields: [product_id], references: [id])
 
+  @@index([invoice_id])
+  @@index([product_id])
   @@map("invoice_items")
 }
