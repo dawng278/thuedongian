@@ -38,7 +38,16 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadMore();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final storeId = context.read<StoresProvider>().currentStore?.id;
+    if (storeId != null && storeId != _storeId) {
+      _storeId = storeId;
+      _refresh();
+    }
   }
 
   Future<void> _loadMore() async {
@@ -444,12 +453,6 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   Widget build(BuildContext context) {
     final hasFilter = _fromDate != null || _toDate != null;
     final cs = Theme.of(context).colorScheme;
-    final storeId = context.watch<StoresProvider>().currentStore?.id;
-    if (storeId != null && storeId != _storeId) {
-      _storeId = storeId;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
-    }
-
     return Column(
       children: [
         // Filter bar
@@ -711,13 +714,45 @@ class _InvoiceDetailSheet extends StatelessWidget {
   final InvoiceDto invoice;
   const _InvoiceDetailSheet({required this.invoice});
 
-  void _downloadXml(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Endpoint XML: GET /invoices/${invoice.id}/xml'),
-        duration: const Duration(seconds: 4),
-      ),
+  Future<void> _downloadXml(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final store = context.read<StoresProvider>().currentStore;
+
+    // Hóa đơn điện tử bắt buộc có MST người bán — chặn sớm với hướng dẫn rõ ràng.
+    if (store?.taxId == null || store!.taxId!.trim().isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Cần khai báo Mã số thuế của quán trước khi xuất hóa đơn điện tử. '
+              'Vào "Cài đặt quán" để thêm.'),
+          backgroundColor: Color(0xFFD97706),
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Đang tạo file XML...')),
     );
+    try {
+      final xml = await context.read<ApiService>().getInvoiceXml(invoice.id);
+      final dir = await getTemporaryDirectory();
+      final number = invoice.invoiceNumber ?? invoice.id.substring(0, 8);
+      final file = File('${dir.path}/hoadon-$number.xml');
+      await file.writeAsString(xml, flush: true);
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'application/xml')],
+        subject: 'Hóa đơn điện tử #$number',
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Lỗi xuất XML: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override

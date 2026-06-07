@@ -20,34 +20,48 @@ class TopProduct {
 
 class RevenueData {
   final int todayRevenue;
+  final int todayCash;
+  final int todayTransfer;
+  final int todayInvoiceCount;
   final int monthRevenue;
   final int monthInvoiceCount;
+  final int? monthProfit; // null = chưa khai báo giá vốn món nào
   final List<DailyRevenue> daily;
   final List<TopProduct> topProducts;
 
   const RevenueData({
     required this.todayRevenue,
+    required this.todayCash,
+    required this.todayTransfer,
+    required this.todayInvoiceCount,
     required this.monthRevenue,
     required this.monthInvoiceCount,
+    this.monthProfit,
     required this.daily,
     required this.topProducts,
   });
 
   factory RevenueData.fromJson(Map<String, dynamic> json) => RevenueData(
-        todayRevenue: (json['today_revenue'] as num).toInt(),
-        monthRevenue: (json['month_revenue'] as num).toInt(),
-        monthInvoiceCount: (json['month_invoice_count'] as num).toInt(),
-        daily: (json['daily'] as List)
+        todayRevenue: num.tryParse(json['today_revenue']?.toString() ?? '0')?.toInt() ?? 0,
+        todayCash: num.tryParse(json['today_cash']?.toString() ?? '0')?.toInt() ?? 0,
+        todayTransfer: num.tryParse(json['today_transfer']?.toString() ?? '0')?.toInt() ?? 0,
+        todayInvoiceCount: num.tryParse(json['today_invoice_count']?.toString() ?? '0')?.toInt() ?? 0,
+        monthRevenue: num.tryParse(json['month_revenue']?.toString() ?? '0')?.toInt() ?? 0,
+        monthInvoiceCount: num.tryParse(json['month_invoice_count']?.toString() ?? '0')?.toInt() ?? 0,
+        monthProfit: json['month_profit'] != null
+            ? num.tryParse(json['month_profit'].toString())?.toInt()
+            : null,
+        daily: ((json['daily'] as List?) ?? [])
             .map((e) => DailyRevenue(
-                  date: e['date'] as String,
-                  revenue: (e['revenue'] as num).toInt(),
+                  date: e['date'] as String? ?? '',
+                  revenue: num.tryParse(e['revenue']?.toString() ?? '0')?.toInt() ?? 0,
                 ))
             .toList(),
-        topProducts: (json['top_products'] as List)
+        topProducts: ((json['top_products'] as List?) ?? [])
             .map((e) => TopProduct(
-                  productName: e['product_name'] as String,
-                  totalRevenue: (e['total_revenue'] as num).toInt(),
-                  totalQuantity: (e['total_quantity'] as num).toInt(),
+                  productName: e['product_name'] as String? ?? '',
+                  totalRevenue: num.tryParse(e['total_revenue']?.toString() ?? '0')?.toInt() ?? 0,
+                  totalQuantity: num.tryParse(e['total_quantity']?.toString() ?? '0')?.toInt() ?? 0,
                 ))
             .toList(),
       );

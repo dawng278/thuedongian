@@ -31,4 +31,14 @@ export class UpdateProductDto {
   @IsBoolean()
   @IsOptional()
   is_active?: boolean;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  cost_price?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  stock?: number;
 }

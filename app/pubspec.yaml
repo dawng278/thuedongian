@@ -33,6 +33,9 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.5.3
 
+  # Connectivity (auto-sync khi có mạng trở lại)
+  connectivity_plus: ^6.1.0
+
   # Export & share
   share_plus: ^10.0.3
   path_provider: ^2.1.5

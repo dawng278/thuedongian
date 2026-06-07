@@ -3,6 +3,8 @@ class ProductDto {
   final String storeId;
   final String name;
   final int price;
+  final int? costPrice; // giá vốn; null = chưa nhập
+  final int? stock; // tồn kho; null = không theo dõi
   final String? unit;
   final String? category;
   final String? imageUrl;
@@ -15,6 +17,8 @@ class ProductDto {
     required this.storeId,
     required this.name,
     required this.price,
+    this.costPrice,
+    this.stock,
     this.unit,
     this.category,
     this.imageUrl,
@@ -27,7 +31,13 @@ class ProductDto {
         id: json['id'] as String,
         storeId: json['store_id'] as String,
         name: json['name'] as String,
-        price: (json['price'] as num).toInt(),
+        price: num.tryParse(json['price']?.toString() ?? '0')?.toInt() ?? 0,
+        costPrice: json['cost_price'] != null
+            ? num.tryParse(json['cost_price'].toString())?.toInt()
+            : null,
+        stock: json['stock'] != null
+            ? num.tryParse(json['stock'].toString())?.toInt()
+            : null,
         unit: json['unit'] as String?,
         category: json['category'] as String?,
         imageUrl: json['image_url'] as String?,
@@ -43,6 +53,8 @@ class ProductDto {
         'store_id': storeId,
         'name': name,
         'price': price,
+        if (costPrice != null) 'cost_price': costPrice,
+        if (stock != null) 'stock': stock,
         if (unit != null) 'unit': unit,
         if (category != null) 'category': category,
         if (imageUrl != null) 'image_url': imageUrl,
