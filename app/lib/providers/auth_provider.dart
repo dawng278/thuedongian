@@ -25,18 +25,34 @@ class AuthProvider extends ChangeNotifier {
   final ApiService _api;
 
   AuthProvider(this._api) {
+    _wireTokenRefresh();
     _tryRestoreSession();
+  }
+
+  /// Khi interceptor refresh token thành công → lưu lại; khi hết hạn hẳn → logout.
+  void _wireTokenRefresh() {
+    final api = _api;
+    if (api is HttpApiService) {
+      api.onTokensRefreshed = (access, refresh) {
+        _saveTokens(access, refresh);
+      };
+      api.onAuthExpired = () {
+        logout();
+      };
+    }
   }
 
   Future<void> _tryRestoreSession() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_keyToken);
+    final refresh = prefs.getString(_keyRefresh);
     if (token == null) {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return;
     }
     (_api as HttpApiService).setToken(token);
+    (_api as HttpApiService).setRefreshToken(refresh);
     try {
       try {
         _store = await _api.getMyStore();
@@ -57,6 +73,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await _api.login(email, password);
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
+      (_api as HttpApiService).setRefreshToken(res.refreshToken);
       _user = res.user;
       try {
         _store = await _api.getMyStore();
@@ -79,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await _api.register(email, password, name);
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
+      (_api as HttpApiService).setRefreshToken(res.refreshToken);
       _user = res.user;
       try {
         _store = await _api.getMyStore();

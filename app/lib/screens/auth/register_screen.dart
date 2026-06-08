@@ -51,6 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TaxEasyColors.background,
+      resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 720;
@@ -92,39 +93,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
             );
           }
 
-          final heroHeight = (constraints.maxHeight * 0.30).clamp(190.0, 260.0);
-          return Stack(
+          return Column(
             children: [
               SizedBox(
                 width: double.infinity,
-                height: heroHeight,
-                child: SafeArea(
+                height: (constraints.maxHeight * 0.28).clamp(160.0, 220.0),
+                child: const SafeArea(
                   bottom: false,
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(
-                        child: TaxEasyAuthVisual(
-                          title: 'Tạo tài khoản',
-                          subtitle: 'Tạo tài khoản trước, thêm quán sau.',
-                          compact: true,
-                        ),
-                      ),
-                      Positioned(
-                        top: 6,
-                        left: 8,
-                        child: IconButton(
-                          tooltip: 'Quay lại',
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back_ios_new,
-                              color: Colors.white),
-                        ),
-                      ),
-                    ],
+                  child: TaxEasyAuthVisual(
+                    title: 'Tạo tài khoản',
+                    subtitle: 'Tạo tài khoản trước, thêm quán sau.',
+                    compact: true,
                   ),
                 ),
               ),
-              Positioned.fill(
-                top: heroHeight - 28,
+              Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
                     color: TaxEasyColors.surface,
@@ -155,7 +138,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         passCtrl: _passCtrl,
                         loading: _loading,
                         obscure: _obscure,
-                        showHandle: true,
                         onBack: () => Navigator.pop(context),
                         onTogglePassword: () =>
                             setState(() => _obscure = !_obscure),
@@ -180,7 +162,6 @@ class _RegisterForm extends StatelessWidget {
   final TextEditingController passCtrl;
   final bool loading;
   final bool obscure;
-  final bool showHandle;
   final VoidCallback onBack;
   final VoidCallback onTogglePassword;
   final VoidCallback onSubmit;
@@ -195,7 +176,6 @@ class _RegisterForm extends StatelessWidget {
     required this.onBack,
     required this.onTogglePassword,
     required this.onSubmit,
-    this.showHandle = false,
   });
 
   @override
@@ -207,29 +187,6 @@ class _RegisterForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showHandle) ...[
-            Center(
-              child: Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: TaxEasyColors.outlineVariant,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ] else ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton.outlined(
-                tooltip: 'Quay lại',
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
           const Text(
             'Tạo tài khoản',
             style: TextStyle(
@@ -329,6 +286,21 @@ class _RegisterForm extends StatelessWidget {
             icon: Icons.arrow_forward,
             label: 'Đăng ký tài khoản',
             loading: loading,
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'Đã có tài khoản?',
+                style: TextStyle(color: TaxEasyColors.textSecondary),
+              ),
+              TextButton(
+                onPressed: onBack,
+                child: const Text('Đăng nhập'),
+              ),
+            ],
           ),
         ],
       ),

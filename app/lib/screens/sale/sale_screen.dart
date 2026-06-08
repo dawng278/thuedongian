@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
@@ -48,12 +49,14 @@ class _SaleViewState extends State<_SaleView> {
   );
 
   void _addToCart(ProductDto product) {
+    HapticFeedback.lightImpact(); // rung nhẹ xác nhận đã thêm món
     setState(() {
       _cart[product.id] = (_cart[product.id] ?? 0) + 1;
     });
   }
 
   void _removeFromCart(String productId) {
+    HapticFeedback.selectionClick();
     setState(() {
       final qty = _cart[productId] ?? 0;
       if (qty <= 1) {
@@ -1062,6 +1065,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
             paymentMethod: widget.paymentMethod,
           );
       if (mounted) {
+        HapticFeedback.mediumImpact(); // rung xác nhận thanh toán thành công
         Navigator.pop(context);
         widget.onClear();
         final num = result.serverNumber ?? result.localNumber;

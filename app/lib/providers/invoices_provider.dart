@@ -165,6 +165,13 @@ class InvoicesProvider extends ChangeNotifier {
     }
   }
 
+  /// Lấy danh sách hóa đơn chưa đồng bộ (để hiển thị cho người quản lý xem).
+  Future<List<LocalInvoice>> pendingInvoices() async {
+    final storeId = _storeId;
+    if (storeId == null) return [];
+    return LocalDb.getPendingInvoices(storeId: storeId);
+  }
+
   /// Sync all pending invoices (call when network comes back)
   Future<SyncResult> syncPending() async {
     final storeId = _storeId;

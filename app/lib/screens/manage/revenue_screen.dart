@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/revenue_provider.dart';
+import '../../widgets/skeleton.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 
@@ -29,7 +30,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
     final cs = Theme.of(context).colorScheme;
 
     if (provider.loading && provider.data == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const RevenueSkeleton();
     }
 
     if (provider.error != null && provider.data == null) {
@@ -126,35 +127,28 @@ class _RevenueScreenState extends State<RevenueScreen> {
             _ProfitCard(profit: data.monthProfit!, cs: cs),
           ],
 
-          // Revenue chart
-          if (data.daily.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                _SectionHeader(title: 'Biểu đồ doanh thu', cs: cs),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFC3C6D7)),
-                  ),
-                  child: Text('Tháng này',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurface)),
-                ),
-              ],
+          // Biểu đồ doanh thu — chuyển đổi Tuần / Tháng / Năm
+          const SizedBox(height: 24),
+          _SectionHeader(title: 'Biểu đồ doanh thu', cs: cs),
+          const SizedBox(height: 12),
+          _GranularitySelector(
+            selected: provider.granularity,
+            onChanged: (g) => provider.loadChart(g),
+            cs: cs,
+          ),
+          const SizedBox(height: 12),
+          _ChartCard(
+            child: SizedBox(
+              height: 200,
+              child: provider.chartLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : provider.chart.every((p) => p.revenue == 0)
+                      ? Center(
+                          child: Text('Chưa có doanh thu trong kỳ này',
+                              style: TextStyle(color: cs.onSurfaceVariant)))
+                      : _RevenueChart(points: provider.chart, cs: cs),
             ),
-            const SizedBox(height: 12),
-            _ChartCard(
-              child: SizedBox(
-                  height: 180, child: _RevenueChart(daily: data.daily, cs: cs)),
-            ),
-          ],
+          ),
 
           // Top products
           if (data.topProducts.isNotEmpty) ...[
@@ -553,25 +547,90 @@ class _TopProductRow extends StatelessWidget {
 
 // ── Line Chart ─────────────────────────────────────────────────────────────
 
-class _RevenueChart extends StatelessWidget {
-  final List<DailyRevenue> daily;
+/// Bộ chọn mốc thời gian biểu đồ: Tuần / Tháng / Năm.
+class _GranularitySelector extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onChanged;
   final ColorScheme cs;
-  const _RevenueChart({required this.daily, required this.cs});
+
+  const _GranularitySelector({
+    required this.selected,
+    required this.onChanged,
+    required this.cs,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (daily.isEmpty) return const SizedBox.shrink();
+    const options = [
+      ('week', '7 ngày'),
+      ('month', '30 ngày'),
+      ('year', '12 tháng'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEDEFF7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: options.map((o) {
+          final isSel = selected == o.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(o.$1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSel ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(9),
+                  boxShadow: isSel
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1))
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  o.$2,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                    color: isSel ? cs.primary : cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
 
-    final maxY =
-        daily.map((d) => d.revenue.toDouble()).reduce((a, b) => a > b ? a : b);
-    final spots = daily.asMap().entries.map((e) {
+class _RevenueChart extends StatelessWidget {
+  final List<ChartPoint> points;
+  final ColorScheme cs;
+  const _RevenueChart({required this.points, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    if (points.isEmpty) return const SizedBox.shrink();
+
+    final maxY = points
+        .map((p) => p.revenue.toDouble())
+        .reduce((a, b) => a > b ? a : b);
+    final spots = points.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.revenue.toDouble());
     }).toList();
 
     return LineChart(
       LineChartData(
         minY: 0,
-        maxY: maxY * 1.2,
+        maxY: (maxY == 0 ? 1 : maxY) * 1.2,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -585,16 +644,15 @@ class _RevenueChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: (daily.length / 5).ceilToDouble().clamp(1, 31),
+              interval: (points.length / 6).ceilToDouble().clamp(1, 31),
               getTitlesWidget: (val, _) {
                 final idx = val.toInt();
-                if (idx < 0 || idx >= daily.length) {
+                if (idx < 0 || idx >= points.length) {
                   return const SizedBox.shrink();
                 }
-                final day = daily[idx].date.substring(8);
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(day,
+                  child: Text(points[idx].label,
                       style:
                           TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
                 );
@@ -607,10 +665,12 @@ class _RevenueChart extends StatelessWidget {
               reservedSize: 44,
               getTitlesWidget: (val, _) {
                 if (val == 0) return const SizedBox.shrink();
-                return Text(
-                  '${(val / 1000).round()}k',
-                  style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
-                );
+                final m = val >= 1000000
+                    ? '${(val / 1000000).toStringAsFixed(1)}tr'
+                    : '${(val / 1000).round()}k';
+                return Text(m,
+                    style:
+                        TextStyle(fontSize: 10, color: cs.onSurfaceVariant));
               },
             ),
           ),
@@ -628,7 +688,7 @@ class _RevenueChart extends StatelessWidget {
             ),
             barWidth: 2.5,
             dotData: FlDotData(
-              show: daily.length <= 10,
+              show: points.length <= 12,
               getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                 radius: 4,
                 color: cs.primaryContainer,

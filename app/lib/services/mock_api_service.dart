@@ -199,6 +199,7 @@ class MockApiService implements ApiService {
       String? category,
       int? stock,
       int? costPrice,
+      String? imageUrl,
       String? storeId}) async {
     final p = ProductDto(
       id: _uuid.v4(),
@@ -209,6 +210,7 @@ class MockApiService implements ApiService {
       stock: stock,
       unit: unit,
       category: category,
+      imageUrl: imageUrl,
       isActive: true,
       updatedAt: DateTime.now(),
     );
@@ -399,6 +401,15 @@ class MockApiService implements ApiService {
       'top_products': <Map<String, dynamic>>[],
       'store': _store.toJson(),
       'tax_estimate': {},
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> getChart(
+      {String granularity = 'week', String? storeId}) async {
+    return {
+      'granularity': granularity,
+      'points': <Map<String, dynamic>>[],
     };
   }
 

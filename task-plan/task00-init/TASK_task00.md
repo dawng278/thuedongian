@@ -10,7 +10,7 @@
 ## VIỆC CẦN LÀM
 
 ### Chung (đầu ngày)
-- [ ] Tạo repo GitHub `taxeasy`, thêm cả hai làm collaborator.
+- [ ] Tạo repo GitHub `thuedongian`, thêm cả hai làm collaborator.
 - [ ] Tạo cấu trúc thư mục `app/ server/ shared/ docs/ task-plan/`.
 - [ ] Tạo `main` và `dev`. Đặt `dev` làm nhánh mặc định.
 - [ ] Thêm `README.md` gốc + copy `RULEBASE.md` vào repo.

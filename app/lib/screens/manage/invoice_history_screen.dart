@@ -2,20 +2,29 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
-
 import '../../providers/stores_provider.dart';
+import '../../services/share_helper.dart';
 import '../../models/invoice.dart';
 import '../../services/api_service.dart';
+import '../../theme/taxeasy_design.dart';
+import '../../widgets/skeleton.dart';
 import '../sale/invoice_qr_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 final _dateFmt = DateFormat('dd/MM/yyyy HH:mm', 'vi_VN');
 final _dateFmtShort = DateFormat('dd/MM/yyyy', 'vi_VN');
+
+/// Rút gọn đường dẫn để hiển thị (chỉ giữ phần thân thiện với người dùng).
+String _displayPath(String fullPath) {
+  if (fullPath.contains('/Download')) return 'Thư mục Download';
+  final parts = fullPath.split('/');
+  return parts.length > 2
+      ? '.../${parts[parts.length - 2]}/${parts.last}'
+      : fullPath;
+}
 
 class InvoiceHistoryScreen extends StatefulWidget {
   const InvoiceHistoryScreen({super.key});
@@ -34,10 +43,34 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
   String? _storeId;
+  String _searchQuery = '';
+  final _searchCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Lọc client-side trên các hóa đơn đã tải: theo số HĐ, tên sản phẩm,
+  /// hoặc số tiền. (Bộ lọc ngày vẫn ở server-side.)
+  List<InvoiceDto> get _filteredInvoices {
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isEmpty) return _invoices;
+    return _invoices.where((inv) {
+      final num = (inv.invoiceNumber?.toString() ?? '');
+      if (num.contains(q)) return true;
+      if (inv.totalAmount.toString().contains(q)) return true;
+      final items = inv.items ?? [];
+      return items.any(
+        (it) => it.productName.toLowerCase().contains(q),
+      );
+    }).toList();
   }
 
   @override
@@ -232,17 +265,22 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
       final file = format == 'pdf'
           ? await _writePdfReport(report, range)
           : await _writeCsvReport(report, range);
-      await Share.shareXFiles(
-        [
-          XFile(
-            file.path,
-            mimeType: format == 'pdf' ? 'application/pdf' : 'text/csv',
-          ),
-        ],
+      await shareOrOpenFile(
+        file.path,
+        mimeType: format == 'pdf' ? 'application/pdf' : 'text/csv',
         subject: format == 'pdf'
             ? 'Báo cáo PDF ThueDonGian'
             : 'Báo cáo CSV ThueDonGian',
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã lưu báo cáo vào: ${_displayPath(file.path)}'),
+            backgroundColor: TaxEasyColors.success,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -279,7 +317,7 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
         '${inv['invoice_number'] ?? '?'},${inv['created_at'] ?? ''},${inv['total_amount'] ?? 0},"$items"',
       );
     }
-    final dir = await getTemporaryDirectory();
+    final dir = await resolveSaveDirectory();
     final file = File(
       '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.csv',
     );
@@ -413,13 +451,14 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
       ),
     );
 
-    final dir = await getTemporaryDirectory();
+    final dir = await resolveSaveDirectory();
     final file = File(
       '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.pdf',
     );
     await file.writeAsBytes(await doc.save(), flush: true);
     return file;
   }
+
 
   pw.TableRow _pdfRow(String label, String value) => _pdfCells([label, value]);
 
@@ -455,6 +494,42 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
+        // Ô tìm kiếm
+        Container(
+          color: const Color(0xFFF8F9FF),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: TextField(
+            controller: _searchCtrl,
+            onChanged: (v) => setState(() => _searchQuery = v),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: 'Tìm số HĐ, sản phẩm, số tiền...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _searchQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+                borderSide: const BorderSide(color: Color(0xFFC3C6D7)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+                borderSide: const BorderSide(color: Color(0xFFC3C6D7)),
+              ),
+            ),
+          ),
+        ),
         // Filter bar
         Container(
           color: const Color(0xFFF8F9FF),
@@ -542,21 +617,19 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
 
         // List
         if (_loading && _invoices.isEmpty)
-          const Expanded(child: Center(child: CircularProgressIndicator()))
-        else if (_invoices.isEmpty)
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.receipt_long_outlined,
-                      size: 56, color: cs.outline),
-                  const SizedBox(height: 12),
-                  Text('Chưa có hóa đơn nào',
-                      style:
-                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
-                ],
-              ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+              physics: const NeverScrollableScrollPhysics(),
+              children: List.generate(
+                  8, (_) => const InvoiceRowSkeleton()),
+            ),
+          )
+        else if (_filteredInvoices.isEmpty)
+          Expanded(
+            child: _InvoiceEmptyState(
+              hasFilter: hasFilter || _searchQuery.isNotEmpty,
+              cs: cs,
             ),
           )
         else
@@ -564,23 +637,32 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
             child: RefreshIndicator(
               color: cs.primary,
               onRefresh: _refresh,
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                itemCount: _invoices.length + (_hasMore ? 1 : 0),
-                itemBuilder: (context, i) {
-                  if (i == _invoices.length) {
-                    if (!_loading) _loadMore();
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _InvoiceRow(
-                      invoice: _invoices[i],
-                      onTap: () => _showDetail(context, _invoices[i]),
-                    ),
+              child: Builder(
+                builder: (context) {
+                  final searching = _searchQuery.trim().isNotEmpty;
+                  final list = _filteredInvoices;
+                  // Khi đang tìm kiếm: không phân trang thêm (lọc client trên
+                  // dữ liệu đã tải). Khi không tìm: giữ infinite scroll.
+                  final showLoadMore = !searching && _hasMore;
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    itemCount: list.length + (showLoadMore ? 1 : 0),
+                    itemBuilder: (context, i) {
+                      if (i == list.length) {
+                        if (!_loading) _loadMore();
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _InvoiceRow(
+                          invoice: list[i],
+                          onTap: () => _showDetail(context, list[i]),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -596,6 +678,65 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _InvoiceDetailSheet(invoice: invoice),
+    );
+  }
+}
+
+// ── Empty state ────────────────────────────────────────────────────────────
+
+class _InvoiceEmptyState extends StatelessWidget {
+  final bool hasFilter;
+  final ColorScheme cs;
+  const _InvoiceEmptyState({required this.hasFilter, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(
+                color: TaxEasyColors.surfaceLow,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                hasFilter ? Icons.search_off_rounded : Icons.receipt_long_outlined,
+                size: 48,
+                color: TaxEasyColors.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              hasFilter
+                  ? 'Không có hóa đơn trong khoảng này'
+                  : 'Chưa có hóa đơn nào',
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: TaxEasyColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasFilter
+                  ? 'Thử chọn khoảng thời gian khác hoặc xóa bộ lọc.'
+                  : 'Chuyển sang chế độ Bán hàng và bán món đầu tiên — hóa đơn sẽ hiện ở đây.',
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: cs.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -737,13 +878,21 @@ class _InvoiceDetailSheet extends StatelessWidget {
     );
     try {
       final xml = await context.read<ApiService>().getInvoiceXml(invoice.id);
-      final dir = await getTemporaryDirectory();
+      final dir = await resolveSaveDirectory();
       final number = invoice.invoiceNumber ?? invoice.id.substring(0, 8);
       final file = File('${dir.path}/hoadon-$number.xml');
       await file.writeAsString(xml, flush: true);
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'application/xml')],
+      await shareOrOpenFile(
+        file.path,
+        mimeType: 'application/xml',
         subject: 'Hóa đơn điện tử #$number',
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Đã lưu XML vào: ${_displayPath(file.path)}'),
+          backgroundColor: TaxEasyColors.success,
+          duration: const Duration(seconds: 4),
+        ),
       );
     } catch (e) {
       messenger.showSnackBar(

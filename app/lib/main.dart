@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'providers/products_provider.dart';
 import 'providers/invoices_provider.dart';
@@ -12,6 +13,7 @@ import 'providers/stores_provider.dart';
 import 'services/api_service.dart';
 import 'services/http_api_service.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/onboarding_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'theme/taxeasy_design.dart';
 
@@ -154,12 +156,47 @@ class TaxEasyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool? _showOnboarding;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    final done = prefs.getBool('onboarding_done') ?? false;
+    if (done) {
+      setState(() => _showOnboarding = false);
+    } else {
+      await prefs.setBool('onboarding_done', true);
+      setState(() => _showOnboarding = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final status = context.watch<AuthProvider>().status;
+
+    // Chờ kiểm tra SharedPreferences + AuthProvider cùng lúc
+    if (_showOnboarding == null || status == AuthStatus.unknown) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Lần đầu cài app → Onboarding, rồi tuỳ auth status
+    if (_showOnboarding!) {
+      return const OnboardingScreen();
+    }
+
     return switch (status) {
       AuthStatus.unknown => const Scaffold(
           body: Center(child: CircularProgressIndicator()),

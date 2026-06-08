@@ -19,6 +19,7 @@ abstract class ApiService {
       String? category,
       int? stock,
       int? costPrice,
+      String? imageUrl,
       String? storeId});
   Future<ProductDto> updateProduct(String id, Map<String, dynamic> data);
   Future<void> deleteProduct(String id);
@@ -37,6 +38,8 @@ abstract class ApiService {
 
   Future<Map<String, dynamic>> getRevenue(
       {DateTime? from, DateTime? to, String? storeId});
+  Future<Map<String, dynamic>> getChart(
+      {String granularity = 'week', String? storeId});
   Future<Map<String, dynamic>> getPeriodReport(
       {required DateTime from, required DateTime to, String? storeId});
 

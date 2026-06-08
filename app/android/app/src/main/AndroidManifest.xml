@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Quyền ghi file xuất báo cáo/hóa đơn vào bộ nhớ ngoài.
+         Android 10+ dùng scoped storage nên maxSdkVersion=28 (chỉ cần cho máy cũ). -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="taxeasy_app"
+        android:label="TaxEasy"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
