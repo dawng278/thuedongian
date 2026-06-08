@@ -166,6 +166,22 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<UserDto> updateProfile({String? name, String? email}) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return UserDto(
+      id: 'user-001',
+      email: email ?? 'owner@taxeasy.vn',
+      name: name ?? 'Chủ quán Demo',
+    );
+  }
+
+  @override
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
+  @override
   Future<List<StoreDto>> getStores() async => [_store];
 
   @override

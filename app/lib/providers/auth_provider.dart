@@ -113,6 +113,41 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Cập nhật hồ sơ (tên/email). Trả true nếu thành công, cập nhật _user.
+  Future<bool> updateProfile({String? name, String? email}) async {
+    _errorMessage = null;
+    try {
+      final updated = await _api.updateProfile(name: name, email: email);
+      _user = updated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      _errorMessage = (msg.contains('409') || msg.contains('Conflict'))
+          ? 'Email đã được dùng bởi tài khoản khác'
+          : _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Đổi mật khẩu. Trả true nếu thành công.
+  Future<bool> changePassword(
+      String currentPassword, String newPassword) async {
+    _errorMessage = null;
+    try {
+      await _api.changePassword(currentPassword, newPassword);
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      _errorMessage = (msg.contains('401') || msg.contains('Unauthorized'))
+          ? 'Mật khẩu hiện tại không đúng'
+          : _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _clearTokens();
     (_api as HttpApiService).clearToken();

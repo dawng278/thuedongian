@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../theme/taxeasy_design.dart';
-import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  /// Gọi khi người dùng hoàn tất/bỏ qua onboarding. AuthGate dùng callback này
+  /// để chuyển sang Login/Home — đừng tự push màn hình trong onboarding.
+  final VoidCallback onDone;
+
+  const OnboardingScreen({super.key, required this.onDone});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -60,14 +63,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      _goToLogin();
+      widget.onDone();
     }
-  }
-
-  void _goToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-    );
   }
 
   @override
@@ -145,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     if (!isLast) ...[
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: _goToLogin,
+                        onPressed: widget.onDone,
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white.withValues(alpha: 0.7),
                         ),

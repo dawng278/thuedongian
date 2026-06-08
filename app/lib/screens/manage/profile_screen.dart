@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/stores_provider.dart';
 import '../../theme/taxeasy_design.dart';
+import 'app_settings_screen.dart';
+import 'edit_profile_screen.dart';
 import 'store_settings_screen.dart';
 
 /// Trang Tài khoản: thông tin người dùng, quán hiện tại, chuyển quán,
@@ -100,6 +102,17 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _sectionLabel('CÀI ĐẶT', cs),
           ListTile(
+            leading: const Icon(Icons.manage_accounts_outlined),
+            title: const Text('Chỉnh sửa hồ sơ'),
+            subtitle: const Text('Tên, email, mật khẩu'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const EditProfileScreen(),
+              ),
+            ),
+          ),
+          ListTile(
             leading: const Icon(Icons.tune_outlined),
             title: const Text('Cài đặt quán'),
             subtitle: const Text('Tên, MST, địa chỉ, loại hình'),
@@ -118,6 +131,17 @@ class ProfileScreen extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _showStoreSwitcher(context, stores),
             ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Cài đặt ứng dụng'),
+            subtitle: const Text('Trải nghiệm, hỗ trợ, về ứng dụng'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AppSettingsScreen(),
+              ),
+            ),
+          ),
 
           const SizedBox(height: 24),
           Padding(

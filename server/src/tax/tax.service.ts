@@ -112,7 +112,9 @@ export class TaxService {
     // Lệ phí môn bài: chậm nhất 30/1 hằng năm (Nghị định 22/2020/NĐ-CP).
     const monBai = new Date(year, 0, 30, 23, 59, 59);
     if (monBai >= now) {
-      const daysLeft = Math.ceil((monBai.getTime() - now.getTime()) / MS_PER_DAY);
+      const daysLeft = Math.ceil(
+        (monBai.getTime() - now.getTime()) / MS_PER_DAY,
+      );
       upcoming.push({
         label: `Lệ phí môn bài (${year})`,
         deadline: monBai.toISOString().substring(0, 10),

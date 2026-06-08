@@ -1,21 +1,44 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:convert';
 import '../../providers/stores_provider.dart';
 import '../../services/share_helper.dart';
 import '../../models/invoice.dart';
 import '../../services/api_service.dart';
 import '../../theme/taxeasy_design.dart';
 import '../../widgets/skeleton.dart';
-import '../sale/invoice_qr_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 final _dateFmt = DateFormat('dd/MM/yyyy HH:mm', 'vi_VN');
 final _dateFmtShort = DateFormat('dd/MM/yyyy', 'vi_VN');
+
+// Cache theme PDF (font Unicode) — load font 1 lần, dùng lại cho mọi lần xuất.
+pw.ThemeData? _cachedPdfTheme;
+
+/// Tạo theme PDF dùng font DejaVu Sans (hỗ trợ đầy đủ tiếng Việt).
+Future<pw.ThemeData> _pdfTheme() async {
+  if (_cachedPdfTheme != null) return _cachedPdfTheme!;
+  final regular = pw.Font.ttf(
+    await rootBundle.load('assets/fonts/DejaVuSans.ttf'),
+  );
+  final bold = pw.Font.ttf(
+    await rootBundle.load('assets/fonts/DejaVuSans-Bold.ttf'),
+  );
+  _cachedPdfTheme = pw.ThemeData.withFont(
+    base: regular,
+    bold: bold,
+    italic: regular,
+    boldItalic: bold,
+  );
+  return _cachedPdfTheme!;
+}
 
 /// Rút gọn đường dẫn để hiển thị (chỉ giữ phần thân thiện với người dùng).
 String _displayPath(String fullPath) {
@@ -321,7 +344,8 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     final file = File(
       '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.csv',
     );
-    await file.writeAsString(sb.toString(), flush: true);
+    // Thêm BOM UTF-8 (﻿) để Excel mở CSV hiển thị đúng tiếng Việt.
+    await file.writeAsString('﻿${sb.toString()}', flush: true);
     return file;
   }
 
@@ -333,11 +357,16 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
     final tax = (report['tax_estimate'] as Map?)?.cast<String, dynamic>() ?? {};
     final invoices = (report['invoices'] as List? ?? []);
     final topProducts = (report['top_products'] as List? ?? []);
-    final doc = pw.Document();
+
+    // Font Unicode (DejaVu Sans) để hiển thị tiếng Việt đúng dấu trong PDF —
+    // font mặc định của package pdf (Helvetica) không có glyph tiếng Việt.
+    final theme = await _pdfTheme();
+    final doc = pw.Document(theme: theme);
 
     doc.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
+          theme: theme,
           margin: const pw.EdgeInsets.all(32),
           buildBackground: (_) => pw.Center(
             child: pw.Transform.rotate(
@@ -649,7 +678,13 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                     itemCount: list.length + (showLoadMore ? 1 : 0),
                     itemBuilder: (context, i) {
                       if (i == list.length) {
-                        if (!_loading) _loadMore();
+                        // Defer load: KHÔNG gọi setState trong lúc build —
+                        // gây "setState during build" và rebuild lặp (treo).
+                        if (!_loading) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) _loadMore();
+                          });
+                        }
                         return const Padding(
                           padding: EdgeInsets.all(16),
                           child: Center(child: CircularProgressIndicator()),
@@ -673,11 +708,10 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   }
 
   void _showDetail(BuildContext context, InvoiceDto invoice) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _InvoiceDetailSheet(invoice: invoice),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => InvoiceDetailScreen(invoice: invoice),
+      ),
     );
   }
 }
@@ -851,9 +885,19 @@ class _InvoiceRow extends StatelessWidget {
 
 // ── Detail Sheet ───────────────────────────────────────────────────────────
 
-class _InvoiceDetailSheet extends StatelessWidget {
+/// Trang chi tiết hóa đơn đầy đủ: QR hiển thị sẵn, danh sách món, tổng tiền,
+/// phương thức thanh toán, trạng thái đồng bộ, và nút xuất XML / xem QR lớn.
+class InvoiceDetailScreen extends StatelessWidget {
   final InvoiceDto invoice;
-  const _InvoiceDetailSheet({required this.invoice});
+  const InvoiceDetailScreen({super.key, required this.invoice});
+
+  String _qrPayload() => jsonEncode({
+        'id': invoice.id,
+        'so': invoice.invoiceNumber,
+        'ngay': invoice.createdAt.toIso8601String(),
+        'tong': invoice.totalAmount,
+        'so_mon': invoice.items?.length ?? 0,
+      });
 
   Future<void> _downloadXml(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -904,157 +948,216 @@ class _InvoiceDetailSheet extends StatelessWidget {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final num = invoice.invoiceNumber;
+    final number = invoice.invoiceNumber;
     final items = invoice.items ?? [];
+    final isOnline = invoice.syncedAt != null;
+    final isCash = invoice.paymentMethod == 'cash';
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    return Scaffold(
+      backgroundColor: TaxEasyColors.background,
+      appBar: AppBar(
+        title: Text('Hóa đơn #${number ?? '?'}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.code_outlined),
+            tooltip: 'Xuất XML',
+            onPressed: () => _downloadXml(context),
+          ),
+        ],
       ),
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (context, scroll) => Column(
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          // QR + thông tin tóm tắt
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: TaxEasyColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: TaxEasyColors.outlineVariant),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Hóa đơn #${num ?? '?'}',
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0B1C30)),
-                    ),
+            child: Column(
+              children: [
+                QrImageView(
+                  data: _qrPayload(),
+                  version: QrVersions.auto,
+                  size: 180,
+                  eyeStyle: QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: cs.primary,
                   ),
-                  IconButton(
-                    icon: Icon(Icons.qr_code_2_outlined, color: cs.primary),
-                    tooltip: 'Xem QR',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  InvoiceQrScreen(invoice: invoice)));
-                    },
+                  dataModuleStyle: QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: cs.onSurface,
                   ),
-                  IconButton(
-                    icon: Icon(Icons.code_outlined, color: cs.primary),
-                    tooltip: 'Xuất XML',
-                    onPressed: () => _downloadXml(context),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text(
-                _dateFmt.format(invoice.createdAt),
-                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-              ),
-            ),
-            Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
-            Expanded(
-              child: ListView(
-                controller: scroll,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  const SizedBox(height: 12),
-                  ...items.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${item.productName} ×${item.quantity}',
-                              style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF0B1C30)),
-                            ),
-                          ),
-                          Text(
-                            '${_currencyFmt.format(item.subtotal)}đ',
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF0B1C30)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Divider(
-                      height: 24,
-                      color: cs.outlineVariant.withValues(alpha: 0.5)),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text('Tổng cộng',
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0B1C30))),
-                      ),
-                      Text(
-                        '${_currencyFmt.format(invoice.totalAmount)}đ',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: cs.primary),
-                      ),
-                    ],
-                  ),
-                  if (invoice.note != null && invoice.note!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text('Ghi chú',
-                        style: TextStyle(
-                            fontSize: 12, color: cs.onSurfaceVariant)),
-                    const SizedBox(height: 4),
-                    Text(invoice.note!,
-                        style: const TextStyle(
-                            fontSize: 14, color: Color(0xFF0B1C30))),
-                  ],
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                  20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Đóng',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
+                const SizedBox(height: 10),
+                Text(
+                  'Khách quét mã để xem thông tin hóa đơn',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Meta: ngày, thanh toán, trạng thái
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: TaxEasyColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: TaxEasyColors.outlineVariant),
+            ),
+            child: Column(
+              children: [
+                _metaRow(Icons.event_outlined, 'Thời gian',
+                    _dateFmt.format(invoice.createdAt), cs),
+                const SizedBox(height: 10),
+                _metaRow(
+                  isCash ? Icons.payments_outlined : Icons.account_balance_outlined,
+                  'Thanh toán',
+                  isCash ? 'Tiền mặt' : 'Chuyển khoản',
+                  cs,
+                ),
+                const SizedBox(height: 10),
+                _metaRow(
+                  isOnline ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+                  'Trạng thái',
+                  isOnline ? 'Đã đồng bộ' : 'Chờ đồng bộ (offline)',
+                  cs,
+                  valueColor: isOnline
+                      ? TaxEasyColors.success
+                      : const Color(0xFFD97706),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Danh sách món
+          Text('CHI TIẾT MÓN',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 0.5)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: TaxEasyColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: TaxEasyColors.outlineVariant),
+            ),
+            child: Column(
+              children: [
+                ...items.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${item.productName} ×${item.quantity}',
+                            style: const TextStyle(
+                                fontSize: 14, color: TaxEasyColors.textPrimary),
+                          ),
+                        ),
+                        Text(
+                          '${_currencyFmt.format(item.subtotal)}đ',
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: TaxEasyColors.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Divider(
+                    height: 24,
+                    color: cs.outlineVariant.withValues(alpha: 0.5)),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text('Tổng cộng',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: TaxEasyColors.textPrimary)),
+                    ),
+                    Text(
+                      '${_currencyFmt.format(invoice.totalAmount)}đ',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          if (invoice.note != null && invoice.note!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: TaxEasyColors.surfaceLow,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.sticky_note_2_outlined,
+                      size: 18, color: TaxEasyColors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(invoice.note!,
+                        style: const TextStyle(
+                            height: 1.4, color: TaxEasyColors.textPrimary)),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
+
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: () => _downloadXml(context),
+            icon: const Icon(Icons.download),
+            label: const Text('Xuất XML hóa đơn điện tử'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _metaRow(IconData icon, String label, String value, ColorScheme cs,
+      {Color? valueColor}) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: 10),
+        Text(label, style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
+        const Spacer(),
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? TaxEasyColors.textPrimary)),
+      ],
     );
   }
 }

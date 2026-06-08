@@ -13,6 +13,7 @@ import '../manage/invoice_history_screen.dart';
 import '../manage/tax_screen.dart';
 import '../manage/store_settings_screen.dart';
 import '../manage/profile_screen.dart';
+import '../manage/inventory_screen.dart';
 import '../../theme/taxeasy_design.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -260,6 +261,17 @@ class _HomeScreenState extends State<HomeScreen> {
             onToggle: () => setState(() => _isSaleMode = !_isSaleMode),
           ),
           _SyncBadge(),
+          // Tồn kho — chỉ hiện ở tab Sản phẩm.
+          if (_manageTabIndex == 2)
+            IconButton(
+              icon: const Icon(Icons.inventory_outlined),
+              tooltip: 'Quản lý tồn kho',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const InventoryScreen(),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             tooltip: 'Tài khoản',

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/revenue_provider.dart';
 import '../../widgets/skeleton.dart';
+import 'top_products_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 
@@ -157,8 +158,14 @@ class _RevenueScreenState extends State<RevenueScreen> {
               children: [
                 _SectionHeader(title: 'Món bán chạy', cs: cs),
                 const Spacer(),
-                Icon(Icons.restaurant_outlined,
-                    size: 18, color: cs.onSurfaceVariant),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TopProductsScreen(),
+                    ),
+                  ),
+                  child: const Text('Xem tất cả'),
+                ),
               ],
             ),
             const SizedBox(height: 12),

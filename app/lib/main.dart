@@ -192,9 +192,13 @@ class _AuthGateState extends State<AuthGate> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Lần đầu cài app → Onboarding, rồi tuỳ auth status
+    // Lần đầu cài app → Onboarding. Khi xong, set cờ để AuthGate tự rebuild
+    // và hiển thị Login/Home tuỳ status (KHÔNG push LoginScreen thủ công —
+    // làm vậy sẽ che mất quyền điều hướng của AuthGate, gây kẹt sau đăng nhập).
     if (_showOnboarding!) {
-      return const OnboardingScreen();
+      return OnboardingScreen(
+        onDone: () => setState(() => _showOnboarding = false),
+      );
     }
 
     return switch (status) {

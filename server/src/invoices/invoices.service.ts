@@ -82,7 +82,12 @@ export class InvoicesService {
       }),
     ]);
 
-    return { total, page, limit, data: data.map((inv) => this.serializeInvoice(inv)) };
+    return {
+      total,
+      page,
+      limit,
+      data: data.map((inv) => this.serializeInvoice(inv)),
+    };
   }
 
   async findOne(userId: string, id: string) {

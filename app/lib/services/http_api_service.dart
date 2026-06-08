@@ -17,8 +17,9 @@ class HttpApiService implements ApiService {
   HttpApiService({String baseUrl = 'http://localhost:3000'}) {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 7),
       receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
     ));
     _dio.interceptors.add(InterceptorsWrapper(onError: _onError));
   }
@@ -112,6 +113,24 @@ class HttpApiService implements ApiService {
     final res = await _dio.post('/auth/register',
         data: {'email': email, 'password': password, 'name': name});
     return AuthResponseDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UserDto> updateProfile({String? name, String? email}) async {
+    final res = await _dio.patch('/auth/me', data: {
+      if (name != null) 'name': name,
+      if (email != null) 'email': email,
+    });
+    return UserDto.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    await _dio.post('/auth/change-password', data: {
+      'current_password': currentPassword,
+      'new_password': newPassword,
+    });
   }
 
   @override

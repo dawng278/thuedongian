@@ -10,7 +10,11 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  Logger.log(`TaxEasy API đang chạy tại http://localhost:${port}`, 'Bootstrap');
+  // Bind 0.0.0.0 để điện thoại trong cùng LAN truy cập được (không chỉ localhost).
+  await app.listen(port, '0.0.0.0');
+  Logger.log(
+    `TaxEasy API đang chạy tại http://0.0.0.0:${port} (truy cập LAN qua IP máy)`,
+    'Bootstrap',
+  );
 }
 void bootstrap();

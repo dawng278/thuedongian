@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/stores_provider.dart';
 import '../../services/api_service.dart';
+import 'tax_deadlines_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
 
@@ -176,7 +177,20 @@ class _TaxScreenState extends State<TaxScreen> {
 
           // Deadline timeline
           if (_deadlines.isNotEmpty) ...[
-            _SectionHeader(title: 'Lịch nộp thuế', cs: cs),
+            Row(
+              children: [
+                _SectionHeader(title: 'Lịch nộp thuế', cs: cs),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TaxDeadlinesScreen(),
+                    ),
+                  ),
+                  child: const Text('Xem tất cả'),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             _DeadlineTimeline(deadlines: _deadlines, cs: cs),
             const SizedBox(height: 24),

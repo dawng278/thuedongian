@@ -8,8 +8,7 @@ describe('TaxService.getDeadlines', () => {
     // Đứng ở 01/05 để mọi hạn từ Q2 trở đi còn phía trước.
     const now = new Date(2026, 4, 1); // 1 May 2026
     const { deadlines } = service.getDeadlines(now);
-    const byLabel = (kw: string) =>
-      deadlines.find((d) => d.label.includes(kw));
+    const byLabel = (kw: string) => deadlines.find((d) => d.label.includes(kw));
 
     expect(byLabel('Q2')?.deadline).toBe('2026-07-31');
     expect(byLabel('Q3')?.deadline).toBe('2026-10-31');

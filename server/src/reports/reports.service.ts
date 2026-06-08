@@ -29,52 +29,57 @@ export class ReportsService {
     const fromDate = from ? new Date(from) : monthStart;
     const toDate = to ? new Date(to + 'T23:59:59') : now;
 
-    const [todayInvoices, monthInvoices, rangeInvoices, topProducts, monthItems] =
-      await Promise.all([
-        // Today revenue (kèm phương thức để chốt ca)
-        this.prisma.invoice.findMany({
-          where: { store_id: store.id, created_at: { gte: todayStart } },
-          select: { total_amount: true, payment_method: true },
-        }),
-        // This month revenue
-        this.prisma.invoice.findMany({
-          where: { store_id: store.id, created_at: { gte: monthStart } },
-          select: { total_amount: true, invoice_number: true },
-        }),
-        // Revenue per day in range (for chart)
-        this.prisma.invoice.findMany({
-          where: {
+    const [
+      todayInvoices,
+      monthInvoices,
+      rangeInvoices,
+      topProducts,
+      monthItems,
+    ] = await Promise.all([
+      // Today revenue (kèm phương thức để chốt ca)
+      this.prisma.invoice.findMany({
+        where: { store_id: store.id, created_at: { gte: todayStart } },
+        select: { total_amount: true, payment_method: true },
+      }),
+      // This month revenue
+      this.prisma.invoice.findMany({
+        where: { store_id: store.id, created_at: { gte: monthStart } },
+        select: { total_amount: true, invoice_number: true },
+      }),
+      // Revenue per day in range (for chart)
+      this.prisma.invoice.findMany({
+        where: {
+          store_id: store.id,
+          created_at: { gte: fromDate, lte: toDate },
+        },
+        select: { total_amount: true, created_at: true },
+        orderBy: { created_at: 'asc' },
+      }),
+      // Top selling products by revenue (from invoice items)
+      this.prisma.invoiceItem.groupBy({
+        by: ['product_name'],
+        where: {
+          invoice: {
             store_id: store.id,
-            created_at: { gte: fromDate, lte: toDate },
+            created_at: { gte: monthStart },
           },
-          select: { total_amount: true, created_at: true },
-          orderBy: { created_at: 'asc' },
-        }),
-        // Top selling products by revenue (from invoice items)
-        this.prisma.invoiceItem.groupBy({
-          by: ['product_name'],
-          where: {
-            invoice: {
-              store_id: store.id,
-              created_at: { gte: monthStart },
-            },
-          },
-          _sum: { subtotal: true, quantity: true },
-          orderBy: { _sum: { subtotal: 'desc' } },
-          take: 5,
-        }),
-        // Items tháng này kèm giá vốn sản phẩm (để ước tính lợi nhuận)
-        this.prisma.invoiceItem.findMany({
-          where: {
-            invoice: { store_id: store.id, created_at: { gte: monthStart } },
-          },
-          select: {
-            quantity: true,
-            subtotal: true,
-            product: { select: { cost_price: true } },
-          },
-        }),
-      ]);
+        },
+        _sum: { subtotal: true, quantity: true },
+        orderBy: { _sum: { subtotal: 'desc' } },
+        take: 5,
+      }),
+      // Items tháng này kèm giá vốn sản phẩm (để ước tính lợi nhuận)
+      this.prisma.invoiceItem.findMany({
+        where: {
+          invoice: { store_id: store.id, created_at: { gte: monthStart } },
+        },
+        select: {
+          quantity: true,
+          subtotal: true,
+          product: { select: { cost_price: true } },
+        },
+      }),
+    ]);
 
     const todayRevenue = todayInvoices.reduce(
       (s, i) => s + Number(i.total_amount),
@@ -285,7 +290,11 @@ export class ReportsService {
       to,
       total_revenue: totalRevenue,
       invoice_count: invoices.length,
-      tax_estimate: computeTax(store.business_type, totalRevenue, monthsInPeriod),
+      tax_estimate: computeTax(
+        store.business_type,
+        totalRevenue,
+        monthsInPeriod,
+      ),
       invoices: invoices.map((inv) => ({
         id: inv.id,
         invoice_number: inv.invoice_number,

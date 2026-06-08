@@ -10,7 +10,9 @@ describe('tax-rules', () => {
     it('trả đúng tỷ lệ theo loại hình', () => {
       expect(resolveRate('goods').rate).toEqual(TAX_RATES.goods);
       expect(resolveRate('services').rate).toEqual(TAX_RATES.services);
-      expect(resolveRate('food_beverage').rate).toEqual(TAX_RATES.food_beverage);
+      expect(resolveRate('food_beverage').rate).toEqual(
+        TAX_RATES.food_beverage,
+      );
     });
 
     it('mặc định food_beverage khi loại hình null/không hợp lệ', () => {

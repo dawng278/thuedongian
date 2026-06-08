@@ -7,6 +7,10 @@ abstract class ApiService {
   Future<AuthResponseDto> login(String email, String password);
   Future<AuthResponseDto> register(String email, String password, String name);
 
+  // Hồ sơ người dùng
+  Future<UserDto> updateProfile({String? name, String? email});
+  Future<void> changePassword(String currentPassword, String newPassword);
+
   Future<List<StoreDto>> getStores();
   Future<StoreDto> createStore(Map<String, dynamic> data);
   Future<StoreDto> getMyStore();
