@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/invoice.dart';
@@ -20,7 +20,8 @@ class InvoicesProvider extends ChangeNotifier {
   int _pendingCount = 0;
   String? _storeId;
 
-  StreamSubscription<List<ConnectivityResult>>? _connSub;
+  Timer? _connTimer;
+  bool _wasOnline = false;
 
   List<InvoiceDto> get invoices => _invoices;
   bool get creating => _creating;
@@ -28,18 +29,28 @@ class InvoicesProvider extends ChangeNotifier {
 
   InvoicesProvider(this._api) {
     _sync = SyncService(_api);
-    _listenConnectivity();
+    _startConnectivityPolling();
   }
 
-  /// Lắng nghe trạng thái mạng — khi có mạng trở lại và còn hàng đợi,
-  /// tự động đồng bộ (đúng "definition of done": bật mạng tự đồng bộ).
-  void _listenConnectivity() {
-    _connSub = Connectivity().onConnectivityChanged.listen((results) {
-      final online = results.any((r) => r != ConnectivityResult.none);
-      if (online && _pendingCount > 0) {
+  /// Poll internet mỗi 10 giây thay vì dùng DBus (không khả dụng trên Linux desktop).
+  void _startConnectivityPolling() {
+    _connTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      final online = await _hasInternet();
+      if (online && !_wasOnline && _pendingCount > 0) {
         _autoSync();
       }
+      _wasOnline = online;
     });
+  }
+
+  Future<bool> _hasInternet() async {
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 3));
+      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _autoSync() async {
@@ -56,7 +67,7 @@ class InvoicesProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _connSub?.cancel();
+    _connTimer?.cancel();
     super.dispose();
   }
 

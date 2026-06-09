@@ -15,40 +15,35 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
-  bool _precached = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Precache ảnh các slide để chuyển trang không bị khựng.
-    if (!_precached) {
-      _precached = true;
-      for (final s in _slides) {
-        precacheImage(NetworkImage(s.imageUrl), context);
-      }
-    }
-  }
-
   static const _slides = [
     _Slide(
-      imageUrl:
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=85',
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF1565C0), Color(0xFF0D47A1), Color(0xFF01579B)],
+      ),
       emoji: '🍜',
       title: 'Bán hàng nhanh\nnhư chớp',
       subtitle:
           'Chạm một cái là xong đơn. Hoạt động offline — không cần lo mất mạng giữa chừng.',
     ),
     _Slide(
-      imageUrl:
-          'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=85',
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF00695C), Color(0xFF00796B), Color(0xFF004D40)],
+      ),
       emoji: '📊',
       title: 'Quản lý doanh thu\nchỉ trong một app',
       subtitle:
           'Xem biểu đồ, top sản phẩm, lợi nhuận và ước tính thuế ngay trên điện thoại.',
     ),
     _Slide(
-      imageUrl:
-          'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=85',
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF4527A0), Color(0xFF512DA8), Color(0xFF311B92)],
+      ),
       emoji: '🧾',
       title: 'Hóa đơn điện tử\nđúng chuẩn',
       subtitle:
@@ -161,13 +156,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 class _Slide {
-  final String imageUrl;
+  final LinearGradient gradient;
   final String emoji;
   final String title;
   final String subtitle;
 
   const _Slide({
-    required this.imageUrl,
+    required this.gradient,
     required this.emoji,
     required this.title,
     required this.subtitle,
@@ -185,44 +180,26 @@ class _SlidePage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Background image — fade-in khi tải xong để mượt mắt
-        Image.network(
-          slide.imageUrl,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          frameBuilder: (context, child, frame, wasSyncLoaded) {
-            if (wasSyncLoaded || frame != null) {
-              return AnimatedOpacity(
-                opacity: 1,
-                duration: const Duration(milliseconds: 350),
-                child: child,
-              );
-            }
-            return Container(color: TaxEasyColors.primary);
-          },
-          errorBuilder: (_, __, ___) => Container(
-            color: TaxEasyColors.primary,
-          ),
+        DecoratedBox(
+          decoration: BoxDecoration(gradient: slide.gradient),
         ),
 
-        // Dark gradient overlay (bottom heavy để text đọc được)
+        // Overlay tối phía dưới để text đọc được
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              stops: const [0.0, 0.35, 0.65, 1.0],
+              stops: const [0.0, 0.5, 1.0],
               colors: [
-                Colors.black.withValues(alpha: 0.15),
-                Colors.black.withValues(alpha: 0.05),
-                Colors.black.withValues(alpha: 0.55),
-                Colors.black.withValues(alpha: 0.92),
+                Colors.black.withValues(alpha: 0.0),
+                Colors.black.withValues(alpha: 0.25),
+                Colors.black.withValues(alpha: 0.75),
               ],
             ),
           ),
         ),
 
-        // Text content
         Positioned(
           left: 28,
           right: 28,

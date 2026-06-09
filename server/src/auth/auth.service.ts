@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -11,12 +12,16 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { EmailService } from './email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -102,6 +107,61 @@ export class AuthService {
       data: { password_hash: hash },
     });
     return { success: true };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    // Luôn trả success để không lộ email có tồn tại hay không
+    if (!user) return { message: 'Nếu email tồn tại, mã OTP đã được gửi.' };
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+    // Xóa OTP cũ chưa dùng của email này
+    await this.prisma.passwordResetOtp.deleteMany({
+      where: { email: dto.email, used: false },
+    });
+
+    await this.prisma.passwordResetOtp.create({
+      data: { email: dto.email, otp_hash: otpHash, expires_at: expiresAt },
+    });
+
+    await this.emailService.sendOtp(dto.email, otp);
+    return { message: 'Nếu email tồn tại, mã OTP đã được gửi.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const record = await this.prisma.passwordResetOtp.findFirst({
+      where: { email: dto.email, used: false },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (!record) throw new BadRequestException('OTP không hợp lệ hoặc đã hết hạn');
+    if (record.expires_at < new Date()) {
+      throw new BadRequestException('OTP đã hết hạn. Vui lòng yêu cầu mã mới.');
+    }
+
+    const valid = await bcrypt.compare(dto.otp, record.otp_hash);
+    if (!valid) throw new BadRequestException('OTP không đúng');
+
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const newHash = await bcrypt.hash(dto.new_password, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { password_hash: newHash },
+      }),
+      this.prisma.passwordResetOtp.update({
+        where: { id: record.id },
+        data: { used: true },
+      }),
+    ]);
+
+    return { message: 'Đặt lại mật khẩu thành công' };
   }
 
   private issueTokens(user: { id: string; email: string; name: string }) {

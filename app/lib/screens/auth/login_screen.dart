@@ -35,8 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailCtrl.text.trim(),
           _passCtrl.text,
         );
-    if (!ok && mounted) {
-      setState(() => _loading = false);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

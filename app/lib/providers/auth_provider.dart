@@ -177,9 +177,21 @@ class AuthProvider extends ChangeNotifier {
     if (msg.contains('409') || msg.contains('Conflict')) {
       return 'Email này đã được đăng ký';
     }
-    if (msg.contains('SocketException') || msg.contains('Connection refused')) {
-      return 'Không kết nối được server';
+    if (msg.contains('SocketException') ||
+        msg.contains('Connection refused') ||
+        msg.contains('Failed host lookup') ||
+        msg.contains('Network is unreachable') ||
+        msg.contains('CLEARTEXT') ||
+        msg.contains('cleartext')) {
+      return 'Không kết nối được server. Kiểm tra mạng và server.';
     }
-    return 'Có lỗi xảy ra, thử lại sau';
+    if (msg.contains('TimeoutException') ||
+        msg.contains('connectTimeout') ||
+        msg.contains('receiveTimeout') ||
+        msg.contains('DioExceptionType.connectionTimeout') ||
+        msg.contains('DioExceptionType.receiveTimeout')) {
+      return 'Server phản hồi quá lâu. Thử lại sau.';
+    }
+    return 'Lỗi: $msg';
   }
 }

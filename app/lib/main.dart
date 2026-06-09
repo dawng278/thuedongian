@@ -12,8 +12,8 @@ import 'providers/revenue_provider.dart';
 import 'providers/stores_provider.dart';
 import 'services/api_service.dart';
 import 'services/http_api_service.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/auth/onboarding_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'theme/taxeasy_design.dart';
 
@@ -26,10 +26,9 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  const apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
-  );
+  const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  final apiBaseUrl =
+      envUrl.isNotEmpty ? envUrl : 'http://localhost:3000';
   final api = HttpApiService(baseUrl: apiBaseUrl);
   runApp(
     MultiProvider(
@@ -175,38 +174,39 @@ class _AuthGateState extends State<AuthGate> {
   Future<void> _checkOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     final done = prefs.getBool('onboarding_done') ?? false;
-    if (done) {
-      setState(() => _showOnboarding = false);
-    } else {
-      await prefs.setBool('onboarding_done', true);
-      setState(() => _showOnboarding = true);
-    }
+    setState(() => _showOnboarding = !done);
   }
 
   @override
   Widget build(BuildContext context) {
     final status = context.watch<AuthProvider>().status;
 
-    // Chờ kiểm tra SharedPreferences + AuthProvider cùng lúc
-    if (_showOnboarding == null || status == AuthStatus.unknown) {
+    // Chờ kiểm tra onboarding flag (SharedPreferences) — AuthProvider tự xử lý riêng
+    if (_showOnboarding == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Lần đầu cài app → Onboarding. Khi xong, set cờ để AuthGate tự rebuild
-    // và hiển thị Login/Home tuỳ status (KHÔNG push LoginScreen thủ công —
-    // làm vậy sẽ che mất quyền điều hướng của AuthGate, gây kẹt sau đăng nhập).
+    // Đang restore session từ token đã lưu → spinner
+    if (status == AuthStatus.unknown) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Đã đăng nhập → vào thẳng HomeScreen, bỏ qua onboarding
+    if (status == AuthStatus.authenticated) {
+      return const HomeScreen();
+    }
+
+    // Chưa đăng nhập — lần đầu cài app → Onboarding
     if (_showOnboarding!) {
       return OnboardingScreen(
-        onDone: () => setState(() => _showOnboarding = false),
+        onDone: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('onboarding_done', true);
+          if (mounted) setState(() => _showOnboarding = false);
+        },
       );
     }
 
-    return switch (status) {
-      AuthStatus.unknown => const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      AuthStatus.authenticated => const HomeScreen(),
-      AuthStatus.unauthenticated => const LoginScreen(),
-    };
+    return const WelcomeScreen();
   }
 }
