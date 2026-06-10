@@ -50,4 +50,6 @@ abstract class ApiService {
   Future<Map<String, dynamic>> getTaxEstimate(
       {String period = 'month', String? storeId});
   Future<Map<String, dynamic>> getTaxDeadlines();
+
+  Future<List<Map<String, dynamic>>> getAiInsights({String? storeId});
 }

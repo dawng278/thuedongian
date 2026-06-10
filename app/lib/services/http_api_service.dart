@@ -300,4 +300,14 @@ class HttpApiService implements ApiService {
     final res = await _dio.get('/tax/deadlines');
     return res.data as Map<String, dynamic>;
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAiInsights({String? storeId}) async {
+    final res = await _dio.get('/ai/insights', queryParameters: {
+      if (storeId != null) 'store_id': storeId,
+    });
+    final data = res.data;
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
 }

@@ -446,4 +446,22 @@ class MockApiService implements ApiService {
       'top_products': <Map<String, dynamic>>[],
     };
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAiInsights({String? storeId}) async {
+    return [
+      {
+        'type': 'tip',
+        'title': 'Nhập giá vốn để tính lợi nhuận',
+        'body':
+            'Điền giá vốn cho từng sản phẩm để app tự tính lợi nhuận thực. Giúp bạn biết món nào lãi nhất.',
+      },
+      {
+        'type': 'info',
+        'title': 'Ngưỡng miễn thuế 2026',
+        'body':
+            'Từ 1/1/2026, hộ kinh doanh có doanh thu dưới 200 triệu/năm được miễn GTGT và TNCN.',
+      },
+    ];
+  }
 }

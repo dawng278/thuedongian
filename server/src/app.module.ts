@@ -9,6 +9,7 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { SyncModule } from './sync/sync.module';
 import { ReportsModule } from './reports/reports.module';
 import { TaxModule } from './tax/tax.module';
+import { AiModule } from './ai/ai.module';
 import { AppController } from './app.controller';
 import { LoggerMiddleware } from './common/logger.middleware';
 
@@ -24,6 +25,7 @@ import { LoggerMiddleware } from './common/logger.middleware';
     SyncModule,
     ReportsModule,
     TaxModule,
+    AiModule,
   ],
   controllers: [AppController],
 })
