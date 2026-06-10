@@ -81,61 +81,82 @@ const demoStores: StoreSeed[] = [
     phone: '0901234567',
     business_type: 'food_beverage',
     products: [
-      // ── Mì cay (mặn hàng đầu) ──────────────────────────────────────────
+      // ── Mì kim chi ──────────────────────────────────────────────────────
       {
         id: 'seoul-p01',
-        name: 'Mì cay cấp độ 1',
-        price: 59000,
-        cost_price: 28000,
+        name: 'Mì kim chi hải sản',
+        price: 79000,
+        cost_price: 38000,
         unit: 'tô',
-        category: 'Mì cay',
+        category: 'Mì kim chi',
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
         id: 'seoul-p02',
-        name: 'Mì cay cấp độ 3',
-        price: 65000,
-        cost_price: 31000,
+        name: 'Mì kim chi bò',
+        price: 75000,
+        cost_price: 36000,
         unit: 'tô',
-        category: 'Mì cay',
+        category: 'Mì kim chi',
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
         id: 'seoul-p03',
-        name: 'Mì cay cấp độ 5',
-        price: 69000,
-        cost_price: 33000,
+        name: 'Mì kim chi bò Mỹ',
+        price: 89000,
+        cost_price: 45000,
         unit: 'tô',
-        category: 'Mì cay',
+        category: 'Mì kim chi',
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
         id: 'seoul-p04',
-        name: 'Mì cay cấp độ 7',
-        price: 75000,
-        cost_price: 36000,
+        name: 'Mì kim chi thập cẩm',
+        price: 85000,
+        cost_price: 42000,
         unit: 'tô',
-        category: 'Mì cay',
+        category: 'Mì kim chi',
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
         id: 'seoul-p05',
-        name: 'Mì cay cấp độ 9 (thách thức)',
-        price: 85000,
-        cost_price: 40000,
+        name: 'Mì kim chi cá hồi',
+        price: 99000,
+        cost_price: 55000,
         unit: 'tô',
-        category: 'Mì cay',
+        category: 'Mì kim chi',
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
-      // ── Topping / thêm ──────────────────────────────────────────────────
+      // ── Mì lẩu thái ─────────────────────────────────────────────────────
       {
         id: 'seoul-p06',
-        name: 'Thêm trứng gà lòng đào',
+        name: 'Mì lẩu thái hải sản',
+        price: 85000,
+        cost_price: 42000,
+        unit: 'tô',
+        category: 'Mì lẩu thái',
+        image_url:
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+      },
+      {
+        id: 'seoul-p07',
+        name: 'Mì lẩu thái bò',
+        price: 79000,
+        cost_price: 38000,
+        unit: 'tô',
+        category: 'Mì lẩu thái',
+        image_url:
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+      },
+      // ── Topping thêm ────────────────────────────────────────────────────
+      {
+        id: 'seoul-p08',
+        name: 'Thêm trứng lòng đào',
         price: 10000,
         cost_price: 4000,
         unit: 'quả',
@@ -144,18 +165,18 @@ const demoStores: StoreSeed[] = [
           'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=640&q=80',
       },
       {
-        id: 'seoul-p07',
-        name: 'Thêm phô mai que',
+        id: 'seoul-p09',
+        name: 'Thêm phô mai',
         price: 15000,
         cost_price: 7000,
-        unit: 'cái',
+        unit: 'phần',
         category: 'Topping',
         image_url:
           'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=640&q=80',
       },
       {
-        id: 'seoul-p08',
-        name: 'Thêm mì (sợi)',
+        id: 'seoul-p10',
+        name: 'Thêm mì',
         price: 10000,
         cost_price: 3500,
         unit: 'phần',
@@ -163,9 +184,9 @@ const demoStores: StoreSeed[] = [
         image_url:
           'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
-      // ── Khai vị / ăn kèm ────────────────────────────────────────────────
+      // ── Ăn kèm ──────────────────────────────────────────────────────────
       {
-        id: 'seoul-p09',
+        id: 'seoul-p11',
         name: 'Bánh tteokbokki chiên',
         price: 39000,
         cost_price: 18000,
@@ -175,7 +196,7 @@ const demoStores: StoreSeed[] = [
           'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=640&q=80',
       },
       {
-        id: 'seoul-p10',
+        id: 'seoul-p12',
         name: 'Gà chiên Hàn Quốc',
         price: 75000,
         cost_price: 40000,
@@ -185,7 +206,7 @@ const demoStores: StoreSeed[] = [
           'https://images.unsplash.com/photo-1569058242567-93de6f36f8eb?w=640&q=80',
       },
       {
-        id: 'seoul-p11',
+        id: 'seoul-p13',
         name: 'Kimbap cuộn rong biển',
         price: 45000,
         cost_price: 22000,
@@ -195,7 +216,7 @@ const demoStores: StoreSeed[] = [
           'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=640&q=80',
       },
       {
-        id: 'seoul-p12',
+        id: 'seoul-p14',
         name: 'Kimchi tươi',
         price: 25000,
         cost_price: 10000,
@@ -206,7 +227,7 @@ const demoStores: StoreSeed[] = [
       },
       // ── Đồ uống ─────────────────────────────────────────────────────────
       {
-        id: 'seoul-p13',
+        id: 'seoul-p15',
         name: 'Soju đào Chum Churum',
         price: 89000,
         cost_price: 52000,
@@ -216,17 +237,7 @@ const demoStores: StoreSeed[] = [
           'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=640&q=80',
       },
       {
-        id: 'seoul-p14',
-        name: 'Nước suối lạnh',
-        price: 10000,
-        cost_price: 4000,
-        unit: 'chai',
-        category: 'Đồ uống',
-        image_url:
-          'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=640&q=80',
-      },
-      {
-        id: 'seoul-p15',
+        id: 'seoul-p16',
         name: 'Trà barley Hàn Quốc',
         price: 15000,
         cost_price: 5000,
@@ -234,6 +245,16 @@ const demoStores: StoreSeed[] = [
         category: 'Đồ uống',
         image_url:
           'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=640&q=80',
+      },
+      {
+        id: 'seoul-p17',
+        name: 'Nước suối lạnh',
+        price: 10000,
+        cost_price: 4000,
+        unit: 'chai',
+        category: 'Đồ uống',
+        image_url:
+          'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=640&q=80',
       },
     ],
     // ~40 đơn/ngày → doanh thu tháng ≈ 80–100tr → gần ngưỡng 200tr/năm, đủ
