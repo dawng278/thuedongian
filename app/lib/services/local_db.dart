@@ -44,7 +44,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'taxeasy.db');
     return openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -127,35 +127,26 @@ class LocalDb {
         "ALTER TABLE invoices ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'cash'",
       );
     }
-    if (oldVersion < 5) {
-      // Thêm cost_price và stock nếu chưa có (bất kể version cũ)
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN cost_price INTEGER");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN stock INTEGER");
-      } catch (_) {}
-    }
-    if (oldVersion < 6) {
-      // Thêm unit và category nếu DB cũ chưa có
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN unit TEXT");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN category TEXT");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN image_url TEXT");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN created_at TEXT");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN updated_at TEXT");
-      } catch (_) {}
+    // v7: drop + recreate products với full schema (thay vì ALTER TABLE từng cột).
+    // Products chỉ là cache từ server — xóa rồi server sẽ sync lại.
+    if (oldVersion < 7) {
+      await db.execute('DROP TABLE IF EXISTS products');
+      await db.execute('''
+        CREATE TABLE products (
+          id TEXT PRIMARY KEY,
+          store_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          price INTEGER NOT NULL,
+          cost_price INTEGER,
+          stock INTEGER,
+          unit TEXT,
+          category TEXT,
+          image_url TEXT,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT,
+          updated_at TEXT
+        )
+      ''');
     }
   }
 
