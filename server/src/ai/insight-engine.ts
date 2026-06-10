@@ -4,6 +4,23 @@
  *
  * Mỗi rule nhận context và trả về AiInsight | null.
  * Engine chạy tất cả rules, chọn top 3 theo độ ưu tiên (warning > tip > info).
+ *
+ * Priority map (càng cao càng ưu tiên):
+ *  110 ruleNoProducts
+ *  105 ruleZeroMonthRevenue
+ *  100 ruleTaxCritical
+ *   95 ruleOutOfStock
+ *   90 ruleTaxWarning
+ *   85 ruleTaxQuarterDeadline
+ *   80 ruleRevenueDropSevere
+ *   75 ruleLowStock
+ *   60 ruleTopProductDominates
+ *   55 ruleMissingTaxId
+ *   50 ruleRevenueGrowth
+ *   40 ruleMissingCostPrice
+ *   30 ruleFewProducts
+ *   20 ruleTaxSafe
+ *   15 ruleNoSalesToday
  */
 
 export interface AiInsight {
@@ -43,6 +60,29 @@ export interface InsightContext {
 }
 
 type Rule = (ctx: InsightContext) => Omit<AiInsight, 'priority'> & { priority: number } | null;
+
+// ── Nhóm 0: Trạng thái khẩn cấp ───────────────────────────────────────────
+
+const ruleNoProducts: Rule = (ctx) => {
+  if (ctx.totalProducts > 0) return null;
+  return {
+    type: 'warning',
+    title: 'Chưa có sản phẩm nào',
+    body: 'Menu trống. Thêm ít nhất 1 sản phẩm để bắt đầu bán hàng.',
+    priority: 110,
+  };
+};
+
+const ruleZeroMonthRevenue: Rule = (ctx) => {
+  // Chỉ cảnh báo từ ngày 5 trở đi để tránh false-positive đầu tháng
+  if (ctx.monthRevenue > 0 || ctx.daysIntoMonth < 5 || ctx.totalProducts === 0) return null;
+  return {
+    type: 'warning',
+    title: 'Chưa có doanh thu tháng này',
+    body: `Đã qua ngày ${ctx.daysIntoMonth} tháng này nhưng chưa ghi nhận đơn hàng nào. Kiểm tra kết nối và đồng bộ dữ liệu.`,
+    priority: 105,
+  };
+};
 
 // ── Nhóm 1: Thuế ──────────────────────────────────────────────────────────
 
@@ -113,7 +153,8 @@ const ruleRevenueGrowth: Rule = (ctx) => {
 };
 
 const ruleNoSalesToday: Rule = (ctx) => {
-  if (ctx.todayInvoiceCount > 0 || ctx.daysIntoMonth < 1) return null;
+  // Chỉ hiện khi đã có doanh thu tháng này (tức là shop đang hoạt động bình thường)
+  if (ctx.todayInvoiceCount > 0 || ctx.monthRevenue === 0) return null;
   return {
     type: 'info',
     title: 'Chưa có đơn hôm nay',
@@ -196,6 +237,9 @@ const ruleFewProducts: Rule = (ctx) => {
 // ── Engine ─────────────────────────────────────────────────────────────────
 
 const ALL_RULES: Rule[] = [
+  // Khẩn cấp
+  ruleNoProducts,
+  ruleZeroMonthRevenue,
   // Thuế
   ruleTaxCritical,
   ruleTaxWarning,
