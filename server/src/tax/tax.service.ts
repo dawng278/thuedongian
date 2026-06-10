@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { computeTax } from './tax-rules';
+import { computeTax, EXEMPT_THRESHOLD } from './tax-rules';
 import { StoresService } from '../stores/stores.service';
 
 const MS_PER_DAY = 86_400_000;
@@ -19,23 +19,24 @@ export class TaxService {
     let periodStart: Date;
     let periodEnd: Date;
     let periodLabel: string;
+    let monthsInPeriod: number;
 
     if (period === 'quarter') {
       const quarter = Math.floor(now.getMonth() / 3);
       periodStart = new Date(now.getFullYear(), quarter * 3, 1);
       periodEnd = new Date(now.getFullYear(), quarter * 3 + 3, 0, 23, 59, 59);
       periodLabel = `Quý ${quarter + 1}/${now.getFullYear()}`;
+      monthsInPeriod = 3;
+    } else if (period === 'year') {
+      periodStart = new Date(now.getFullYear(), 0, 1);
+      periodEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+      periodLabel = `Năm ${now.getFullYear()}`;
+      monthsInPeriod = 12;
     } else {
       periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      periodEnd = new Date(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-      );
+      periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
       periodLabel = `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`;
+      monthsInPeriod = 1;
     }
 
     const invoices = await this.prisma.invoice.findMany({
@@ -43,7 +44,7 @@ export class TaxService {
         store_id: store.id,
         created_at: { gte: periodStart, lte: periodEnd },
       },
-      select: { total_amount: true },
+      select: { total_amount: true, created_at: true },
     });
 
     const periodRevenue = invoices.reduce(
@@ -51,18 +52,80 @@ export class TaxService {
       0,
     );
 
-    const monthsInPeriod = period === 'quarter' ? 3 : 1;
     const tax = computeTax(store.business_type, periodRevenue, monthsInPeriod);
+
+    // Breakdown theo tháng trong kỳ (để vẽ biểu đồ / chi tiết)
+    const monthlyBreakdown = await this._monthlyBreakdown(
+      store.id,
+      periodStart,
+      periodEnd,
+      store.business_type,
+    );
+
+    // Doanh thu năm thực tế (để so với ngưỡng 200tr chính xác hơn)
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const yearRevenue =
+      period === 'year'
+        ? periodRevenue
+        : (
+            await this.prisma.invoice.aggregate({
+              where: { store_id: store.id, created_at: { gte: yearStart, lte: now } },
+              _sum: { total_amount: true },
+            })
+          )._sum.total_amount ?? 0;
+
+    const yearRevenueNum = Number(yearRevenue);
+    const yearProgress = Math.min(
+      Math.round((yearRevenueNum / EXEMPT_THRESHOLD) * 100),
+      100,
+    );
 
     return {
       period_label: periodLabel,
       period_start: periodStart.toISOString().substring(0, 10),
       period_end: periodEnd.toISOString().substring(0, 10),
       period_revenue: periodRevenue,
+      year_revenue: yearRevenueNum,
+      year_progress_pct: yearProgress,
+      monthly_breakdown: monthlyBreakdown,
       ...tax,
       disclaimer:
         'Số liệu ước tính tham khảo — không thay thế tư vấn thuế chính thức.',
     };
+  }
+
+  private async _monthlyBreakdown(
+    storeId: string,
+    from: Date,
+    to: Date,
+    businessType: string | null,
+  ) {
+    const rows = await this.prisma.$queryRaw<
+      { month: number; year: number; revenue: bigint }[]
+    >`
+      SELECT
+        EXTRACT(MONTH FROM created_at)::int AS month,
+        EXTRACT(YEAR  FROM created_at)::int AS year,
+        SUM(total_amount)::bigint           AS revenue
+      FROM invoices
+      WHERE store_id = ${storeId}
+        AND created_at >= ${from}
+        AND created_at <= ${to}
+      GROUP BY year, month
+      ORDER BY year, month
+    `;
+
+    return rows.map((r) => {
+      const rev = Number(r.revenue);
+      const tax = computeTax(businessType, rev, 1);
+      return {
+        month: r.month,
+        year: r.year,
+        revenue: rev,
+        tax_amount: tax.total_tax,
+        below_threshold: tax.below_threshold,
+      };
+    });
   }
 
   getDeadlines(now = new Date()) {

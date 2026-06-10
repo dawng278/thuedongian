@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/invoice.dart';
 import '../models/product.dart';
+import '../providers/products_provider.dart';
 import '../services/api_service.dart';
 import '../services/local_db.dart';
 import '../services/sync_service.dart';
@@ -27,10 +28,14 @@ class InvoicesProvider extends ChangeNotifier {
   bool get creating => _creating;
   int get pendingCount => _pendingCount;
 
+  ProductsProvider? _products;
+
   InvoicesProvider(this._api) {
     _sync = SyncService(_api);
     _startConnectivityPolling();
   }
+
+  void bindProductsProvider(ProductsProvider p) => _products = p;
 
   /// Poll internet mỗi 10 giây thay vì dùng DBus (không khả dụng trên Linux desktop).
   void _startConnectivityPolling() {
@@ -127,7 +132,11 @@ class InvoicesProvider extends ChangeNotifier {
       // Step 1: Always persist locally first (works offline)
       final local = await LocalDb.insertPendingInvoice(dto);
 
-      // Step 2: Try immediate sync
+      // Step 2: Giảm tồn kho local ngay lập tức
+      await LocalDb.decreaseStock(cart);
+      _products?.reloadFromLocal(storeId);
+
+      // Step 3: Try immediate sync
       int? serverNumber;
       try {
         final result = await _api.syncInvoices([dto]);

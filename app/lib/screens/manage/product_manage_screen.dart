@@ -653,11 +653,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         await provider.updateProduct(widget.existing!.id, {
           'name': _nameCtrl.text.trim(),
           'price': price,
-          if (_unitCtrl.text.trim().isNotEmpty) 'unit': _unitCtrl.text.trim(),
-          if (_categoryCtrl.text.trim().isNotEmpty)
-            'category': _categoryCtrl.text.trim(),
-          if (stock != null) 'stock': stock,
-          if (costPrice != null) 'cost_price': costPrice,
+          'unit': _unitCtrl.text.trim().isEmpty ? null : _unitCtrl.text.trim(),
+          'category': _categoryCtrl.text.trim().isEmpty ? null : _categoryCtrl.text.trim(),
+          'stock': stock,
+          'cost_price': costPrice,
           if (imageUrl != null) 'image_url': imageUrl,
         });
       }

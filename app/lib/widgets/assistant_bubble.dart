@@ -219,13 +219,13 @@ class _AssistantFabState extends State<_AssistantFab>
                 child: FadeTransition(opacity: anim, child: child),
               ),
               child: widget.open
-                  ? Icon(
+                  ? const Icon(
                       Icons.close_rounded,
-                      key: const ValueKey('close'),
+                      key: ValueKey('close'),
                       color: TaxEasyColors.textPrimary,
                       size: 22,
                     )
-                  : _RobotFace(key: const ValueKey('robot')),
+                  : const _RobotFace(key: ValueKey('robot')),
             ),
           ),
         ),

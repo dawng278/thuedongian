@@ -44,7 +44,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'taxeasy.db');
     return openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -127,9 +127,35 @@ class LocalDb {
         "ALTER TABLE invoices ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'cash'",
       );
     }
-    if (oldVersion >= 4 && oldVersion < 5) {
-      await db.execute("ALTER TABLE products ADD COLUMN cost_price INTEGER");
-      await db.execute("ALTER TABLE products ADD COLUMN stock INTEGER");
+    if (oldVersion < 5) {
+      // Thêm cost_price và stock nếu chưa có (bất kể version cũ)
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN cost_price INTEGER");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN stock INTEGER");
+      } catch (_) {}
+    }
+    if (oldVersion < 6) {
+      // Thêm unit và category nếu DB cũ chưa có
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN unit TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN category TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN image_url TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN created_at TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE products ADD COLUMN updated_at TEXT");
+      } catch (_) {}
     }
   }
 
@@ -190,6 +216,20 @@ class LocalDb {
           : null,
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );
+  }
+
+  /// Giảm tồn kho local khi tạo hóa đơn (chỉ khi stock != null).
+  static Future<void> decreaseStock(
+      Map<String, int> cart /* productId -> qty */) async {
+    final database = await db;
+    final batch = database.batch();
+    for (final entry in cart.entries) {
+      batch.rawUpdate(
+        'UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ? AND stock IS NOT NULL',
+        [entry.value, entry.key],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   // ── Invoices ──

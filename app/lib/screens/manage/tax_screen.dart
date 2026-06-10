@@ -37,8 +37,9 @@ class _TaxScreenState extends State<TaxScreen> {
         api.getTaxDeadlines(),
       ]);
       setState(() {
-        _estimate = results[0] as Map<String, dynamic>;
-        final raw = (results[1] as Map<String, dynamic>)['deadlines'] as List? ?? [];
+        _estimate = results[0];
+        // ignore: avoid_dynamic_calls
+        final raw = ((results[1] as Map)['deadlines'] as List?) ?? [];
         _deadlines = raw.cast<Map<String, dynamic>>();
       });
     } catch (e) {
@@ -81,16 +82,26 @@ class _TaxScreenState extends State<TaxScreen> {
     final belowThreshold = est['below_threshold'] as bool? ?? false;
     final periodRevenue = (est['period_revenue'] as num?)?.toInt() ?? 0;
     final exemptThreshold =
-        (est['exempt_threshold'] as num?)?.toInt() ?? 100000000;
+        (est['exempt_threshold'] as num?)?.toInt() ?? 200000000;
     final vatAmount = (est['vat_amount'] as num?)?.toInt() ?? 0;
     final pitAmount = (est['pit_amount'] as num?)?.toInt() ?? 0;
     final vatRate = ((est['vat_rate'] as num?)?.toDouble() ?? 0.01) * 100;
     final pitRate = ((est['pit_rate'] as num?)?.toDouble() ?? 0.005) * 100;
-    final progress = exemptThreshold > 0
-        ? (periodRevenue / exemptThreshold).clamp(0.0, 1.0)
-        : 0.0;
-    final pctText = '${(progress * 100).round()}%';
-    final isNearThreshold = progress >= 0.7;
+
+    // Ưu tiên dùng year_progress_pct từ server (chính xác hơn cho kỳ tháng/quý)
+    final yearRevenue = (est['year_revenue'] as num?)?.toInt() ?? periodRevenue;
+    final yearProgressPct = (est['year_progress_pct'] as num?)?.toInt() ??
+        (exemptThreshold > 0
+            ? ((periodRevenue / exemptThreshold) * 100).round().clamp(0, 100)
+            : 0);
+    final yearProgress = yearProgressPct / 100.0;
+
+    final pctText = '$yearProgressPct%';
+    final isNearThreshold = yearProgress >= 0.7;
+
+    final monthlyBreakdown = (est['monthly_breakdown'] as List?)
+        ?.cast<Map<String, dynamic>>() ??
+        [];
 
     return RefreshIndicator(
       color: cs.primary,
@@ -111,7 +122,7 @@ class _TaxScreenState extends State<TaxScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _PeriodTab(
-                      label: 'Tháng này',
+                      label: 'Tháng',
                       value: 'month',
                       selected: _period,
                       onTap: (v) {
@@ -119,8 +130,16 @@ class _TaxScreenState extends State<TaxScreen> {
                         _load();
                       }),
                   _PeriodTab(
-                      label: 'Quý này',
+                      label: 'Quý',
                       value: 'quarter',
+                      selected: _period,
+                      onTap: (v) {
+                        setState(() => _period = v);
+                        _load();
+                      }),
+                  _PeriodTab(
+                      label: 'Năm',
+                      value: 'year',
                       selected: _period,
                       onTap: (v) {
                         setState(() => _period = v);
@@ -130,16 +149,30 @@ class _TaxScreenState extends State<TaxScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
 
-          // Tax threshold card
-          _ThresholdCard(
-            periodRevenue: periodRevenue,
+          // Period label
+          Center(
+            child: Text(
+              est['period_label'] as String? ?? '',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: cs.onSurfaceVariant),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Ngưỡng thuế năm (luôn hiển thị — dùng year_revenue)
+          _YearThresholdCard(
+            yearRevenue: yearRevenue,
             exemptThreshold: exemptThreshold,
-            progress: progress,
+            yearProgress: yearProgress,
             pctText: pctText,
             isNear: isNearThreshold,
             belowThreshold: belowThreshold,
+            periodRevenue: periodRevenue,
+            period: _period,
           ),
           const SizedBox(height: 16),
 
@@ -153,7 +186,7 @@ class _TaxScreenState extends State<TaxScreen> {
                     iconBg: cs.secondaryContainer,
                     iconFg: cs.onSecondaryContainer,
                     label:
-                        'Thuế GTGT ước tính (${vatRate.toStringAsFixed(0)}%)',
+                        'Thuế GTGT ước tính\n(${vatRate.toStringAsFixed(0)}%)',
                     amount: '${_currencyFmt.format(vatAmount)}đ',
                     cs: cs,
                   ),
@@ -165,14 +198,31 @@ class _TaxScreenState extends State<TaxScreen> {
                     iconBg: cs.primaryContainer,
                     iconFg: cs.onPrimaryContainer,
                     label:
-                        'Thuế TNCN ước tính (${pitRate.toStringAsFixed(1)}%)',
+                        'Thuế TNCN ước tính\n(${pitRate.toStringAsFixed(1)}%)',
                     amount: '${_currencyFmt.format(pitAmount)}đ',
                     cs: cs,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+          ],
+
+          // Monthly breakdown (khi chọn quý hoặc năm và có dữ liệu)
+          if (monthlyBreakdown.isNotEmpty && _period != 'month') ...[
+            _SectionHeader(
+              title: _period == 'year'
+                  ? 'Doanh thu & thuế theo tháng'
+                  : 'Chi tiết theo tháng trong quý',
+              cs: cs,
+            ),
+            const SizedBox(height: 12),
+            _MonthlyBreakdownCard(
+              breakdown: monthlyBreakdown,
+              cs: cs,
+              exemptThreshold: exemptThreshold,
+            ),
+            const SizedBox(height: 16),
           ],
 
           // Deadline timeline
@@ -193,7 +243,7 @@ class _TaxScreenState extends State<TaxScreen> {
             ),
             const SizedBox(height: 12),
             _DeadlineTimeline(deadlines: _deadlines, cs: cs),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
           ],
 
           // Disclaimer
@@ -268,7 +318,7 @@ class _PeriodTab extends StatelessWidget {
       onTap: () => onTap(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
@@ -292,21 +342,26 @@ class _PeriodTab extends StatelessWidget {
   }
 }
 
-class _ThresholdCard extends StatelessWidget {
-  final int periodRevenue;
+/// Card ngưỡng thuế — luôn dùng doanh thu năm để cảnh báo đúng.
+class _YearThresholdCard extends StatelessWidget {
+  final int yearRevenue;
   final int exemptThreshold;
-  final double progress;
+  final double yearProgress;
   final String pctText;
   final bool isNear;
   final bool belowThreshold;
+  final int periodRevenue;
+  final String period;
 
-  const _ThresholdCard({
-    required this.periodRevenue,
+  const _YearThresholdCard({
+    required this.yearRevenue,
     required this.exemptThreshold,
-    required this.progress,
+    required this.yearProgress,
     required this.pctText,
     required this.isNear,
     required this.belowThreshold,
+    required this.periodRevenue,
+    required this.period,
   });
 
   @override
@@ -315,6 +370,8 @@ class _ThresholdCard extends StatelessWidget {
     final barColor = isNear ? const Color(0xFFFBBF24) : cs.primary;
     final borderColor =
         isNear ? const Color(0xFFFBBF24) : const Color(0xFFC3C6D7);
+
+    final remaining = (exemptThreshold - yearRevenue).clamp(0, exemptThreshold);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -347,7 +404,7 @@ class _ThresholdCard extends StatelessWidget {
                 const SizedBox(width: 6),
               ],
               Text(
-                'Trạng thái ngưỡng thuế',
+                'Ngưỡng chịu thuế (cả năm)',
                 style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -376,22 +433,34 @@ class _ThresholdCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Doanh thu kỳ này',
+              Text('Doanh thu năm đến nay',
                   style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
               Text(
-                '${_currencyFmt.format(periodRevenue)}đ / ${_currencyFmt.format(exemptThreshold)}đ',
+                '${_currencyFmt.format(yearRevenue)}đ',
                 style: const TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: Color(0xFF0B1C30)),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Ngưỡng miễn thuế',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+              Text(
+                '${_currencyFmt.format(exemptThreshold)}đ/năm',
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
-              value: progress,
+              value: yearProgress,
               minHeight: 10,
               backgroundColor: const Color(0xFFE5EEFF),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
@@ -400,10 +469,34 @@ class _ThresholdCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             belowThreshold
-                ? 'Còn ${_currencyFmt.format(exemptThreshold - periodRevenue)}đ đến ngưỡng chịu thuế.'
-                : 'Chỉ còn ${_currencyFmt.format(exemptThreshold - periodRevenue)}đ để đạt ngưỡng chịu thuế cao hơn.',
+                ? 'Còn ${_currencyFmt.format(remaining)}đ đến ngưỡng chịu thuế.'
+                : 'Đã vượt ngưỡng miễn thuế — cần kê khai và nộp thuế.',
             style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
+          // Nếu đang xem kỳ tháng/quý thì thêm dòng doanh thu kỳ hiện tại
+          if (period != 'year') ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  period == 'month'
+                      ? 'Doanh thu tháng này'
+                      : 'Doanh thu quý này',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurfaceVariant),
+                ),
+                Text(
+                  '${_currencyFmt.format(periodRevenue)}đ',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: cs.primary),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -453,7 +546,7 @@ class _TaxEstCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(label,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant, height: 1.4)),
           const SizedBox(height: 4),
           Text(
             amount,
@@ -463,6 +556,140 @@ class _TaxEstCard extends StatelessWidget {
                 color: Color(0xFF0B1C30)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Bảng doanh thu + thuế theo từng tháng trong quý/năm.
+class _MonthlyBreakdownCard extends StatelessWidget {
+  final List<Map<String, dynamic>> breakdown;
+  final ColorScheme cs;
+  final int exemptThreshold;
+
+  const _MonthlyBreakdownCard({
+    required this.breakdown,
+    required this.cs,
+    required this.exemptThreshold,
+  });
+
+  static const _months = [
+    'T1', 'T2', 'T3', 'T4', 'T5', 'T6',
+    'T7', 'T8', 'T9', 'T10', 'T11', 'T12',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final maxRev = breakdown.fold<int>(
+      1,
+      (m, r) => ((r['revenue'] as num?)?.toInt() ?? 0) > m
+          ? (r['revenue'] as num).toInt()
+          : m,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC3C6D7)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 3))
+        ],
+      ),
+      child: Column(
+        children: breakdown.map((row) {
+          final month = (row['month'] as num?)?.toInt() ?? 0;
+          final rev = (row['revenue'] as num?)?.toInt() ?? 0;
+          final taxAmt = (row['tax_amount'] as num?)?.toInt() ?? 0;
+          final below = row['below_threshold'] as bool? ?? true;
+          final barW = maxRev > 0 ? (rev / maxRev) : 0.0;
+          final label = month >= 1 && month <= 12
+              ? _months[month - 1]
+              : 'T$month';
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurfaceVariant),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Bar
+                      LayoutBuilder(builder: (ctx, constraints) {
+                        return Stack(
+                          children: [
+                            Container(
+                              height: 8,
+                              width: constraints.maxWidth,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE5EEFF),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                            Container(
+                              height: 8,
+                              width: constraints.maxWidth * barW,
+                              decoration: BoxDecoration(
+                                color: below
+                                    ? cs.primary
+                                    : const Color(0xFFFBBF24),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_currencyFmt.format(rev)}đ',
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF0B1C30)),
+                          ),
+                          if (!below)
+                            Text(
+                              'Thuế: ${_currencyFmt.format(taxAmt)}đ',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFFFBBF24),
+                                  fontWeight: FontWeight.w600),
+                            )
+                          else
+                            Text(
+                              'Miễn thuế',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onSurfaceVariant),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -619,4 +846,3 @@ class _TimelineItem extends StatelessWidget {
     );
   }
 }
-

@@ -42,9 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _activeStoreId = storeId;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      final products = context.read<ProductsProvider>();
+      final invoices = context.read<InvoicesProvider>();
+      invoices.bindProductsProvider(products);
       await Future.wait([
-        context.read<ProductsProvider>().setStore(storeId),
-        context.read<InvoicesProvider>().setStore(storeId),
+        products.setStore(storeId),
+        invoices.setStore(storeId),
         context.read<RevenueProvider>().setStore(storeId),
       ], eagerError: false);
     });

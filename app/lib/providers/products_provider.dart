@@ -82,6 +82,17 @@ class ProductsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reload danh sách sản phẩm từ SQLite local (sau khi giảm tồn kho).
+  Future<void> reloadFromLocal(String storeId) async {
+    try {
+      final cached = await LocalDb.getActiveProducts(storeId: storeId);
+      if (cached.isNotEmpty) {
+        _products = cached;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
   Future<void> deleteProduct(String id) async {
     await _api.deleteProduct(id);
     _products = _products.where((p) => p.id != id).toList();
