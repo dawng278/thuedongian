@@ -109,19 +109,8 @@ export class TaxService {
       }
     }
 
-    // Lệ phí môn bài: chậm nhất 30/1 hằng năm (Nghị định 22/2020/NĐ-CP).
-    const monBai = new Date(year, 0, 30, 23, 59, 59);
-    if (monBai >= now) {
-      const daysLeft = Math.ceil(
-        (monBai.getTime() - now.getTime()) / MS_PER_DAY,
-      );
-      upcoming.push({
-        label: `Lệ phí môn bài (${year})`,
-        deadline: monBai.toISOString().substring(0, 10),
-        daysLeft,
-        urgent: daysLeft <= 14,
-      });
-    }
+    // Lệ phí môn bài đã bị BÃI BỎ từ 1/1/2026 theo Nghị quyết 198/2025/QH15.
+    // Không hiển thị deadline này nữa.
 
     upcoming.sort((a, b) => a.daysLeft - b.daysLeft);
     return { deadlines: upcoming.slice(0, 5) };

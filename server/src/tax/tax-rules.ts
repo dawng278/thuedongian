@@ -1,10 +1,12 @@
 /**
- * Quy tắc thuế Hộ kinh doanh theo Thông tư 40/2021/TT-BTC.
+ * Quy tắc thuế Hộ kinh doanh theo Thông tư 18/2026/TT-BTC
+ * (thay thế Thông tư 40/2021/TT-BTC, hiệu lực 24/4/2026).
  * Dùng chung cho TaxService (màn hình Thuế) và ReportsService (dashboard)
  * để tránh lệch logic giữa hai nơi.
  *
  * Thuế khoán HKD = (tỷ lệ GTGT + tỷ lệ TNCN) trên doanh thu.
- * Miễn thuế nếu doanh thu cả năm < 100 triệu VND.
+ * Miễn thuế nếu doanh thu cả năm < 200 triệu VND
+ * (Luật TNCN sửa đổi thông qua 10/12/2025, hiệu lực 1/1/2026).
  */
 
 export interface TaxRate {
@@ -22,7 +24,8 @@ export const TAX_RATES: Record<string, TaxRate> = {
 export const DEFAULT_BUSINESS_TYPE = 'food_beverage';
 
 // Ngưỡng doanh thu năm được miễn GTGT & TNCN (VND).
-export const EXEMPT_THRESHOLD = 100_000_000;
+// Nâng từ 100tr lên 200tr theo Luật TNCN sửa đổi hiệu lực 1/1/2026.
+export const EXEMPT_THRESHOLD = 200_000_000;
 
 export function resolveRate(businessType?: string | null): {
   key: string;
@@ -77,6 +80,6 @@ export function computeTax(
     vat_amount: vatAmount,
     pit_amount: pitAmount,
     total_tax: vatAmount + pitAmount,
-    source: 'Thông tư 40/2021/TT-BTC',
+    source: 'Thông tư 18/2026/TT-BTC (thay thế TT 40/2021)',
   };
 }

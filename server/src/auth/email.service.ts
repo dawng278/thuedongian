@@ -1,9 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
 
   constructor(private config: ConfigService) {
@@ -28,7 +33,10 @@ export class EmailService {
         html: buildOtpEmail(otp),
       });
     } catch (err) {
-      console.error('Gửi email thất bại:', err);
+      this.logger.error(
+        `Gửi email OTP tới ${to} thất bại`,
+        err instanceof Error ? err.stack : String(err),
+      );
       throw new InternalServerErrorException('Không thể gửi email. Thử lại sau.');
     }
   }
