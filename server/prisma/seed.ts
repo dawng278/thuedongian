@@ -73,87 +73,172 @@ type StoreSeed = {
 // ── Quán của tài khoản demo chính (owner@taxeasy.vn) ──────────────────────
 const demoStores: StoreSeed[] = [
   {
-    id: 'store-demo-pho',
-    name: 'Quán Phở Hà Nội',
+    // Chuỗi Mì Cay Seoul — menu thực tế, lượng khách ổn định để demo AI đủ nét
+    id: 'store-demo-seoul',
+    name: 'Mì Cay Seoul',
     tax_id: '0109990001',
-    address: '45 Phố Huế, Hai Bà Trưng, Hà Nội',
+    address: '23 Nguyễn Văn Cừ, Quận 5, TP.HCM',
     phone: '0901234567',
     business_type: 'food_beverage',
     products: [
+      // ── Mì cay (mặn hàng đầu) ──────────────────────────────────────────
       {
-        id: 'pho-p01',
-        name: 'Phở bò tái',
-        price: 55000,
-        unit: 'bát',
-        category: 'Món chính',
+        id: 'seoul-p01',
+        name: 'Mì cay cấp độ 1',
+        price: 59000,
+        cost_price: 28000,
+        unit: 'tô',
+        category: 'Mì cay',
         image_url:
-          'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=640&q=80',
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
-        id: 'pho-p02',
-        name: 'Phở bò chín',
-        price: 55000,
-        unit: 'bát',
-        category: 'Món chính',
+        id: 'seoul-p02',
+        name: 'Mì cay cấp độ 3',
+        price: 65000,
+        cost_price: 31000,
+        unit: 'tô',
+        category: 'Mì cay',
         image_url:
-          'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=640&q=80',
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
-        id: 'pho-p03',
-        name: 'Phở gà',
-        price: 50000,
-        unit: 'bát',
-        category: 'Món chính',
+        id: 'seoul-p03',
+        name: 'Mì cay cấp độ 5',
+        price: 69000,
+        cost_price: 33000,
+        unit: 'tô',
+        category: 'Mì cay',
         image_url:
-          'https://images.unsplash.com/photo-1606631977767-381dd4f72040?w=640&q=80',
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
-        id: 'pho-p04',
-        name: 'Bún bò Huế',
-        price: 60000,
-        unit: 'bát',
-        category: 'Món chính',
+        id: 'seoul-p04',
+        name: 'Mì cay cấp độ 7',
+        price: 75000,
+        cost_price: 36000,
+        unit: 'tô',
+        category: 'Mì cay',
         image_url:
-          'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=640&q=80',
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
       },
       {
-        id: 'pho-p05',
-        name: 'Bún riêu cua',
-        price: 50000,
-        unit: 'bát',
-        category: 'Món chính',
+        id: 'seoul-p05',
+        name: 'Mì cay cấp độ 9 (thách thức)',
+        price: 85000,
+        cost_price: 40000,
+        unit: 'tô',
+        category: 'Mì cay',
         image_url:
-          'https://images.unsplash.com/photo-1587325765878-8ceb46c74d5f?w=640&q=80',
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+      },
+      // ── Topping / thêm ──────────────────────────────────────────────────
+      {
+        id: 'seoul-p06',
+        name: 'Thêm trứng gà lòng đào',
+        price: 10000,
+        cost_price: 4000,
+        unit: 'quả',
+        category: 'Topping',
+        image_url:
+          'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=640&q=80',
       },
       {
-        id: 'pho-p06',
-        name: 'Cà phê sữa đá',
-        price: 30000,
-        unit: 'ly',
+        id: 'seoul-p07',
+        name: 'Thêm phô mai que',
+        price: 15000,
+        cost_price: 7000,
+        unit: 'cái',
+        category: 'Topping',
+        image_url:
+          'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=640&q=80',
+      },
+      {
+        id: 'seoul-p08',
+        name: 'Thêm mì (sợi)',
+        price: 10000,
+        cost_price: 3500,
+        unit: 'phần',
+        category: 'Topping',
+        image_url:
+          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+      },
+      // ── Khai vị / ăn kèm ────────────────────────────────────────────────
+      {
+        id: 'seoul-p09',
+        name: 'Bánh tteokbokki chiên',
+        price: 39000,
+        cost_price: 18000,
+        unit: 'đĩa',
+        category: 'Ăn kèm',
+        image_url:
+          'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=640&q=80',
+      },
+      {
+        id: 'seoul-p10',
+        name: 'Gà chiên Hàn Quốc',
+        price: 75000,
+        cost_price: 40000,
+        unit: 'phần',
+        category: 'Ăn kèm',
+        image_url:
+          'https://images.unsplash.com/photo-1569058242567-93de6f36f8eb?w=640&q=80',
+      },
+      {
+        id: 'seoul-p11',
+        name: 'Kimbap cuộn rong biển',
+        price: 45000,
+        cost_price: 22000,
+        unit: 'đĩa',
+        category: 'Ăn kèm',
+        image_url:
+          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=640&q=80',
+      },
+      {
+        id: 'seoul-p12',
+        name: 'Kimchi tươi',
+        price: 25000,
+        cost_price: 10000,
+        unit: 'đĩa',
+        category: 'Ăn kèm',
+        image_url:
+          'https://images.unsplash.com/photo-1583187832534-e82e0e832cce?w=640&q=80',
+      },
+      // ── Đồ uống ─────────────────────────────────────────────────────────
+      {
+        id: 'seoul-p13',
+        name: 'Soju đào Chum Churum',
+        price: 89000,
+        cost_price: 52000,
+        unit: 'chai',
         category: 'Đồ uống',
         image_url:
-          'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=640&q=80',
+          'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=640&q=80',
       },
       {
-        id: 'pho-p07',
-        name: 'Trà đá',
-        price: 5000,
+        id: 'seoul-p14',
+        name: 'Nước suối lạnh',
+        price: 10000,
+        cost_price: 4000,
+        unit: 'chai',
+        category: 'Đồ uống',
+        image_url:
+          'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=640&q=80',
+      },
+      {
+        id: 'seoul-p15',
+        name: 'Trà barley Hàn Quốc',
+        price: 15000,
+        cost_price: 5000,
         unit: 'ly',
         category: 'Đồ uống',
         image_url:
           'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=640&q=80',
       },
-      {
-        id: 'pho-p08',
-        name: 'Chè thập cẩm',
-        price: 30000,
-        unit: 'chén',
-        category: 'Tráng miệng',
-        image_url:
-          'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=640&q=80',
-      },
     ],
-    dailyOrders: genDailyOrders(12),
+    // ~40 đơn/ngày → doanh thu tháng ≈ 80–100tr → gần ngưỡng 200tr/năm, đủ
+    // để AI hiện cảnh báo thuế, top-product, low-stock, insight đa dạng.
+    dailyOrders: genDailyOrders(40),
   },
   {
     id: 'store-demo-cafe',
@@ -747,8 +832,8 @@ async function main() {
   );
 
   console.log('\nTài khoản demo:');
-  console.log('  owner@taxeasy.vn   / password123  (5 quán)');
-  console.log('  manager@taxeasy.vn / password123  (2 quán)');
+  console.log('  owner@taxeasy.vn   / password123  (5 quán — Mì Cay Seoul, Cafe Sáng, Tạp Hóa, Bún Đậu, Cơm VP)');
+  console.log('  manager@taxeasy.vn / password123  (2 quán — Nướng Lẩu, Bánh Mì)');
 }
 
 main()
