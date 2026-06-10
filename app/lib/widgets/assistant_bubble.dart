@@ -41,12 +41,24 @@ class _AssistantBubbleState extends State<AssistantBubble>
     );
     _scaleAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutBack);
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    // Fetch ngay sau khi frame đầu tiên render xong để badge hiện sớm.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeFetch());
   }
 
   @override
   void dispose() {
     _animCtrl.dispose();
     super.dispose();
+  }
+
+  /// Fetch nếu storeId mới hơn lần fetch trước.
+  void _maybeFetch() {
+    if (!mounted) return;
+    final storeId = context.read<StoresProvider>().currentStore?.id;
+    if (storeId != null && storeId != _lastStoreId) {
+      _lastStoreId = storeId;
+      _fetchInsights(storeId);
+    }
   }
 
   Future<void> _fetchInsights(String storeId) async {
@@ -70,6 +82,7 @@ class _AssistantBubbleState extends State<AssistantBubble>
     } else {
       setState(() => _open = true);
       _animCtrl.forward();
+      // Khi mở lại sau khi storeId thay đổi thì re-fetch
       if (storeId != null && storeId != _lastStoreId) {
         _lastStoreId = storeId;
         _fetchInsights(storeId);
@@ -83,8 +96,12 @@ class _AssistantBubbleState extends State<AssistantBubble>
 
   @override
   Widget build(BuildContext context) {
-    final storeId =
-        context.watch<StoresProvider>().currentStore?.id;
+    final storeId = context.watch<StoresProvider>().currentStore?.id;
+
+    // Khi storeId thay đổi (đổi quán) → fetch lại insights + cập nhật badge
+    if (storeId != null && storeId != _lastStoreId && !_loading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeFetch());
+    }
 
     return Stack(
       children: [
