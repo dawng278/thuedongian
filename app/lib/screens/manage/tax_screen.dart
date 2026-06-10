@@ -18,9 +18,7 @@ class TaxScreen extends StatefulWidget {
 class _TaxScreenState extends State<TaxScreen> {
   Map<String, dynamic>? _estimate;
   List<Map<String, dynamic>> _deadlines = [];
-  List<Map<String, dynamic>> _insights = [];
   bool _loading = false;
-  bool _insightsLoading = false;
   String? _error;
   String _period = 'month';
   String? _storeId;
@@ -30,7 +28,6 @@ class _TaxScreenState extends State<TaxScreen> {
     if (storeId == null) return;
     setState(() {
       _loading = true;
-      _insightsLoading = true;
       _error = null;
     });
     final api = context.read<ApiService>();
@@ -48,15 +45,6 @@ class _TaxScreenState extends State<TaxScreen> {
       setState(() => _error = e.toString());
     } finally {
       setState(() => _loading = false);
-    }
-    // AI insights load riêng — không block UI chính nếu chậm
-    try {
-      final insights = await api.getAiInsights(storeId: storeId);
-      if (mounted) setState(() => _insights = insights);
-    } catch (_) {
-      // Không hiện lỗi AI — chỉ ẩn section
-    } finally {
-      if (mounted) setState(() => _insightsLoading = false);
     }
   }
 
@@ -154,17 +142,6 @@ class _TaxScreenState extends State<TaxScreen> {
             belowThreshold: belowThreshold,
           ),
           const SizedBox(height: 16),
-
-          // AI Insights
-          if (_insightsLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: _InsightsLoadingCard(),
-            )
-          else if (_insights.isNotEmpty) ...[
-            _AiInsightsSection(insights: _insights, cs: cs),
-            const SizedBox(height: 16),
-          ],
 
           if (!belowThreshold) ...[
             // Tax estimate cards row
@@ -643,164 +620,3 @@ class _TimelineItem extends StatelessWidget {
   }
 }
 
-// ── AI Insights ────────────────────────────────────────────────────────────
-
-class _InsightsLoadingCard extends StatelessWidget {
-  const _InsightsLoadingCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFC3C6D7)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: cs.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Đang phân tích dữ liệu...',
-            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AiInsightsSection extends StatelessWidget {
-  final List<Map<String, dynamic>> insights;
-  final ColorScheme cs;
-
-  const _AiInsightsSection({required this.insights, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.auto_awesome_rounded, size: 18, color: cs.primary),
-            const SizedBox(width: 6),
-            Text(
-              'Gợi ý thông minh',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: cs.onSurface,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'AI',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: cs.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        ...insights.map((i) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _InsightCard(insight: i, cs: cs),
-            )),
-      ],
-    );
-  }
-}
-
-class _InsightCard extends StatelessWidget {
-  final Map<String, dynamic> insight;
-  final ColorScheme cs;
-
-  const _InsightCard({required this.insight, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    final type = insight['type'] as String? ?? 'info';
-    final title = insight['title'] as String? ?? '';
-    final body = insight['body'] as String? ?? '';
-
-    final (iconData, bgColor, iconColor) = switch (type) {
-      'warning' => (
-          Icons.warning_amber_rounded,
-          const Color(0xFFFEF3C7),
-          const Color(0xFFD97706),
-        ),
-      'tip' => (
-          Icons.lightbulb_outline_rounded,
-          const Color(0xFFECFDF5),
-          const Color(0xFF059669),
-        ),
-      _ => (
-          Icons.info_outline_rounded,
-          const Color(0xFFEFF4FF),
-          const Color(0xFF1976D2),
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: iconColor.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(iconData, size: 18, color: iconColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-                if (body.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    body,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

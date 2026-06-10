@@ -15,6 +15,7 @@ import '../manage/store_settings_screen.dart';
 import '../manage/profile_screen.dart';
 import '../manage/inventory_screen.dart';
 import '../../theme/taxeasy_design.dart';
+import '../../widgets/assistant_bubble.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -230,7 +231,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: SaleScreen(key: ValueKey(currentStore.id)),
+        body: Stack(
+          children: [
+            SaleScreen(key: ValueKey(currentStore.id)),
+            const AssistantBubble(),
+          ],
+        ),
       );
     }
 
@@ -283,7 +289,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _manageBody(),
+      body: Stack(
+        children: [
+          _manageBody(),
+          const AssistantBubble(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _manageTabIndex,
         onTap: (index) => setState(() => _manageTabIndex = index),
