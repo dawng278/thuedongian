@@ -8,7 +8,7 @@ import {
   runInsightEngine,
 } from './insight-engine';
 
-export { AiInsight };
+export type { AiInsight };
 
 @Injectable()
 export class AiService {
