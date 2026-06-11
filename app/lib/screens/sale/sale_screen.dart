@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
@@ -48,12 +49,14 @@ class _SaleViewState extends State<_SaleView> {
   );
 
   void _addToCart(ProductDto product) {
+    HapticFeedback.lightImpact(); // rung nhẹ xác nhận đã thêm món
     setState(() {
       _cart[product.id] = (_cart[product.id] ?? 0) + 1;
     });
   }
 
   void _removeFromCart(String productId) {
+    HapticFeedback.selectionClick();
     setState(() {
       final qty = _cart[productId] ?? 0;
       if (qty <= 1) {
@@ -1055,6 +1058,10 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
 
   Future<void> _confirm() async {
     setState(() => _loading = true);
+    // Capture Navigator/Messenger của màn cha TRƯỚC khi pop bottom sheet —
+    // context của nút này sẽ chết sau pop, không dùng để push/show được nữa.
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final result = await context.read<InvoicesProvider>().createInvoice(
             Map.of(widget.cart),
@@ -1062,11 +1069,12 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
             paymentMethod: widget.paymentMethod,
           );
       if (mounted) {
-        Navigator.pop(context);
+        HapticFeedback.mediumImpact(); // rung xác nhận thanh toán thành công
+        Navigator.pop(context); // đóng bottom sheet thanh toán
         widget.onClear();
         final num = result.serverNumber ?? result.localNumber;
         final offline = result.serverNumber == null;
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               offline
@@ -1079,8 +1087,7 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
             action: SnackBarAction(
               label: 'Xem QR',
               textColor: Colors.white,
-              onPressed: () => Navigator.push(
-                context,
+              onPressed: () => rootNavigator.push(
                 MaterialPageRoute(
                     builder: (_) => InvoiceQrScreen(invoice: result.invoice)),
               ),
@@ -1089,13 +1096,11 @@ class _ConfirmSaleButtonState extends State<_ConfirmSaleButton> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Lỗi tạo hóa đơn: $e'),
-              backgroundColor: const Color(0xFFBA1A1A)),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+            content: Text('Lỗi tạo hóa đơn: $e'),
+            backgroundColor: const Color(0xFFBA1A1A)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }

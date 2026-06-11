@@ -59,6 +59,18 @@ model Product {
   @@map("products")
 }
 
+model PasswordResetOtp {
+  id         String   @id @default(uuid())
+  email      String
+  otp_hash   String
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@map("password_reset_otps")
+}
+
 // id sinh ở CLIENT (UUID v4) — chống trùng khi sync offline
 model Invoice {
   id             String    @id

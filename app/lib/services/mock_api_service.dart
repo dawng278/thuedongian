@@ -166,6 +166,22 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<UserDto> updateProfile({String? name, String? email}) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return UserDto(
+      id: 'user-001',
+      email: email ?? 'owner@taxeasy.vn',
+      name: name ?? 'Chủ quán Demo',
+    );
+  }
+
+  @override
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
+  @override
   Future<List<StoreDto>> getStores() async => [_store];
 
   @override
@@ -199,6 +215,7 @@ class MockApiService implements ApiService {
       String? category,
       int? stock,
       int? costPrice,
+      String? imageUrl,
       String? storeId}) async {
     final p = ProductDto(
       id: _uuid.v4(),
@@ -209,6 +226,7 @@ class MockApiService implements ApiService {
       stock: stock,
       unit: unit,
       category: category,
+      imageUrl: imageUrl,
       isActive: true,
       updatedAt: DateTime.now(),
     );
@@ -403,6 +421,15 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<Map<String, dynamic>> getChart(
+      {String granularity = 'week', String? storeId}) async {
+    return {
+      'granularity': granularity,
+      'points': <Map<String, dynamic>>[],
+    };
+  }
+
+  @override
   Future<Map<String, dynamic>> getPeriodReport(
       {required DateTime from, required DateTime to, String? storeId}) async {
     final invoices =
@@ -418,5 +445,23 @@ class MockApiService implements ApiService {
       'invoices': invoices.map((i) => i.toJson()).toList(),
       'top_products': <Map<String, dynamic>>[],
     };
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAiInsights({String? storeId}) async {
+    return [
+      {
+        'type': 'tip',
+        'title': 'Nhập giá vốn để tính lợi nhuận',
+        'body':
+            'Điền giá vốn cho từng sản phẩm để app tự tính lợi nhuận thực. Giúp bạn biết món nào lãi nhất.',
+      },
+      {
+        'type': 'info',
+        'title': 'Ngưỡng miễn thuế 2026',
+        'body':
+            'Từ 1/1/2026, hộ kinh doanh có doanh thu dưới 200 triệu/năm được miễn GTGT và TNCN.',
+      },
+    ];
   }
 }

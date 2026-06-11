@@ -25,18 +25,34 @@ class AuthProvider extends ChangeNotifier {
   final ApiService _api;
 
   AuthProvider(this._api) {
+    _wireTokenRefresh();
     _tryRestoreSession();
+  }
+
+  /// Khi interceptor refresh token thành công → lưu lại; khi hết hạn hẳn → logout.
+  void _wireTokenRefresh() {
+    final api = _api;
+    if (api is HttpApiService) {
+      api.onTokensRefreshed = (access, refresh) {
+        _saveTokens(access, refresh);
+      };
+      api.onAuthExpired = () {
+        logout();
+      };
+    }
   }
 
   Future<void> _tryRestoreSession() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_keyToken);
+    final refresh = prefs.getString(_keyRefresh);
     if (token == null) {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return;
     }
     (_api as HttpApiService).setToken(token);
+    (_api as HttpApiService).setRefreshToken(refresh);
     try {
       try {
         _store = await _api.getMyStore();
@@ -57,6 +73,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await _api.login(email, password);
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
+      (_api as HttpApiService).setRefreshToken(res.refreshToken);
       _user = res.user;
       try {
         _store = await _api.getMyStore();
@@ -79,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await _api.register(email, password, name);
       await _saveTokens(res.accessToken, res.refreshToken);
       (_api as HttpApiService).setToken(res.accessToken);
+      (_api as HttpApiService).setRefreshToken(res.refreshToken);
       _user = res.user;
       try {
         _store = await _api.getMyStore();
@@ -90,6 +108,41 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Cập nhật hồ sơ (tên/email). Trả true nếu thành công, cập nhật _user.
+  Future<bool> updateProfile({String? name, String? email}) async {
+    _errorMessage = null;
+    try {
+      final updated = await _api.updateProfile(name: name, email: email);
+      _user = updated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      _errorMessage = (msg.contains('409') || msg.contains('Conflict'))
+          ? 'Email đã được dùng bởi tài khoản khác'
+          : _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Đổi mật khẩu. Trả true nếu thành công.
+  Future<bool> changePassword(
+      String currentPassword, String newPassword) async {
+    _errorMessage = null;
+    try {
+      await _api.changePassword(currentPassword, newPassword);
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      _errorMessage = (msg.contains('401') || msg.contains('Unauthorized'))
+          ? 'Mật khẩu hiện tại không đúng'
+          : _parseError(e);
       notifyListeners();
       return false;
     }
@@ -124,9 +177,21 @@ class AuthProvider extends ChangeNotifier {
     if (msg.contains('409') || msg.contains('Conflict')) {
       return 'Email này đã được đăng ký';
     }
-    if (msg.contains('SocketException') || msg.contains('Connection refused')) {
-      return 'Không kết nối được server';
+    if (msg.contains('SocketException') ||
+        msg.contains('Connection refused') ||
+        msg.contains('Failed host lookup') ||
+        msg.contains('Network is unreachable') ||
+        msg.contains('CLEARTEXT') ||
+        msg.contains('cleartext')) {
+      return 'Không kết nối được server. Kiểm tra mạng và server.';
     }
-    return 'Có lỗi xảy ra, thử lại sau';
+    if (msg.contains('TimeoutException') ||
+        msg.contains('connectTimeout') ||
+        msg.contains('receiveTimeout') ||
+        msg.contains('DioExceptionType.connectionTimeout') ||
+        msg.contains('DioExceptionType.receiveTimeout')) {
+      return 'Server phản hồi quá lâu. Thử lại sau.';
+    }
+    return 'Lỗi: $msg';
   }
 }

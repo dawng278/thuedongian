@@ -67,6 +67,12 @@ class RevenueData {
       );
 }
 
+class ChartPoint {
+  final String label;
+  final int revenue;
+  const ChartPoint({required this.label, required this.revenue});
+}
+
 class RevenueProvider extends ChangeNotifier {
   final ApiService _api;
 
@@ -75,9 +81,17 @@ class RevenueProvider extends ChangeNotifier {
   String? _error;
   String? _storeId;
 
+  // Biểu đồ theo mốc thời gian (week | month | year)
+  String _granularity = 'week';
+  List<ChartPoint> _chart = [];
+  bool _chartLoading = false;
+
   RevenueData? get data => _data;
   bool get loading => _loading;
   String? get error => _error;
+  String get granularity => _granularity;
+  List<ChartPoint> get chart => _chart;
+  bool get chartLoading => _chartLoading;
 
   RevenueProvider(this._api);
 
@@ -85,6 +99,33 @@ class RevenueProvider extends ChangeNotifier {
     if (_storeId == storeId && _data != null) return;
     _storeId = storeId;
     await load();
+    await loadChart(_granularity);
+  }
+
+  /// Tải dữ liệu biểu đồ theo mốc thời gian (tuần/tháng/năm).
+  Future<void> loadChart(String granularity) async {
+    final storeId = _storeId;
+    if (storeId == null) return;
+    _granularity = granularity;
+    _chartLoading = true;
+    notifyListeners();
+    try {
+      final json =
+          await _api.getChart(granularity: granularity, storeId: storeId);
+      final points = (json['points'] as List?) ?? [];
+      _chart = points
+          .map((e) => ChartPoint(
+                label: e['label'] as String? ?? '',
+                revenue:
+                    num.tryParse(e['revenue']?.toString() ?? '0')?.toInt() ?? 0,
+              ))
+          .toList();
+    } catch (_) {
+      _chart = [];
+    } finally {
+      _chartLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> load({DateTime? from, DateTime? to}) async {

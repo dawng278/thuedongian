@@ -6,12 +6,16 @@ import '../../providers/invoices_provider.dart';
 import '../../providers/revenue_provider.dart';
 import '../../providers/stores_provider.dart';
 import '../sale/sale_screen.dart';
+import '../sale/pending_sync_screen.dart';
 import '../manage/product_manage_screen.dart';
 import '../manage/revenue_screen.dart';
 import '../manage/invoice_history_screen.dart';
 import '../manage/tax_screen.dart';
 import '../manage/store_settings_screen.dart';
+import '../manage/profile_screen.dart';
+import '../manage/inventory_screen.dart';
 import '../../theme/taxeasy_design.dart';
+import '../../widgets/assistant_bubble.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSaleMode = true;
   String? _activeStoreId;
   int _manageTabIndex = 0;
-  bool _manageSyncing = false;
 
   @override
   void initState() {
@@ -39,9 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _activeStoreId = storeId;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      final products = context.read<ProductsProvider>();
+      final invoices = context.read<InvoicesProvider>();
+      invoices.bindProductsProvider(products);
       await Future.wait([
-        context.read<ProductsProvider>().setStore(storeId),
-        context.read<InvoicesProvider>().setStore(storeId),
+        products.setStore(storeId),
+        invoices.setStore(storeId),
         context.read<RevenueProvider>().setStore(storeId),
       ], eagerError: false);
     });
@@ -50,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showStoreSwitcher() {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -57,75 +64,93 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (sheetContext) => Consumer<StoresProvider>(
         builder: (context, stores, _) {
           final current = stores.currentStore;
+          // Giới hạn chiều cao tối đa ~85% màn hình; danh sách quán cuộn được.
+          final maxH = MediaQuery.of(sheetContext).size.height * 0.85;
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: TaxEasyColors.outlineVariant,
-                        borderRadius: BorderRadius.circular(999),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxH),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: TaxEasyColors.outlineVariant,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Chọn quán',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 12),
-                  ...stores.stores.map(
-                    (store) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        current?.id == store.id
-                            ? Icons.check_circle
-                            : Icons.storefront_outlined,
-                        color: current?.id == store.id
-                            ? TaxEasyColors.primary
-                            : TaxEasyColors.outline,
-                      ),
-                      title: Text(
-                        store.name,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(_businessTypeLabel(store.businessType)),
-                      onTap: () async {
-                        await stores.switchStore(store);
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                      },
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Chọn quán',
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (current != null)
-                    OutlinedButton.icon(
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        children: stores.stores
+                            .map(
+                              (store) => ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(
+                                  current?.id == store.id
+                                      ? Icons.check_circle
+                                      : Icons.storefront_outlined,
+                                  color: current?.id == store.id
+                                      ? TaxEasyColors.primary
+                                      : TaxEasyColors.outline,
+                                ),
+                                title: Text(
+                                  store.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                subtitle:
+                                    Text(_businessTypeLabel(store.businessType)),
+                                onTap: () async {
+                                  await stores.switchStore(store);
+                                  if (sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
+                                  }
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (current != null)
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const StoreSettingsScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.settings_outlined),
+                        label: const Text('Cài đặt quán hiện tại'),
+                      ),
+                    const SizedBox(height: 8),
+                    FilledButton.icon(
                       onPressed: () {
                         Navigator.pop(sheetContext);
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const StoreSettingsScreen(),
-                          ),
-                        );
+                        _showCreateStoreSheet();
                       },
-                      icon: const Icon(Icons.settings_outlined),
-                      label: const Text('Cài đặt quán hiện tại'),
+                      icon: const Icon(Icons.add_business_outlined),
+                      label: const Text('Tạo quán mới'),
                     ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                      _showCreateStoreSheet();
-                    },
-                    icon: const Icon(Icons.add_business_outlined),
-                    label: const Text('Tạo quán mới'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -198,24 +223,23 @@ class _HomeScreenState extends State<HomeScreen> {
               onToggle: () => setState(() => _isSaleMode = !_isSaleMode),
             ),
             _SyncBadge(),
-            PopupMenuButton<String>(
-              onSelected: (v) async {
-                if (v == 'logout') await context.read<AuthProvider>().logout();
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Row(children: [
-                    Icon(Icons.logout),
-                    SizedBox(width: 8),
-                    Text('Đăng xuất')
-                  ]),
+            IconButton(
+              icon: const Icon(Icons.account_circle_outlined),
+              tooltip: 'Tài khoản',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ProfileScreen(),
                 ),
-              ],
+              ),
             ),
           ],
         ),
-        body: SaleScreen(key: ValueKey(currentStore.id)),
+        body: Stack(
+          children: [
+            SaleScreen(key: ValueKey(currentStore.id)),
+            const AssistantBubble(),
+          ],
+        ),
       );
     }
 
@@ -238,62 +262,42 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16),
-          child: Icon(
-            Icons.storefront,
-            color: Color(0xFF004AC6),
-          ),
-        ),
-        title: const Text(
-          'TaxEasy 2026',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: TaxEasyColors.textPrimary,
-          ),
-        ),
+        title: _StoreTitle(
+            storeName: currentStore.name, onTap: _showStoreSwitcher),
         actions: [
           _ModeToggle(
             isSaleMode: _isSaleMode,
             onToggle: () => setState(() => _isSaleMode = !_isSaleMode),
           ),
-          _manageSyncing
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.swap_vert),
-                  tooltip: 'Đồng bộ',
-                  onPressed: () async {
-                    setState(() => _manageSyncing = true);
-                    try {
-                      final result =
-                          await context.read<InvoicesProvider>().syncPending();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
-                            backgroundColor: result.errors > 0
-                                ? const Color(0xFFD97706)
-                                : const Color(0xFF059669),
-                          ),
-                        );
-                      }
-                    } finally {
-                      if (mounted) setState(() => _manageSyncing = false);
-                    }
-                  },
+          _SyncBadge(),
+          // Tồn kho — chỉ hiện ở tab Sản phẩm.
+          if (_manageTabIndex == 2)
+            IconButton(
+              icon: const Icon(Icons.inventory_outlined),
+              tooltip: 'Quản lý tồn kho',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const InventoryScreen(),
                 ),
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Tài khoản',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ProfileScreen(),
+              ),
+            ),
+          ),
         ],
       ),
-      body: _manageBody(),
+      body: Stack(
+        children: [
+          _manageBody(),
+          const AssistantBubble(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _manageTabIndex,
         onTap: (index) => setState(() => _manageTabIndex = index),
@@ -306,19 +310,19 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.payments_outlined),
-            label: 'Revenue',
+            label: 'Doanh thu',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
-            label: 'Tax',
+            label: 'Thuế',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.inventory_2_outlined),
-            label: 'Products',
+            label: 'Sản phẩm',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
-            label: 'Invoices',
+            label: 'Hóa đơn',
           ),
         ],
       ),
@@ -350,11 +354,13 @@ class _ModeToggle extends StatelessWidget {
             children: [
               _PillTab(
                 label: 'Bán hàng',
+                icon: Icons.point_of_sale_outlined,
                 isActive: isSaleMode,
                 cs: cs,
               ),
               _PillTab(
                 label: 'Quản lý',
+                icon: Icons.bar_chart_outlined,
                 isActive: !isSaleMode,
                 cs: cs,
               ),
@@ -422,18 +428,22 @@ class _StoreTitle extends StatelessWidget {
 
 class _PillTab extends StatelessWidget {
   final String label;
+  final IconData icon;
   final bool isActive;
   final ColorScheme cs;
 
   const _PillTab(
-      {required this.label, required this.isActive, required this.cs});
+      {required this.label,
+      required this.icon,
+      required this.isActive,
+      required this.cs});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isActive ? cs.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
@@ -446,64 +456,41 @@ class _PillTab extends StatelessWidget {
               ]
             : null,
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: isActive ? Colors.white : cs.onSurfaceVariant,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              size: 15,
+              color: isActive ? Colors.white : cs.onSurfaceVariant),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isActive ? Colors.white : cs.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SyncBadge extends StatefulWidget {
-  @override
-  State<_SyncBadge> createState() => _SyncBadgeState();
-}
-
-class _SyncBadgeState extends State<_SyncBadge> {
-  bool _syncing = false;
-
+class _SyncBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pending = context.watch<InvoicesProvider>().pendingCount;
     if (pending == 0) return const SizedBox.shrink();
     return IconButton(
-      icon: _syncing
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Badge(
-              label: Text('$pending'),
-              child: const Icon(Icons.sync_outlined),
-            ),
-      tooltip: 'Đồng bộ $pending hóa đơn offline',
-      onPressed: _syncing
-          ? null
-          : () async {
-              setState(() => _syncing = true);
-              try {
-                final result =
-                    await context.read<InvoicesProvider>().syncPending();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
-                      backgroundColor: result.errors > 0
-                          ? const Color(0xFFD97706)
-                          : const Color(0xFF059669),
-                    ),
-                  );
-                }
-              } finally {
-                if (mounted) setState(() => _syncing = false);
-              }
-            },
+      icon: Badge(
+        label: Text('$pending'),
+        child: const Icon(Icons.cloud_off_outlined),
+      ),
+      tooltip: 'Xem $pending hóa đơn chờ đồng bộ',
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const PendingSyncScreen()),
+      ),
     );
   }
 }

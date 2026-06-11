@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/invoice.dart';
 import '../models/product.dart';
+import '../providers/products_provider.dart';
 import '../services/api_service.dart';
 import '../services/local_db.dart';
 import '../services/sync_service.dart';
@@ -20,26 +21,41 @@ class InvoicesProvider extends ChangeNotifier {
   int _pendingCount = 0;
   String? _storeId;
 
-  StreamSubscription<List<ConnectivityResult>>? _connSub;
+  Timer? _connTimer;
+  bool _wasOnline = false;
 
   List<InvoiceDto> get invoices => _invoices;
   bool get creating => _creating;
   int get pendingCount => _pendingCount;
 
+  ProductsProvider? _products;
+
   InvoicesProvider(this._api) {
     _sync = SyncService(_api);
-    _listenConnectivity();
+    _startConnectivityPolling();
   }
 
-  /// Lắng nghe trạng thái mạng — khi có mạng trở lại và còn hàng đợi,
-  /// tự động đồng bộ (đúng "definition of done": bật mạng tự đồng bộ).
-  void _listenConnectivity() {
-    _connSub = Connectivity().onConnectivityChanged.listen((results) {
-      final online = results.any((r) => r != ConnectivityResult.none);
-      if (online && _pendingCount > 0) {
+  void bindProductsProvider(ProductsProvider p) => _products = p;
+
+  /// Poll internet mỗi 10 giây thay vì dùng DBus (không khả dụng trên Linux desktop).
+  void _startConnectivityPolling() {
+    _connTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      final online = await _hasInternet();
+      if (online && !_wasOnline && _pendingCount > 0) {
         _autoSync();
       }
+      _wasOnline = online;
     });
+  }
+
+  Future<bool> _hasInternet() async {
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 3));
+      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _autoSync() async {
@@ -56,7 +72,7 @@ class InvoicesProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _connSub?.cancel();
+    _connTimer?.cancel();
     super.dispose();
   }
 
@@ -116,7 +132,11 @@ class InvoicesProvider extends ChangeNotifier {
       // Step 1: Always persist locally first (works offline)
       final local = await LocalDb.insertPendingInvoice(dto);
 
-      // Step 2: Try immediate sync
+      // Step 2: Giảm tồn kho local ngay lập tức
+      await LocalDb.decreaseStock(cart);
+      _products?.reloadFromLocal(storeId);
+
+      // Step 3: Try immediate sync
       int? serverNumber;
       try {
         final result = await _api.syncInvoices([dto]);
@@ -163,6 +183,13 @@ class InvoicesProvider extends ChangeNotifier {
       _creating = false;
       notifyListeners();
     }
+  }
+
+  /// Lấy danh sách hóa đơn chưa đồng bộ (để hiển thị cho người quản lý xem).
+  Future<List<LocalInvoice>> pendingInvoices() async {
+    final storeId = _storeId;
+    if (storeId == null) return [];
+    return LocalDb.getPendingInvoices(storeId: storeId);
   }
 
   /// Sync all pending invoices (call when network comes back)

@@ -1,0 +1,29 @@
+# PostgreSQL cho TaxEasy — dùng NAMED VOLUME để data KHÔNG mất khi
+# container restart/recreate (anonymous volume là nguyên nhân mất data trước đây).
+#
+# Dùng:
+#   docker compose up -d        # khởi động (data giữ qua các lần restart)
+#   docker compose down         # dừng (GIỮ data — volume vẫn còn)
+#   docker compose down -v      # dừng + XÓA data (chỉ khi muốn reset sạch)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taxeasy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taxeasy
+    ports:
+      - "5433:5432"
+    volumes:
+      - taxeasy_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taxeasy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  taxeasy_pgdata:
+    name: taxeasy_pgdata

@@ -3,11 +3,26 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceXmlService } from './invoice-xml.service';
 import { createInvoiceAtomic } from './create-invoice-atomic';
 import { StoresService } from '../stores/stores.service';
+
+type DecimalValue = Prisma.Decimal | number | string;
+
+type SerializableInvoiceItem = {
+  price: DecimalValue;
+  subtotal: DecimalValue;
+  [key: string]: unknown;
+};
+
+type SerializableInvoice = {
+  total_amount: DecimalValue;
+  items?: SerializableInvoiceItem[];
+  [key: string]: unknown;
+};
 
 @Injectable()
 export class InvoicesService {
@@ -17,11 +32,11 @@ export class InvoicesService {
     private stores: StoresService,
   ) {}
 
-  private serializeInvoice(invoice: any) {
+  private serializeInvoice(invoice: SerializableInvoice) {
     return {
       ...invoice,
       total_amount: Number(invoice.total_amount),
-      items: invoice.items?.map((item: any) => ({
+      items: invoice.items?.map((item) => ({
         ...item,
         price: Number(item.price),
         subtotal: Number(item.subtotal),
@@ -82,7 +97,12 @@ export class InvoicesService {
       }),
     ]);
 
-    return { total, page, limit, data: data.map((inv) => this.serializeInvoice(inv)) };
+    return {
+      total,
+      page,
+      limit,
+      data: data.map((inv) => this.serializeInvoice(inv)),
+    };
   }
 
   async findOne(userId: string, id: string) {

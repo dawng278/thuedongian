@@ -25,7 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Lỗi máy chủ nội bộ';
 
     if (exception instanceof HttpException) {
@@ -51,12 +51,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message = 'Dữ liệu tham chiếu không hợp lệ';
           break;
         default:
+          // Log code để debug
+          this.logger.error(
+            `Prisma known error ${exception.code}: ${request.method} ${request.url}`,
+            exception.message,
+          );
           status = HttpStatus.BAD_REQUEST;
           message = 'Yêu cầu không hợp lệ';
       }
     } else if (exception instanceof Prisma.PrismaClientValidationError) {
       status = HttpStatus.BAD_REQUEST;
       message = 'Dữ liệu gửi lên không hợp lệ';
+    } else if (exception instanceof Prisma.PrismaClientInitializationError) {
+      // DB unreachable (sai port, chưa start, v.v.)
+      status = HttpStatus.SERVICE_UNAVAILABLE;
+      message = 'Không kết nối được cơ sở dữ liệu';
+      this.logger.error(
+        `DB init error ${exception.errorCode}: ${request.method} ${request.url}`,
+        exception.message,
+      );
     }
 
     if (status >= 500) {

@@ -13,7 +13,9 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateInvoiceItemDto {
-  @IsUUID()
+  // Khóa ngoại tới product có sẵn — không ép định dạng UUID
+  // (id seed/demo có thể không phải UUID v4).
+  @IsString()
   @IsOptional()
   product_id?: string;
 
@@ -31,10 +33,12 @@ export class CreateInvoiceItemDto {
 }
 
 export class CreateInvoiceDto {
+  // id hóa đơn do client sinh (UUID v4) — chống trùng khi sync offline.
   @IsUUID()
   id: string;
 
-  @IsUUID()
+  // Khóa ngoại tới store có sẵn — không ép UUID (id seed/demo có thể khác).
+  @IsString()
   @IsOptional()
   store_id?: string;
 

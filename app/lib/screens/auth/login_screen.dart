@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/taxeasy_design.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -34,8 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailCtrl.text.trim(),
           _passCtrl.text,
         );
-    if (!ok && mounted) {
-      setState(() => _loading = false);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -51,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TaxEasyColors.background,
+      resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 720;
@@ -93,20 +98,19 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           }
 
-          final heroHeight = (constraints.maxHeight * 0.38).clamp(250.0, 340.0);
-          return Stack(
+          // Layout dọc: hero banner nhỏ phía trên, form cuộn phía dưới
+          return Column(
             children: [
               SizedBox(
                 width: double.infinity,
-                height: heroHeight,
+                height: (constraints.maxHeight * 0.32).clamp(180.0, 260.0),
                 child: const TaxEasyAuthVisual(
                   title: 'ThueDonGian',
                   subtitle: 'Bán hàng rõ ràng. Thuế nhẹ đầu.',
                   compact: true,
                 ),
               ),
-              Positioned.fill(
-                top: heroHeight - 28,
+              Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
                     color: TaxEasyColors.surface,
@@ -285,7 +289,12 @@ class _LoginForm extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ForgotPasswordScreen(),
+                  ),
+                ),
                 child: const Text('Quên mật khẩu?'),
               ),
             ],

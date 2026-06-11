@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
@@ -66,7 +69,10 @@ class _ProductManageScreenState extends State<ProductManageScreen> {
       backgroundColor: const Color(0xFFF8F9FF),
       body: provider.loading && allProducts.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
+          : RefreshIndicator(
+              color: cs.primary,
+              onRefresh: () => provider.loadProducts(),
+              child: CustomScrollView(
               slivers: [
                 // Sticky search + filter header
                 SliverPersistentHeader(
@@ -130,6 +136,7 @@ class _ProductManageScreenState extends State<ProductManageScreen> {
                     ),
                   ),
               ],
+            ),
             ),
       floatingActionButton:
           _AddFab(onTap: () => _showProductDialog(context, null), cs: cs),
@@ -291,6 +298,42 @@ class _ProductTile extends StatelessWidget {
         .toUpperCase();
   }
 
+  Widget _buildThumbnail(ColorScheme cs) {
+    final url = product.imageUrl;
+    if (url != null && url.isNotEmpty) {
+      if (url.startsWith('http')) {
+        return Image.network(
+          url,
+          width: 72,
+          height: 72,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _initialsBox(cs),
+        );
+      }
+      // Local file path (ảnh từ image_picker chưa upload)
+      final f = File(url);
+      if (f.existsSync()) {
+        return Image.file(f, width: 72, height: 72, fit: BoxFit.cover);
+      }
+    }
+    return _initialsBox(cs);
+  }
+
+  Widget _initialsBox(ColorScheme cs) {
+    return Container(
+      width: 72,
+      height: 72,
+      color: const Color(0xFFEFF4FF),
+      child: Center(
+        child: Text(
+          _initials(),
+          style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.w700, color: cs.primary),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -314,23 +357,9 @@ class _ProductTile extends StatelessWidget {
         child: Row(
           children: [
             // Thumbnail / Avatar
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF4FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  _initials(),
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: cs.primary,
-                  ),
-                ),
-              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: _buildThumbnail(cs),
             ),
             const SizedBox(width: 14),
             // Details
@@ -487,6 +516,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
   late final TextEditingController _categoryCtrl;
   bool _saving = false;
 
+  // Ảnh đã chọn từ thư viện — chỉ local path (chưa upload)
+  String? _pickedImagePath;
+
   @override
   void initState() {
     super.initState();
@@ -512,6 +544,81 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     super.dispose();
   }
 
+  Widget _buildImagePreview(ColorScheme cs) {
+    // Ưu tiên ảnh mới chọn từ thư viện
+    if (_pickedImagePath != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(File(_pickedImagePath!), fit: BoxFit.cover),
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('Đổi ảnh',
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ),
+        ],
+      );
+    }
+    // Ảnh cũ từ URL (seed/server)
+    final existingUrl = widget.existing?.imageUrl;
+    if (existingUrl != null && existingUrl.startsWith('http')) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(existingUrl, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _noImagePlaceholder(cs)),
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('Đổi ảnh',
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ),
+        ],
+      );
+    }
+    // Chưa có ảnh
+    return _noImagePlaceholder(cs);
+  }
+
+  Widget _noImagePlaceholder(ColorScheme cs) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_photo_alternate_outlined, size: 36, color: cs.primary),
+        const SizedBox(height: 6),
+        Text('Chọn ảnh từ thư viện',
+            style: TextStyle(fontSize: 12, color: cs.primary)),
+      ],
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      imageQuality: 80,
+    );
+    if (picked != null) {
+      setState(() => _pickedImagePath = picked.path);
+    }
+  }
+
   int? _parseIntField(TextEditingController c) {
     final raw = c.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (raw.isEmpty) return null;
@@ -527,6 +634,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
           int.parse(_priceCtrl.text.replaceAll(',', '').replaceAll('.', ''));
       final stock = _parseIntField(_stockCtrl);
       final costPrice = _parseIntField(_costPriceCtrl);
+      // Ảnh: ưu tiên ảnh mới chọn, fallback về ảnh cũ
+      final imageUrl = _pickedImagePath ?? widget.existing?.imageUrl;
+
       if (widget.existing == null) {
         await provider.createProduct(
           _nameCtrl.text.trim(),
@@ -537,16 +647,17 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               : _categoryCtrl.text.trim(),
           stock: stock,
           costPrice: costPrice,
+          imageUrl: imageUrl,
         );
       } else {
         await provider.updateProduct(widget.existing!.id, {
           'name': _nameCtrl.text.trim(),
           'price': price,
-          if (_unitCtrl.text.trim().isNotEmpty) 'unit': _unitCtrl.text.trim(),
-          if (_categoryCtrl.text.trim().isNotEmpty)
-            'category': _categoryCtrl.text.trim(),
-          if (stock != null) 'stock': stock,
-          if (costPrice != null) 'cost_price': costPrice,
+          'unit': _unitCtrl.text.trim().isEmpty ? null : _unitCtrl.text.trim(),
+          'category': _categoryCtrl.text.trim().isEmpty ? null : _categoryCtrl.text.trim(),
+          'stock': stock,
+          'cost_price': costPrice,
+          if (imageUrl != null) 'image_url': imageUrl,
         });
       }
       if (mounted) Navigator.pop(context);
@@ -596,6 +707,25 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   color: Color(0xFF0B1C30)),
             ),
             const SizedBox(height: 20),
+
+            // ── Ảnh sản phẩm ──
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF4FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFC3C6D7)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: _buildImagePreview(cs),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
             TextFormField(
               controller: _nameCtrl,
               decoration: const InputDecoration(

@@ -17,6 +17,21 @@ export class ReportsController {
     return this.reportsService.getRevenue(req.user.userId, from, to, storeId);
   }
 
+  // Dữ liệu biểu đồ doanh thu theo mốc thời gian:
+  // week = 7 ngày gần nhất, month = 30 ngày, year = 12 tháng gần nhất.
+  @Get('chart')
+  getChart(
+    @Request() req: { user: { userId: string } },
+    @Query('granularity') granularity?: string,
+    @Query('store_id') storeId?: string,
+  ) {
+    return this.reportsService.getChart(
+      req.user.userId,
+      granularity ?? 'week',
+      storeId,
+    );
+  }
+
   @Get('period')
   getPeriodReport(
     @Request() req: { user: { userId: string } },

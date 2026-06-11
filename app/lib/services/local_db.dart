@@ -44,7 +44,7 @@ class LocalDb {
     final path = join(await getDatabasesPath(), 'taxeasy.db');
     return openDatabase(
       path,
-      version: 5,
+      version: 7,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -127,9 +127,26 @@ class LocalDb {
         "ALTER TABLE invoices ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'cash'",
       );
     }
-    if (oldVersion >= 4 && oldVersion < 5) {
-      await db.execute("ALTER TABLE products ADD COLUMN cost_price INTEGER");
-      await db.execute("ALTER TABLE products ADD COLUMN stock INTEGER");
+    // v7: drop + recreate products với full schema (thay vì ALTER TABLE từng cột).
+    // Products chỉ là cache từ server — xóa rồi server sẽ sync lại.
+    if (oldVersion < 7) {
+      await db.execute('DROP TABLE IF EXISTS products');
+      await db.execute('''
+        CREATE TABLE products (
+          id TEXT PRIMARY KEY,
+          store_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          price INTEGER NOT NULL,
+          cost_price INTEGER,
+          stock INTEGER,
+          unit TEXT,
+          category TEXT,
+          image_url TEXT,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT,
+          updated_at TEXT
+        )
+      ''');
     }
   }
 
@@ -190,6 +207,20 @@ class LocalDb {
           : null,
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );
+  }
+
+  /// Giảm tồn kho local khi tạo hóa đơn (chỉ khi stock != null).
+  static Future<void> decreaseStock(
+      Map<String, int> cart /* productId -> qty */) async {
+    final database = await db;
+    final batch = database.batch();
+    for (final entry in cart.entries) {
+      batch.rawUpdate(
+        'UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ? AND stock IS NOT NULL',
+        [entry.value, entry.key],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   // ── Invoices ──

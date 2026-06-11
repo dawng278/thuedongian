@@ -141,7 +141,13 @@ class TaxEasyAuthVisual extends StatelessWidget {
           decoration: BoxDecoration(gradient: TaxEasyGradients.brand),
         ),
         Positioned.fill(
-          child: CustomPaint(painter: _ReceiptPatternPainter()),
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: _ReceiptPatternPainter(),
+              isComplex: true,
+              willChange: false,
+            ),
+          ),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
@@ -156,53 +162,54 @@ class TaxEasyAuthVisual extends StatelessWidget {
           ),
         ),
         Padding(
-          padding:
-              EdgeInsets.fromLTRB(28, compact ? 24 : 40, 28, compact ? 24 : 40),
+          padding: EdgeInsets.symmetric(
+            horizontal: 28,
+            vertical: compact ? 16 : 40,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: compact ? 64 : 80,
-                height: compact ? 64 : 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(compact ? 20 : 24),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.34)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+              if (!compact)
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.34)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.receipt_long,
+                      size: 42, color: Colors.white),
                 ),
-                child: Icon(
-                  Icons.receipt_long,
-                  size: compact ? 34 : 42,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
+              if (!compact) const SizedBox(height: 20),
               Text(
                 title,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: compact ? 26 : 34,
+                  fontSize: compact ? 24 : 34,
                   height: 1.05,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 360),
                 child: Text(
                   subtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.88),
-                    fontSize: compact ? 14 : 16,
-                    height: 1.45,
+                    fontSize: compact ? 13 : 16,
+                    height: 1.4,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

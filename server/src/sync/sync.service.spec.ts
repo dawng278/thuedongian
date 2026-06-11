@@ -41,7 +41,9 @@ describe('SyncService.syncInvoices', () => {
       invoice_number: 7,
     });
     // Không chạm transaction (không tạo hóa đơn mới)
-    expect((prisma as { $transaction: jest.Mock }).$transaction).not.toHaveBeenCalled();
+    expect(
+      (prisma as { $transaction: jest.Mock }).$transaction,
+    ).not.toHaveBeenCalled();
   });
 
   it('hóa đơn của user khác → NotFoundException (authz, không lộ dữ liệu)', async () => {
@@ -94,13 +96,15 @@ describe('SyncService.syncInvoices', () => {
     let exists = false;
     const prisma = {
       invoice: {
-        findUnique: jest.fn().mockImplementation(() =>
-          Promise.resolve(
-            exists
-              ? { invoice_number: 1, store: { owner_id: 'user-1' } }
-              : null,
+        findUnique: jest
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(
+              exists
+                ? { invoice_number: 1, store: { owner_id: 'user-1' } }
+                : null,
+            ),
           ),
-        ),
       },
       $transaction: jest.fn().mockImplementation(() => {
         exists = true; // sau khi tạo, lần sau sẽ thấy tồn tại

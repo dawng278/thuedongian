@@ -29,52 +29,57 @@ export class ReportsService {
     const fromDate = from ? new Date(from) : monthStart;
     const toDate = to ? new Date(to + 'T23:59:59') : now;
 
-    const [todayInvoices, monthInvoices, rangeInvoices, topProducts, monthItems] =
-      await Promise.all([
-        // Today revenue (kèm phương thức để chốt ca)
-        this.prisma.invoice.findMany({
-          where: { store_id: store.id, created_at: { gte: todayStart } },
-          select: { total_amount: true, payment_method: true },
-        }),
-        // This month revenue
-        this.prisma.invoice.findMany({
-          where: { store_id: store.id, created_at: { gte: monthStart } },
-          select: { total_amount: true, invoice_number: true },
-        }),
-        // Revenue per day in range (for chart)
-        this.prisma.invoice.findMany({
-          where: {
+    const [
+      todayInvoices,
+      monthInvoices,
+      rangeInvoices,
+      topProducts,
+      monthItems,
+    ] = await Promise.all([
+      // Today revenue (kèm phương thức để chốt ca)
+      this.prisma.invoice.findMany({
+        where: { store_id: store.id, created_at: { gte: todayStart } },
+        select: { total_amount: true, payment_method: true },
+      }),
+      // This month revenue
+      this.prisma.invoice.findMany({
+        where: { store_id: store.id, created_at: { gte: monthStart } },
+        select: { total_amount: true, invoice_number: true },
+      }),
+      // Revenue per day in range (for chart)
+      this.prisma.invoice.findMany({
+        where: {
+          store_id: store.id,
+          created_at: { gte: fromDate, lte: toDate },
+        },
+        select: { total_amount: true, created_at: true },
+        orderBy: { created_at: 'asc' },
+      }),
+      // Top selling products by revenue (from invoice items)
+      this.prisma.invoiceItem.groupBy({
+        by: ['product_name'],
+        where: {
+          invoice: {
             store_id: store.id,
-            created_at: { gte: fromDate, lte: toDate },
+            created_at: { gte: monthStart },
           },
-          select: { total_amount: true, created_at: true },
-          orderBy: { created_at: 'asc' },
-        }),
-        // Top selling products by revenue (from invoice items)
-        this.prisma.invoiceItem.groupBy({
-          by: ['product_name'],
-          where: {
-            invoice: {
-              store_id: store.id,
-              created_at: { gte: monthStart },
-            },
-          },
-          _sum: { subtotal: true, quantity: true },
-          orderBy: { _sum: { subtotal: 'desc' } },
-          take: 5,
-        }),
-        // Items tháng này kèm giá vốn sản phẩm (để ước tính lợi nhuận)
-        this.prisma.invoiceItem.findMany({
-          where: {
-            invoice: { store_id: store.id, created_at: { gte: monthStart } },
-          },
-          select: {
-            quantity: true,
-            subtotal: true,
-            product: { select: { cost_price: true } },
-          },
-        }),
-      ]);
+        },
+        _sum: { subtotal: true, quantity: true },
+        orderBy: { _sum: { subtotal: 'desc' } },
+        take: 5,
+      }),
+      // Items tháng này kèm giá vốn sản phẩm (để ước tính lợi nhuận)
+      this.prisma.invoiceItem.findMany({
+        where: {
+          invoice: { store_id: store.id, created_at: { gte: monthStart } },
+        },
+        select: {
+          quantity: true,
+          subtotal: true,
+          product: { select: { cost_price: true } },
+        },
+      }),
+    ]);
 
     const todayRevenue = todayInvoices.reduce(
       (s, i) => s + Number(i.total_amount),
@@ -149,6 +154,84 @@ export class ReportsService {
     };
   }
 
+  /**
+   * Dữ liệu biểu đồ doanh thu theo mốc thời gian.
+   * - week: 7 ngày gần nhất, mỗi cột 1 ngày
+   * - month: 30 ngày gần nhất, mỗi cột 1 ngày
+   * - year: 12 tháng gần nhất, mỗi cột 1 tháng
+   * Trả về đủ các mốc kể cả mốc doanh thu = 0 để biểu đồ liền mạch.
+   */
+  async getChart(userId: string, granularity: string, storeId?: string) {
+    const store = await this.stores.resolveStore(userId, storeId);
+    const now = new Date();
+
+    if (granularity === 'year') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      const invoices = await this.prisma.invoice.findMany({
+        where: { store_id: store.id, created_at: { gte: start } },
+        select: { total_amount: true, created_at: true },
+      });
+      // Khởi tạo 12 tháng = 0
+      const buckets = new Map<string, number>();
+      const labels: string[] = [];
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        buckets.set(key, 0);
+        labels.push(`T${d.getMonth() + 1}`);
+      }
+      for (const inv of invoices) {
+        const d = inv.created_at;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (buckets.has(key)) {
+          buckets.set(key, buckets.get(key)! + Number(inv.total_amount));
+        }
+      }
+      const points = Array.from(buckets.entries()).map(([key, revenue], i) => ({
+        label: labels[i],
+        key,
+        revenue,
+      }));
+      return { granularity, points };
+    }
+
+    // week / month: gom theo ngày
+    const days = granularity === 'month' ? 30 : 7;
+    const start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - (days - 1),
+    );
+    const invoices = await this.prisma.invoice.findMany({
+      where: { store_id: store.id, created_at: { gte: start } },
+      select: { total_amount: true, created_at: true },
+    });
+    const buckets = new Map<string, number>();
+    const labels: string[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - (days - 1) + i,
+      );
+      const key = d.toISOString().substring(0, 10);
+      buckets.set(key, 0);
+      labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+    }
+    for (const inv of invoices) {
+      const key = inv.created_at.toISOString().substring(0, 10);
+      if (buckets.has(key)) {
+        buckets.set(key, buckets.get(key)! + Number(inv.total_amount));
+      }
+    }
+    const points = Array.from(buckets.entries()).map(([key, revenue], i) => ({
+      label: labels[i],
+      key,
+      revenue,
+    }));
+    return { granularity, points };
+  }
+
   async getPeriodReport(
     userId: string,
     from: string,
@@ -207,7 +290,11 @@ export class ReportsService {
       to,
       total_revenue: totalRevenue,
       invoice_count: invoices.length,
-      tax_estimate: computeTax(store.business_type, totalRevenue, monthsInPeriod),
+      tax_estimate: computeTax(
+        store.business_type,
+        totalRevenue,
+        monthsInPeriod,
+      ),
       invoices: invoices.map((inv) => ({
         id: inv.id,
         invoice_number: inv.invoice_number,
