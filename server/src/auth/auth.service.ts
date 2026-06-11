@@ -110,7 +110,9 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     // Luôn trả success để không lộ email có tồn tại hay không
     if (!user) return { message: 'Nếu email tồn tại, mã OTP đã được gửi.' };
 
@@ -137,7 +139,8 @@ export class AuthService {
       orderBy: { created_at: 'desc' },
     });
 
-    if (!record) throw new BadRequestException('OTP không hợp lệ hoặc đã hết hạn');
+    if (!record)
+      throw new BadRequestException('OTP không hợp lệ hoặc đã hết hạn');
     if (record.expires_at < new Date()) {
       throw new BadRequestException('OTP đã hết hạn. Vui lòng yêu cầu mã mới.');
     }
@@ -145,7 +148,9 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.otp, record.otp_hash);
     if (!valid) throw new BadRequestException('OTP không đúng');
 
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
     const newHash = await bcrypt.hash(dto.new_password, 10);

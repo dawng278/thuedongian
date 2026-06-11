@@ -31,7 +31,7 @@ class WelcomeScreen extends StatelessWidget {
           ),
 
           // Decorative blobs
-          Positioned(
+          const Positioned(
             top: -70,
             right: -70,
             child: _Blob(size: 240, opacity: 0.09),
@@ -39,17 +39,17 @@ class WelcomeScreen extends StatelessWidget {
           Positioned(
             top: size.height * 0.13,
             left: -50,
-            child: _Blob(size: 160, opacity: 0.06),
+            child: const _Blob(size: 160, opacity: 0.06),
           ),
           Positioned(
             top: size.height * 0.38,
             right: 16,
-            child: _Blob(size: 90, opacity: 0.10),
+            child: const _Blob(size: 90, opacity: 0.10),
           ),
           Positioned(
             top: size.height * 0.22,
             left: size.width * 0.55,
-            child: _Blob(size: 50, opacity: 0.13),
+            child: const _Blob(size: 50, opacity: 0.13),
           ),
 
           // Main content
@@ -113,13 +113,14 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: 40),
 
                         // Feature chips
-                        Wrap(
+                        const Wrap(
                           spacing: 10,
                           runSpacing: 10,
                           alignment: WrapAlignment.center,
-                          children: const [
+                          children: [
                             _Chip(icon: Icons.bolt_rounded, label: 'Bán nhanh'),
-                            _Chip(icon: Icons.wifi_off_rounded, label: 'Offline'),
+                            _Chip(
+                                icon: Icons.wifi_off_rounded, label: 'Offline'),
                             _Chip(
                               icon: Icons.receipt_long_rounded,
                               label: 'Hóa đơn điện tử',
@@ -168,9 +169,7 @@ class WelcomeScreen extends StatelessWidget {
                           icon: Icons.login_rounded,
                           label: 'Đăng nhập',
                         ),
-
                         const SizedBox(height: 12),
-
                         OutlinedButton.icon(
                           onPressed: () => Navigator.push(
                             context,
@@ -197,9 +196,7 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
                         Center(
                           child: Text(
                             'IT Solution Challenge 2026',

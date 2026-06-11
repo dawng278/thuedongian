@@ -1,8 +1,17 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { StoresService } from '../stores/stores.service';
+
+type DecimalValue = Prisma.Decimal | number | string;
+
+type SerializableProduct = {
+  price: DecimalValue;
+  cost_price?: DecimalValue | null;
+  [key: string]: unknown;
+};
 
 @Injectable()
 export class ProductsService {
@@ -11,7 +20,7 @@ export class ProductsService {
     private stores: StoresService,
   ) {}
 
-  private serializeProduct(p: any) {
+  private serializeProduct(p: SerializableProduct) {
     return {
       ...p,
       price: Number(p.price),

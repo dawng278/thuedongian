@@ -29,7 +29,7 @@ export async function createInvoiceAtomic(
   prisma: PrismaClient,
   input: CreateInvoiceInput,
   maxRetries = 5,
-) {
+): Promise<Prisma.InvoiceGetPayload<{ include: { items: true } }>> {
   const totalAmount = input.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,

@@ -38,7 +38,7 @@ describe('tax-rules', () => {
       expect(r.total_tax).toBeGreaterThan(0);
       // goods: vat 1% + pit 0.5% = 1.5% trên doanh thu kỳ
       expect(r.vat_amount).toBe(170_000); // 17tr × 1%
-      expect(r.pit_amount).toBe(85_000);  // 17tr × 0.5%
+      expect(r.pit_amount).toBe(85_000); // 17tr × 0.5%
       expect(r.total_tax).toBe(255_000);
     });
 

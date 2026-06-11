@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StoresService } from '../stores/stores.service';
 import { computeTax, EXEMPT_THRESHOLD } from '../tax/tax-rules';
-import {
-  AiInsight,
-  InsightContext,
-  runInsightEngine,
-} from './insight-engine';
+import { AiInsight, InsightContext, runInsightEngine } from './insight-engine';
 
 export type { AiInsight };
 
@@ -22,8 +18,19 @@ export class AiService {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastMonthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      0,
+      23,
+      59,
+      59,
+    );
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
 
     const [
       monthInvoices,
@@ -51,13 +58,19 @@ export class AiService {
       }),
       this.prisma.invoiceItem.groupBy({
         by: ['product_name'],
-        where: { invoice: { store_id: store.id, created_at: { gte: monthStart } } },
+        where: {
+          invoice: { store_id: store.id, created_at: { gte: monthStart } },
+        },
         _sum: { quantity: true, subtotal: true },
         orderBy: { _sum: { subtotal: 'desc' } },
         take: 5,
       }),
       this.prisma.product.findMany({
-        where: { store_id: store.id, is_active: true, stock: { gt: 0, lt: 10 } },
+        where: {
+          store_id: store.id,
+          is_active: true,
+          stock: { gt: 0, lt: 10 },
+        },
         select: { name: true, stock: true },
         take: 5,
       }),
@@ -74,14 +87,24 @@ export class AiService {
       }),
     ]);
 
-    const monthRevenue = monthInvoices.reduce((s, i) => s + Number(i.total_amount), 0);
-    const lastMonthRevenue = lastMonthInvoices.reduce((s, i) => s + Number(i.total_amount), 0);
+    const monthRevenue = monthInvoices.reduce(
+      (s, i) => s + Number(i.total_amount),
+      0,
+    );
+    const lastMonthRevenue = lastMonthInvoices.reduce(
+      (s, i) => s + Number(i.total_amount),
+      0,
+    );
     const annualisedRevenue = monthRevenue * 12;
-    const thresholdPct = Math.round((annualisedRevenue / EXEMPT_THRESHOLD) * 100);
+    const thresholdPct = Math.round(
+      (annualisedRevenue / EXEMPT_THRESHOLD) * 100,
+    );
     const tax = computeTax(store.business_type, monthRevenue, 1);
     const growthPct =
       lastMonthRevenue > 0
-        ? Math.round(((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+        ? Math.round(
+            ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100,
+          )
         : null;
 
     const ctx: InsightContext = {

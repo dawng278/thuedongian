@@ -37,7 +37,9 @@ export class EmailService {
         `Gửi email OTP tới ${to} thất bại`,
         err instanceof Error ? err.stack : String(err),
       );
-      throw new InternalServerErrorException('Không thể gửi email. Thử lại sau.');
+      throw new InternalServerErrorException(
+        'Không thể gửi email. Thử lại sau.',
+      );
     }
   }
 }

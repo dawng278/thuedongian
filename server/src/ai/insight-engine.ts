@@ -39,7 +39,7 @@ export interface InsightContext {
   // Thuế
   annualisedRevenue: number;
   thresholdPct: number; // % ngưỡng 200tr
-  taxAmount: number;    // 0 nếu miễn
+  taxAmount: number; // 0 nếu miễn
   belowThreshold: boolean;
   currentMonth: number; // 1-12
 
@@ -59,7 +59,9 @@ export interface InsightContext {
   daysIntoMonth: number; // ngày bao nhiêu của tháng
 }
 
-type Rule = (ctx: InsightContext) => Omit<AiInsight, 'priority'> & { priority: number } | null;
+type Rule = (
+  ctx: InsightContext,
+) => (Omit<AiInsight, 'priority'> & { priority: number }) | null;
 
 // ── Nhóm 0: Trạng thái khẩn cấp ───────────────────────────────────────────
 
@@ -75,7 +77,8 @@ const ruleNoProducts: Rule = (ctx) => {
 
 const ruleZeroMonthRevenue: Rule = (ctx) => {
   // Chỉ cảnh báo từ ngày 5 trở đi để tránh false-positive đầu tháng
-  if (ctx.monthRevenue > 0 || ctx.daysIntoMonth < 5 || ctx.totalProducts === 0) return null;
+  if (ctx.monthRevenue > 0 || ctx.daysIntoMonth < 5 || ctx.totalProducts === 0)
+    return null;
   return {
     type: 'warning',
     title: 'Chưa có doanh thu tháng này',
@@ -88,7 +91,9 @@ const ruleZeroMonthRevenue: Rule = (ctx) => {
 
 const ruleTaxCritical: Rule = (ctx) => {
   if (ctx.thresholdPct < 90) return null;
-  const remaining = Math.round((200_000_000 - ctx.annualisedRevenue) / 1_000_000);
+  const remaining = Math.round(
+    (200_000_000 - ctx.annualisedRevenue) / 1_000_000,
+  );
   return {
     type: 'warning',
     title: 'Nguy cơ vượt ngưỡng thuế',
@@ -167,7 +172,10 @@ const ruleNoSalesToday: Rule = (ctx) => {
 
 const ruleOutOfStock: Rule = (ctx) => {
   if (ctx.outOfStockProducts.length === 0) return null;
-  const names = ctx.outOfStockProducts.slice(0, 3).map((p) => p.name).join(', ');
+  const names = ctx.outOfStockProducts
+    .slice(0, 3)
+    .map((p) => p.name)
+    .join(', ');
   return {
     type: 'warning',
     title: `${ctx.outOfStockProducts.length} món đã hết kho`,
@@ -178,7 +186,10 @@ const ruleOutOfStock: Rule = (ctx) => {
 
 const ruleLowStock: Rule = (ctx) => {
   if (ctx.lowStockProducts.length === 0) return null;
-  const names = ctx.lowStockProducts.slice(0, 2).map((p) => `${p.name} (còn ${p.stock})`).join(', ');
+  const names = ctx.lowStockProducts
+    .slice(0, 2)
+    .map((p) => `${p.name} (còn ${p.stock})`)
+    .join(', ');
   return {
     type: 'warning',
     title: `${ctx.lowStockProducts.length} món sắp hết`,

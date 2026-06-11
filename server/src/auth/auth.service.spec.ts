@@ -92,8 +92,18 @@ describe('AuthService', () => {
 
     it('email tồn tại → xóa OTP cũ, tạo OTP mới (đã hash) và gửi email', async () => {
       const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
-      const create = jest.fn().mockResolvedValue({});
-      const sendOtp = jest.fn().mockResolvedValue(undefined);
+      let stored: string | undefined;
+      let sent: string | undefined;
+      const create = jest.fn(
+        (arg: { data: { otp_hash: string } }): Promise<unknown> => {
+          stored = arg.data.otp_hash;
+          return Promise.resolve({});
+        },
+      );
+      const sendOtp = jest.fn((_email: string, otp: string): Promise<void> => {
+        sent = otp;
+        return Promise.resolve();
+      });
       const prisma = {
         user: { findUnique: jest.fn().mockResolvedValue({ id: 'u1' }) },
         passwordResetOtp: { deleteMany, create },
@@ -107,10 +117,8 @@ describe('AuthService', () => {
       expect(deleteMany).toHaveBeenCalled();
       expect(create).toHaveBeenCalled();
       // OTP lưu xuống DB phải là hash, không phải plaintext 6 số.
-      const stored = create.mock.calls[0][0].data.otp_hash as string;
       expect(stored).not.toMatch(/^\d{6}$/);
       // OTP gửi qua email phải là 6 chữ số.
-      const sent = sendOtp.mock.calls[0][1] as string;
       expect(sent).toMatch(/^\d{6}$/);
     });
   });

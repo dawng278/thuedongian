@@ -1,4 +1,10 @@
-import { IsIn, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 const BUSINESS_TYPES = ['goods', 'food_beverage', 'services'] as const;
 

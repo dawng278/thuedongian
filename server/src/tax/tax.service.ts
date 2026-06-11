@@ -34,7 +34,14 @@ export class TaxService {
       monthsInPeriod = 12;
     } else {
       periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      periodEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+      );
       periodLabel = `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`;
       monthsInPeriod = 1;
     }
@@ -67,12 +74,15 @@ export class TaxService {
     const yearRevenue =
       period === 'year'
         ? periodRevenue
-        : (
+        : ((
             await this.prisma.invoice.aggregate({
-              where: { store_id: store.id, created_at: { gte: yearStart, lte: now } },
+              where: {
+                store_id: store.id,
+                created_at: { gte: yearStart, lte: now },
+              },
               _sum: { total_amount: true },
             })
-          )._sum.total_amount ?? 0;
+          )._sum.total_amount ?? 0);
 
     const yearRevenueNum = Number(yearRevenue);
     const yearProgress = Math.min(

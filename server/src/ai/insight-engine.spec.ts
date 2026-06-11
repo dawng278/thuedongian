@@ -31,9 +31,6 @@ const titles = (ctx: Partial<InsightContext>) =>
 const hasTitle = (ctx: Partial<InsightContext>, fragment: string) =>
   titles(ctx).some((t) => t.includes(fragment));
 
-const types = (ctx: Partial<InsightContext>) =>
-  runInsightEngine(makeCtx(ctx)).map((i) => i.type);
-
 // ══════════════════════════════════════════════════════════════════════════
 // Nhóm 0: Engine fundamentals
 // ══════════════════════════════════════════════════════════════════════════
@@ -81,13 +78,19 @@ describe('Engine', () => {
       }),
     );
     for (let i = 1; i < insights.length; i++) {
-      expect(insights[i - 1].priority).toBeGreaterThanOrEqual(insights[i].priority);
+      expect(insights[i - 1].priority).toBeGreaterThanOrEqual(
+        insights[i].priority,
+      );
     }
   });
 
   it('mỗi insight đều có type hợp lệ', () => {
     const insights = runInsightEngine(
-      makeCtx({ thresholdPct: 95, hasTaxId: false, productsMissingCostPrice: 2 }),
+      makeCtx({
+        thresholdPct: 95,
+        hasTaxId: false,
+        productsMissingCostPrice: 2,
+      }),
     );
     const validTypes = ['warning', 'tip', 'info'];
     insights.forEach((i) => expect(validTypes).toContain(i.type));
@@ -130,7 +133,13 @@ describe('ruleZeroMonthRevenue', () => {
   it('cảnh báo khi doanh thu = 0 và đã qua ngày 5', () => {
     expect(
       hasTitle(
-        { monthRevenue: 0, daysIntoMonth: 6, totalProducts: 3, annualisedRevenue: 0, thresholdPct: 0 },
+        {
+          monthRevenue: 0,
+          daysIntoMonth: 6,
+          totalProducts: 3,
+          annualisedRevenue: 0,
+          thresholdPct: 0,
+        },
         'Chưa có doanh thu',
       ),
     ).toBe(true);
@@ -140,7 +149,13 @@ describe('ruleZeroMonthRevenue', () => {
     for (const day of [1, 2, 3, 4]) {
       expect(
         hasTitle(
-          { monthRevenue: 0, daysIntoMonth: day, totalProducts: 3, annualisedRevenue: 0, thresholdPct: 0 },
+          {
+            monthRevenue: 0,
+            daysIntoMonth: day,
+            totalProducts: 3,
+            annualisedRevenue: 0,
+            thresholdPct: 0,
+          },
           'Chưa có doanh thu',
         ),
       ).toBe(false);
@@ -150,7 +165,13 @@ describe('ruleZeroMonthRevenue', () => {
   it('KHÔNG cảnh báo khi chưa có sản phẩm (tránh trùng với ruleNoProducts)', () => {
     expect(
       hasTitle(
-        { monthRevenue: 0, daysIntoMonth: 10, totalProducts: 0, annualisedRevenue: 0, thresholdPct: 0 },
+        {
+          monthRevenue: 0,
+          daysIntoMonth: 10,
+          totalProducts: 0,
+          annualisedRevenue: 0,
+          thresholdPct: 0,
+        },
         'Chưa có doanh thu',
       ),
     ).toBe(false);
@@ -177,7 +198,9 @@ describe('ruleTaxCritical', () => {
   });
 
   it('type = warning và là phần tử đầu tiên khi không có rule ưu tiên cao hơn', () => {
-    const insights = runInsightEngine(makeCtx({ thresholdPct: 95, annualisedRevenue: 190_000_000 }));
+    const insights = runInsightEngine(
+      makeCtx({ thresholdPct: 95, annualisedRevenue: 190_000_000 }),
+    );
     expect(insights[0].type).toBe('warning');
     expect(insights[0].title).toContain('vượt ngưỡng');
   });
@@ -205,7 +228,9 @@ describe('ruleTaxWarning', () => {
   it('KHÔNG cùng lúc với ruleTaxCritical trong kết quả', () => {
     const insights = runInsightEngine(makeCtx({ thresholdPct: 95 }));
     const hasCritical = insights.some((i) => i.title.includes('vượt ngưỡng'));
-    const hasWarning = insights.some((i) => i.title.includes('Gần ngưỡng thuế'));
+    const hasWarning = insights.some((i) =>
+      i.title.includes('Gần ngưỡng thuế'),
+    );
     expect(hasCritical && hasWarning).toBe(false);
   });
 });
@@ -237,19 +262,28 @@ describe('ruleTaxQuarterDeadline', () => {
 describe('ruleTaxSafe', () => {
   it('trigger khi belowThreshold, thresholdPct ≤ 40, daysIntoMonth ≥ 20', () => {
     expect(
-      hasTitle({ belowThreshold: true, thresholdPct: 30, daysIntoMonth: 20 }, 'Miễn thuế'),
+      hasTitle(
+        { belowThreshold: true, thresholdPct: 30, daysIntoMonth: 20 },
+        'Miễn thuế',
+      ),
     ).toBe(true);
   });
 
   it('KHÔNG trigger khi daysIntoMonth < 20', () => {
     expect(
-      hasTitle({ belowThreshold: true, thresholdPct: 20, daysIntoMonth: 19 }, 'Miễn thuế'),
+      hasTitle(
+        { belowThreshold: true, thresholdPct: 20, daysIntoMonth: 19 },
+        'Miễn thuế',
+      ),
     ).toBe(false);
   });
 
   it('KHÔNG trigger khi thresholdPct > 40', () => {
     expect(
-      hasTitle({ belowThreshold: true, thresholdPct: 41, daysIntoMonth: 25 }, 'Miễn thuế'),
+      hasTitle(
+        { belowThreshold: true, thresholdPct: 41, daysIntoMonth: 25 },
+        'Miễn thuế',
+      ),
     ).toBe(false);
   });
 });
@@ -301,13 +335,19 @@ describe('ruleRevenueGrowth', () => {
 describe('ruleNoSalesToday', () => {
   it('trigger khi todayInvoiceCount = 0 và đã có doanh thu tháng này', () => {
     expect(
-      hasTitle({ todayInvoiceCount: 0, monthRevenue: 1_000_000 }, 'Chưa có đơn hôm nay'),
+      hasTitle(
+        { todayInvoiceCount: 0, monthRevenue: 1_000_000 },
+        'Chưa có đơn hôm nay',
+      ),
     ).toBe(true);
   });
 
   it('KHÔNG trigger khi todayInvoiceCount > 0', () => {
     expect(
-      hasTitle({ todayInvoiceCount: 1, monthRevenue: 1_000_000 }, 'Chưa có đơn hôm nay'),
+      hasTitle(
+        { todayInvoiceCount: 1, monthRevenue: 1_000_000 },
+        'Chưa có đơn hôm nay',
+      ),
     ).toBe(false);
   });
 
@@ -315,7 +355,14 @@ describe('ruleNoSalesToday', () => {
     // Nếu monthRevenue = 0 thì ruleZeroMonthRevenue đã xử lý
     expect(
       hasTitle(
-        { todayInvoiceCount: 0, monthRevenue: 0, daysIntoMonth: 10, totalProducts: 3, annualisedRevenue: 0, thresholdPct: 0 },
+        {
+          todayInvoiceCount: 0,
+          monthRevenue: 0,
+          daysIntoMonth: 10,
+          totalProducts: 3,
+          annualisedRevenue: 0,
+          thresholdPct: 0,
+        },
         'Chưa có đơn hôm nay',
       ),
     ).toBe(false);
@@ -328,11 +375,15 @@ describe('ruleNoSalesToday', () => {
 
 describe('ruleOutOfStock', () => {
   it('cảnh báo khi có 1 sản phẩm hết kho', () => {
-    expect(hasTitle({ outOfStockProducts: [{ name: 'Bún bò' }] }, 'hết kho')).toBe(true);
+    expect(
+      hasTitle({ outOfStockProducts: [{ name: 'Bún bò' }] }, 'hết kho'),
+    ).toBe(true);
   });
 
   it('type = warning', () => {
-    const insights = runInsightEngine(makeCtx({ outOfStockProducts: [{ name: 'X' }] }));
+    const insights = runInsightEngine(
+      makeCtx({ outOfStockProducts: [{ name: 'X' }] }),
+    );
     const oos = insights.find((i) => i.title.includes('hết kho'));
     expect(oos?.type).toBe('warning');
   });
@@ -351,7 +402,11 @@ describe('ruleOutOfStock', () => {
     const insights = runInsightEngine(
       makeCtx({
         outOfStockProducts: [
-          { name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' },
+          { name: 'A' },
+          { name: 'B' },
+          { name: 'C' },
+          { name: 'D' },
+          { name: 'E' },
         ],
       }),
     );
@@ -396,7 +451,9 @@ describe('ruleLowStock', () => {
     const insights = runInsightEngine(
       makeCtx({
         lowStockProducts: [
-          { name: 'A', stock: 1 }, { name: 'B', stock: 2 }, { name: 'C', stock: 3 },
+          { name: 'A', stock: 1 },
+          { name: 'B', stock: 2 },
+          { name: 'C', stock: 3 },
         ],
       }),
     );
@@ -416,7 +473,9 @@ describe('ruleTopProductDominates', () => {
       hasTitle(
         {
           monthRevenue: 10_000_000,
-          topProducts: [{ name: 'Cơm tấm', subtotal: 6_000_000, quantity: 100 }],
+          topProducts: [
+            { name: 'Cơm tấm', subtotal: 6_000_000, quantity: 100 },
+          ],
         },
         'Cơm tấm',
       ),
@@ -428,7 +487,9 @@ describe('ruleTopProductDominates', () => {
       hasTitle(
         {
           monthRevenue: 10_000_000,
-          topProducts: [{ name: 'Cơm tấm', subtotal: 5_900_000, quantity: 100 }],
+          topProducts: [
+            { name: 'Cơm tấm', subtotal: 5_900_000, quantity: 100 },
+          ],
         },
         'Cơm tấm',
       ),
@@ -510,7 +571,9 @@ describe('ruleFewProducts', () => {
 
 describe('Priority và loại trừ lẫn nhau', () => {
   it('ruleNoProducts ưu tiên hơn ruleTaxCritical', () => {
-    const insights = runInsightEngine(makeCtx({ totalProducts: 0, thresholdPct: 99 }));
+    const insights = runInsightEngine(
+      makeCtx({ totalProducts: 0, thresholdPct: 99 }),
+    );
     expect(insights[0].title).toContain('Chưa có sản phẩm');
   });
 
@@ -546,7 +609,9 @@ describe('Priority và loại trừ lẫn nhau', () => {
       }),
     );
     const hasNoSales = insights.some((i) => i.title.includes('Chưa có đơn'));
-    const hasNoRevenue = insights.some((i) => i.title.includes('Chưa có doanh thu'));
+    const hasNoRevenue = insights.some((i) =>
+      i.title.includes('Chưa có doanh thu'),
+    );
     expect(hasNoSales && hasNoRevenue).toBe(false);
   });
 });
@@ -563,14 +628,23 @@ describe('Edge cases', () => {
   });
 
   it('growthPct = null không tạo warning giảm hay tip tăng', () => {
-    const insights = runInsightEngine(makeCtx({ growthPct: null, lastMonthRevenue: 0 }));
+    const insights = runInsightEngine(
+      makeCtx({ growthPct: null, lastMonthRevenue: 0 }),
+    );
     expect(insights.some((i) => i.title.includes('giảm'))).toBe(false);
     expect(insights.some((i) => i.title.includes('tăng'))).toBe(false);
   });
 
   it('monthRevenue = 0 và topProducts rỗng — không crash', () => {
     expect(() =>
-      runInsightEngine(makeCtx({ monthRevenue: 0, topProducts: [], annualisedRevenue: 0, thresholdPct: 0 })),
+      runInsightEngine(
+        makeCtx({
+          monthRevenue: 0,
+          topProducts: [],
+          annualisedRevenue: 0,
+          thresholdPct: 0,
+        }),
+      ),
     ).not.toThrow();
   });
 
@@ -584,7 +658,9 @@ describe('Edge cases', () => {
 
   it('thresholdPct = 100 (vượt ngưỡng) — remaining âm, body không crash', () => {
     expect(() =>
-      runInsightEngine(makeCtx({ thresholdPct: 100, annualisedRevenue: 210_000_000 })),
+      runInsightEngine(
+        makeCtx({ thresholdPct: 100, annualisedRevenue: 210_000_000 }),
+      ),
     ).not.toThrow();
   });
 

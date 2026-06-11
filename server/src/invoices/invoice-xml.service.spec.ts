@@ -7,7 +7,9 @@ import { InvoiceXmlService } from './invoice-xml.service';
  * - Cấu trúc XML đúng, escape ký tự đặc biệt (chống XML injection).
  * - Tách tiền chưa thuế / tiền thuế theo loại hình HKD.
  */
-function makeData(overrides: Partial<Parameters<InvoiceXmlService['buildXml']>[0]> = {}) {
+function makeData(
+  overrides: Partial<Parameters<InvoiceXmlService['buildXml']>[0]> = {},
+) {
   return {
     invoiceNumber: 7,
     storeId: 'store-1',
@@ -56,9 +58,7 @@ describe('InvoiceXmlService.buildXml', () => {
   });
 
   it('escape ký tự XML đặc biệt trong tên cửa hàng (chống injection)', () => {
-    const xml = service.buildXml(
-      makeData({ storeName: 'A & B <script>' }),
-    );
+    const xml = service.buildXml(makeData({ storeName: 'A & B <script>' }));
     // Ký tự thô < > & KHÔNG được xuất hiện nguyên dạng trong nội dung.
     expect(xml).toContain('&amp;');
     expect(xml).toContain('&lt;');
