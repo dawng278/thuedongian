@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/products_provider.dart';
+import '../../widgets/product_image.dart';
 
 final _fmt = NumberFormat('#,###', 'vi_VN');
 
@@ -289,32 +290,25 @@ class _ProductTile extends StatelessWidget {
       {required this.product, required this.onEdit, required this.onHide});
 
   String _initials() {
-    final parts = product.name.trim().split(' ');
+    final name = product.name.trim();
+    if (name.isEmpty) return '?';
+    final parts = name.split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.length >= 2) {
       return (parts.first[0] + parts.last[0]).toUpperCase();
     }
-    return product.name
-        .substring(0, product.name.length.clamp(1, 2))
-        .toUpperCase();
+    return name.substring(0, name.length.clamp(1, 2)).toUpperCase();
   }
 
   Widget _buildThumbnail(ColorScheme cs) {
     final url = product.imageUrl;
     if (url != null && url.isNotEmpty) {
-      if (url.startsWith('http')) {
-        return Image.network(
-          url,
-          width: 72,
-          height: 72,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _initialsBox(cs),
-        );
-      }
-      // Local file path (ảnh từ image_picker chưa upload)
-      final f = File(url);
-      if (f.existsSync()) {
-        return Image.file(f, width: 72, height: 72, fit: BoxFit.cover);
-      }
+      return buildProductImage(
+        url,
+        width: 72,
+        height: 72,
+        fit: BoxFit.cover,
+        errorWidget: _initialsBox(cs),
+      );
     }
     return _initialsBox(cs);
   }
@@ -567,14 +561,14 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         ],
       );
     }
-    // Ảnh cũ từ URL (seed/server)
+    // Ảnh cũ từ URL (seed/server) — asset đóng gói, network, hoặc file local
     final existingUrl = widget.existing?.imageUrl;
-    if (existingUrl != null && existingUrl.startsWith('http')) {
+    if (existingUrl != null && existingUrl.isNotEmpty) {
       return Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(existingUrl, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _noImagePlaceholder(cs)),
+          buildProductImage(existingUrl,
+              fit: BoxFit.cover, errorWidget: _noImagePlaceholder(cs)),
           Positioned(
             right: 8,
             bottom: 8,

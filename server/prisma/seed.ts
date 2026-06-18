@@ -89,8 +89,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 38000,
         unit: 'tô',
         category: 'Mì kim chi',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p01.jpg',
       },
       {
         id: 'seoul-p02',
@@ -99,8 +98,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 36000,
         unit: 'tô',
         category: 'Mì kim chi',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p02.jpg',
       },
       {
         id: 'seoul-p03',
@@ -109,8 +107,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 45000,
         unit: 'tô',
         category: 'Mì kim chi',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p03.jpg',
       },
       {
         id: 'seoul-p04',
@@ -119,8 +116,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 42000,
         unit: 'tô',
         category: 'Mì kim chi',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p04.jpg',
       },
       {
         id: 'seoul-p05',
@@ -129,8 +125,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 55000,
         unit: 'tô',
         category: 'Mì kim chi',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p05.jpg',
       },
       // ── Mì lẩu thái ─────────────────────────────────────────────────────
       {
@@ -140,8 +135,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 42000,
         unit: 'tô',
         category: 'Mì lẩu thái',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p06.jpg',
       },
       {
         id: 'seoul-p07',
@@ -150,8 +144,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 38000,
         unit: 'tô',
         category: 'Mì lẩu thái',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p07.jpg',
       },
       // ── Topping thêm ────────────────────────────────────────────────────
       {
@@ -161,8 +154,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 4000,
         unit: 'quả',
         category: 'Topping',
-        image_url:
-          'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=640&q=80',
+        image_url: 'assets/products/seoul-p08.jpg',
       },
       {
         id: 'seoul-p09',
@@ -171,8 +163,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 7000,
         unit: 'phần',
         category: 'Topping',
-        image_url:
-          'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=640&q=80',
+        image_url: 'assets/products/seoul-p09.jpg',
       },
       {
         id: 'seoul-p10',
@@ -181,8 +172,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 3500,
         unit: 'phần',
         category: 'Topping',
-        image_url:
-          'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=640&q=80',
+        image_url: 'assets/products/seoul-p10.jpg',
       },
       // ── Ăn kèm ──────────────────────────────────────────────────────────
       {
@@ -192,8 +182,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 18000,
         unit: 'đĩa',
         category: 'Ăn kèm',
-        image_url:
-          'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=640&q=80',
+        image_url: 'assets/products/seoul-p11.jpg',
       },
       {
         id: 'seoul-p12',
@@ -202,8 +191,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 40000,
         unit: 'phần',
         category: 'Ăn kèm',
-        image_url:
-          'https://images.unsplash.com/photo-1569058242567-93de6f36f8eb?w=640&q=80',
+        image_url: 'assets/products/seoul-p12.jpg',
       },
       {
         id: 'seoul-p13',
@@ -212,8 +200,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 22000,
         unit: 'đĩa',
         category: 'Ăn kèm',
-        image_url:
-          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=640&q=80',
+        image_url: 'assets/products/seoul-p13.jpg',
       },
       {
         id: 'seoul-p14',
@@ -222,8 +209,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 10000,
         unit: 'đĩa',
         category: 'Ăn kèm',
-        image_url:
-          'https://images.unsplash.com/photo-1583187832534-e82e0e832cce?w=640&q=80',
+        image_url: 'assets/products/seoul-p14.jpg',
       },
       // ── Đồ uống ─────────────────────────────────────────────────────────
       {
@@ -233,8 +219,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 52000,
         unit: 'chai',
         category: 'Đồ uống',
-        image_url:
-          'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=640&q=80',
+        image_url: 'assets/products/seoul-p15.jpg',
       },
       {
         id: 'seoul-p16',
@@ -243,9 +228,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 5000,
         unit: 'ly',
         category: 'Đồ uống',
-        image_url:
-          'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=640&q=80',
-      },
+              },
       {
         id: 'seoul-p17',
         name: 'Nước suối lạnh',
@@ -253,8 +236,7 @@ const demoStores: StoreSeed[] = [
         cost_price: 4000,
         unit: 'chai',
         category: 'Đồ uống',
-        image_url:
-          'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=640&q=80',
+        image_url: 'assets/products/seoul-p17.jpg',
       },
     ],
     // ~40 đơn/ngày → doanh thu tháng ≈ 80–100tr → gần ngưỡng 200tr/năm, đủ

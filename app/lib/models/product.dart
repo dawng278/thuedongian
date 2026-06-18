@@ -28,9 +28,9 @@ class ProductDto {
   });
 
   factory ProductDto.fromJson(Map<String, dynamic> json) => ProductDto(
-        id: json['id'] as String,
-        storeId: json['store_id'] as String,
-        name: json['name'] as String,
+        id: json['id'] as String? ?? '',
+        storeId: json['store_id'] as String? ?? '',
+        name: json['name'] as String? ?? '',
         price: num.tryParse(json['price']?.toString() ?? '0')?.toInt() ?? 0,
         costPrice: json['cost_price'] != null
             ? num.tryParse(json['cost_price'].toString())?.toInt()
@@ -41,11 +41,13 @@ class ProductDto {
         unit: json['unit'] as String?,
         category: json['category'] as String?,
         imageUrl: json['image_url'] as String?,
-        isActive: json['is_active'] as bool,
+        isActive: json['is_active'] as bool? ?? true,
         createdAt: json['created_at'] != null
             ? DateTime.tryParse(json['created_at'] as String)
             : null,
-        updatedAt: DateTime.parse(json['updated_at'] as String),
+        updatedAt: json['updated_at'] != null
+            ? (DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now())
+            : DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {

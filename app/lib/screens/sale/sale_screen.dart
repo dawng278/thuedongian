@@ -6,6 +6,7 @@ import '../../models/product.dart';
 import '../../providers/products_provider.dart';
 import '../../providers/invoices_provider.dart';
 import '../../theme/taxeasy_design.dart';
+import '../../widgets/product_image.dart';
 import 'invoice_qr_screen.dart';
 
 final _currencyFmt = NumberFormat('#,###', 'vi_VN');
@@ -278,13 +279,13 @@ class _ProductCard extends StatelessWidget {
       product.imageUrl != null && product.imageUrl!.trim().isNotEmpty;
 
   String _initials() {
-    final parts = product.name.trim().split(' ');
+    final name = product.name.trim();
+    if (name.isEmpty) return '?';
+    final parts = name.split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.length >= 2) {
       return (parts.first[0] + parts.last[0]).toUpperCase();
     }
-    return product.name
-        .substring(0, product.name.length.clamp(1, 2))
-        .toUpperCase();
+    return name.substring(0, name.length.clamp(1, 2)).toUpperCase();
   }
 
   @override
@@ -324,20 +325,16 @@ class _ProductCard extends StatelessWidget {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(14)),
                   child: _hasImage
-                      ? Image.network(
+                      ? buildProductImage(
                           product.imageUrl!.trim(),
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _AvatarFallback(
+                          errorWidget: _AvatarFallback(
                             initials: _initials(),
                             bg: _avatarBg(),
                             fg: _avatarTextColor(),
                           ),
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const ColoredBox(
-                                color: TaxEasyColors.surfaceLow);
-                          },
+                          loadingWidget: const ColoredBox(
+                              color: TaxEasyColors.surfaceLow),
                         )
                       : _AvatarFallback(
                           initials: _initials(),
@@ -714,7 +711,11 @@ class _CartSheetState extends State<_CartSheet> {
     final cart = widget.cart;
     final products = widget.products;
     final total = widget.total;
-    final entries = cart.entries.toList();
+    // Chỉ giữ các món còn tồn tại trong danh sách (phòng trường hợp món bị
+    // ẩn/xoá ở tab Quản lý trong lúc giỏ đang mở → tránh StateError).
+    final productIds = products.map((p) => p.id).toSet();
+    final entries =
+        cart.entries.where((e) => productIds.contains(e.key)).toList();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,

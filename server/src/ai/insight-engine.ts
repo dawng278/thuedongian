@@ -97,7 +97,7 @@ const ruleTaxCritical: Rule = (ctx) => {
   return {
     type: 'warning',
     title: 'Nguy cơ vượt ngưỡng thuế',
-    body: `Doanh thu quy đổi năm đã đạt ${ctx.thresholdPct}% ngưỡng 200 triệu. Còn khoảng ${remaining > 0 ? remaining + ' triệu' : 'rất ít'} trước khi phải nộp thuế.`,
+    body: `Doanh thu quy đổi năm đã đạt ${ctx.thresholdPct}% ngưỡng 200 triệu. Chỉ còn khoảng ${remaining > 0 ? remaining + ' triệu' : 'rất ít'} là phải nộp thuế GTGT + TNCN. Cân nhắc theo dõi sát doanh thu các tháng tới và chuẩn bị kê khai.`,
     priority: 100,
   };
 };
@@ -119,7 +119,7 @@ const ruleTaxQuarterDeadline: Rule = (ctx) => {
   return {
     type: 'warning',
     title: `Sắp hạn kê khai Q${quarterNum}`,
-    body: `Tháng ${ctx.currentMonth} là tháng cuối quý. Hạn nộp tờ khai thuế là ngày cuối tháng ${ctx.currentMonth + 1 > 12 ? 1 : ctx.currentMonth + 1}.`,
+    body: `Tháng ${ctx.currentMonth} là tháng cuối quý. Hạn nộp tờ khai thuế là ngày cuối tháng ${ctx.currentMonth + 1 > 12 ? 1 : ctx.currentMonth + 1} — chuẩn bị số liệu doanh thu quý từ bây giờ để khỏi vội.`,
     priority: 85,
   };
 };
@@ -142,7 +142,7 @@ const ruleRevenueDropSevere: Rule = (ctx) => {
   return {
     type: 'warning',
     title: `Doanh thu giảm ${Math.abs(ctx.growthPct)}%`,
-    body: `So với tháng trước giảm ${Math.abs(ctx.growthPct)}%. Kiểm tra lại giá bán, tồn kho, hoặc xem có món nào ngừng bán không.`,
+    body: `So với tháng trước giảm ${Math.abs(ctx.growthPct)}%. Thử xem lại: giá bán có còn hợp lý, món bán chạy có bị hết kho, hay có món nào vô tình ngừng bán không.`,
     priority: 80,
   };
 };

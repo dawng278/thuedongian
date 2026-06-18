@@ -110,15 +110,20 @@ class InvoicesProvider extends ChangeNotifier {
         throw StateError('Chưa chọn quán');
       }
 
-      final items = cart.entries.map((e) {
-        final product = products.firstWhere((p) => p.id == e.key);
-        return CreateInvoiceItemInput(
-          productId: product.id,
-          productName: product.name,
-          price: product.price,
-          quantity: e.value,
-        );
-      }).toList();
+      final items = cart.entries
+          .map((e) {
+            final idx = products.indexWhere((p) => p.id == e.key);
+            if (idx == -1) return null; // món đã bị ẩn/xoá → bỏ qua
+            final product = products[idx];
+            return CreateInvoiceItemInput(
+              productId: product.id,
+              productName: product.name,
+              price: product.price,
+              quantity: e.value,
+            );
+          })
+          .whereType<CreateInvoiceItemInput>()
+          .toList();
 
       final dto = CreateInvoiceDto(
         id: invoiceId,
