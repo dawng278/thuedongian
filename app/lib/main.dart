@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
+    show defaultTargetPlatform, TargetPlatform, kIsWeb, debugPrint;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
@@ -17,6 +17,26 @@ import 'screens/auth/welcome_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'theme/taxeasy_design.dart';
 
+/// Chọn địa chỉ server theo thứ tự ưu tiên:
+/// 1. `--dart-define=API_BASE_URL=...` nếu được truyền (luôn thắng — dùng cho
+///    thiết bị thật: trỏ IP LAN của máy chạy server, vd http://192.168.x.x:3000).
+/// 2. Mặc định theo nền tảng:
+///    - Emulator Android: 10.0.2.2 (alias trỏ về máy host, KHÔNG phải localhost).
+///    - Desktop / Web / iOS simulator: localhost.
+String resolveApiBaseUrl() {
+  const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  if (envUrl.isNotEmpty) return envUrl;
+
+  // Web và desktop chạy cùng máy với server → localhost đúng.
+  if (kIsWeb) return 'http://localhost:3000';
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    // Emulator Android map host qua 10.0.2.2. Thiết bị thật phải truyền
+    // API_BASE_URL (đã xử lý ở trên) — nếu không, đây là mặc định an toàn nhất.
+    return 'http://10.0.2.2:3000';
+  }
+  return 'http://localhost:3000';
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('vi_VN', null);
@@ -26,9 +46,8 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  final apiBaseUrl =
-      envUrl.isNotEmpty ? envUrl : 'http://localhost:3000';
+  final apiBaseUrl = resolveApiBaseUrl();
+  debugPrint('[TaxEasy] Đang kết nối tới server: $apiBaseUrl');
   final api = HttpApiService(baseUrl: apiBaseUrl);
   runApp(
     MultiProvider(

@@ -28,17 +28,6 @@
 
 ---
 
-## 1. Mở màn — nêu vấn đề (0:00 – 0:25)
-
-**Hình:** Logo TaxEasy / slide bìa, rồi cắt sang màn hình điện thoại đang ở chế độ Bán hàng.
-
-**Lời thoại:**
-> "Từ 2026, hàng triệu hộ kinh doanh ở Việt Nam phải tự kê khai thuế khi bỏ thuế khoán —
-> nhưng họ không có công cụ phù hợp, và thường bán hàng ở nơi sóng yếu.
-> **TaxEasy** giải quyết cả ba việc trong một app: bán hàng — quản lý — thuế, **chạy được cả khi mất mạng**."
-
----
-
 ## 2. Bán hàng nhanh (0:25 – 1:00)
 
 **Hình:** Lưới món ở chế độ Bán hàng.

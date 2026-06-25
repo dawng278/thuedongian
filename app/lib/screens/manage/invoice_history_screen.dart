@@ -253,6 +253,7 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                     segments: const [
                       ButtonSegment(value: 'pdf', label: Text('PDF')),
                       ButtonSegment(value: 'csv', label: Text('CSV')),
+                      ButtonSegment(value: 'xml', label: Text('XML')),
                     ],
                     selected: {format},
                     onSelectionChanged: (value) =>
@@ -265,7 +266,11 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
                       _exportPeriodReport(range, format);
                     },
                     icon: const Icon(Icons.ios_share_outlined),
-                    label: Text(format == 'pdf' ? 'Tạo PDF' : 'Tạo CSV'),
+                    label: Text(format == 'pdf'
+                        ? 'Tạo PDF'
+                        : format == 'csv'
+                            ? 'Tạo CSV'
+                            : 'Tạo XML'),
                   ),
                 ],
               ),
@@ -287,13 +292,17 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
           );
       final file = format == 'pdf'
           ? await _writePdfReport(report, range)
-          : await _writeCsvReport(report, range);
+          : format == 'csv'
+              ? await _writeCsvReport(report, range)
+              : await _writeXmlReport(report, range);
       await shareOrOpenFile(
         file.path,
         mimeType: format == 'pdf' ? 'application/pdf' : 'text/csv',
         subject: format == 'pdf'
             ? 'Báo cáo PDF ThueDonGian'
-            : 'Báo cáo CSV ThueDonGian',
+            : format == 'csv'
+                ? 'Báo cáo CSV ThueDonGian'
+                : 'Báo cáo XML ThueDonGian',
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -313,6 +322,24 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
         );
       }
     }
+  }
+
+  Future<File> _writeXmlReport(
+    Map<String, dynamic> report,
+    DateTimeRange range,
+  ) async {
+    final xml = await context.read<ApiService>().getPeriodReportXml(
+          from: range.start,
+          to: range.end,
+          storeId: _storeId,
+        );
+    final dir = await resolveSaveDirectory();
+    final store = (report['store'] as Map?)?.cast<String, dynamic>() ?? {};
+    final file = File(
+      '${dir.path}/thuedongian-report_${_slug(store['name'] as String? ?? 'store')}_${DateFormat('yyyyMMdd').format(range.start)}-${DateFormat('yyyyMMdd').format(range.end)}.xml',
+    );
+    await file.writeAsString(xml, flush: true);
+    return file;
   }
 
   Future<File> _writeCsvReport(

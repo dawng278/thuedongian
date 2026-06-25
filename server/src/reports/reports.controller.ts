@@ -1,11 +1,16 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Request, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ReportsService } from './reports.service';
+import { ReportsXmlService } from './reports-xml.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard)
 export class ReportsController {
-  constructor(private reportsService: ReportsService) {}
+  constructor(
+    private reportsService: ReportsService,
+    private reportsXmlService: ReportsXmlService,
+  ) {}
 
   @Get('revenue')
   getRevenue(
@@ -45,5 +50,28 @@ export class ReportsController {
       to,
       storeId,
     );
+  }
+
+  @Get('period/xml')
+  async exportPeriodXml(
+    @Request() req: { user: { userId: string } },
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('store_id') storeId: string | undefined,
+    @Res() res: Response,
+  ) {
+    const report = await this.reportsService.getPeriodReport(
+      req.user.userId,
+      from,
+      to,
+      storeId,
+    );
+    const xml = this.reportsXmlService.buildXml(report);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="thuedongian-report-${from}-${to}.xml"`,
+    );
+    res.send(xml);
   }
 }

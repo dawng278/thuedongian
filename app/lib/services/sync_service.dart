@@ -10,13 +10,16 @@ class SyncService {
   SyncService(this._api);
 
   Future<SyncResult> syncPending(String storeId) async {
-    if (_syncing) return const SyncResult(synced: 0, errors: 0);
+    if (_syncing) return const SyncResult(saved: 0, duplicates: 0, errors: 0);
     _syncing = true;
-    int synced = 0;
+    int saved = 0;
+    int duplicates = 0;
     int errors = 0;
     try {
       final pending = await LocalDb.getPendingInvoices(storeId: storeId);
-      if (pending.isEmpty) return const SyncResult(synced: 0, errors: 0);
+      if (pending.isEmpty) {
+        return const SyncResult(saved: 0, duplicates: 0, errors: 0);
+      }
 
       final batch = pending
           .map((inv) => CreateInvoiceDto(
@@ -33,12 +36,18 @@ class SyncService {
 
       for (final r in results) {
         final map = r as Map<String, dynamic>;
-        if (map['status'] == 'saved' || map['status'] == 'duplicate') {
+        if (map['status'] == 'saved') {
+          saved++;
           await LocalDb.markSynced(
             map['id'] as String,
             map['invoice_number'] as int,
           );
-          synced++;
+        } else if (map['status'] == 'duplicate') {
+          duplicates++;
+          await LocalDb.markSynced(
+            map['id'] as String,
+            map['invoice_number'] as int,
+          );
         } else {
           errors++;
         }
@@ -49,12 +58,17 @@ class SyncService {
     } finally {
       _syncing = false;
     }
-    return SyncResult(synced: synced, errors: errors);
+    return SyncResult(saved: saved, duplicates: duplicates, errors: errors);
   }
 }
 
 class SyncResult {
-  final int synced;
+  final int saved;
+  final int duplicates;
   final int errors;
-  const SyncResult({required this.synced, required this.errors});
+  const SyncResult({
+    required this.saved,
+    required this.duplicates,
+    required this.errors,
+  });
 }

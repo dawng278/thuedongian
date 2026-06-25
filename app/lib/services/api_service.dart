@@ -46,6 +46,8 @@ abstract class ApiService {
       {String granularity = 'week', String? storeId});
   Future<Map<String, dynamic>> getPeriodReport(
       {required DateTime from, required DateTime to, String? storeId});
+  Future<String> getPeriodReportXml(
+      {required DateTime from, required DateTime to, String? storeId});
 
   Future<Map<String, dynamic>> getTaxEstimate(
       {String period = 'month', String? storeId});

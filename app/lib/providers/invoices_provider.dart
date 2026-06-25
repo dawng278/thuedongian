@@ -200,7 +200,7 @@ class InvoicesProvider extends ChangeNotifier {
   /// Sync all pending invoices (call when network comes back)
   Future<SyncResult> syncPending() async {
     final storeId = _storeId;
-    if (storeId == null) return const SyncResult(synced: 0, errors: 1);
+    if (storeId == null) return const SyncResult(saved: 0, duplicates: 0, errors: 1);
     final result = await _sync.syncPending(storeId);
     await _refreshPendingCount();
     return result;

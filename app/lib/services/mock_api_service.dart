@@ -448,6 +448,40 @@ class MockApiService implements ApiService {
   }
 
   @override
+  Future<String> getPeriodReportXml(
+      {required DateTime from, required DateTime to, String? storeId}) async {
+    final report = await getPeriodReport(from: from, to: to, storeId: storeId);
+    final store = (report['store'] as Map?)?.cast<String, dynamic>() ?? {};
+    final invoices = (report['invoices'] as List? ?? [])
+        .cast<Map<String, dynamic>>();
+    final sb = StringBuffer();
+    sb.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    sb.writeln('<BaoCaoThue>');
+    sb.writeln('  <CuaHang>');
+    sb.writeln('    <Id>${store['id'] ?? ''}</Id>');
+    sb.writeln('    <Ten>${store['name'] ?? ''}</Ten>');
+    sb.writeln('    <MST>${store['tax_id'] ?? ''}</MST>');
+    sb.writeln('  </CuaHang>');
+    sb.writeln('  <KyBaoCao>');
+    sb.writeln('    <TuNgay>${report['from']}</TuNgay>');
+    sb.writeln('    <DenNgay>${report['to']}</DenNgay>');
+    sb.writeln('    <SoHoaDon>${report['invoice_count']}</SoHoaDon>');
+    sb.writeln('    <TongDoanhThu>${report['total_revenue']}</TongDoanhThu>');
+    sb.writeln('  </KyBaoCao>');
+    sb.writeln('  <DanhSachHoaDon>');
+    for (final inv in invoices) {
+      sb.writeln('    <HoaDon>');
+      sb.writeln('      <SoHoaDon>${inv['invoice_number'] ?? ''}</SoHoaDon>');
+      sb.writeln('      <NgayLap>${inv['created_at'] ?? ''}</NgayLap>');
+      sb.writeln('      <TongTien>${inv['total_amount'] ?? 0}</TongTien>');
+      sb.writeln('    </HoaDon>');
+    }
+    sb.writeln('  </DanhSachHoaDon>');
+    sb.writeln('</BaoCaoThue>');
+    return sb.toString();
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> getAiInsights({String? storeId}) async {
     return [
       {

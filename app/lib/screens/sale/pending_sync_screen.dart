@@ -47,7 +47,7 @@ class _PendingSyncScreenState extends State<PendingSyncScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Đồng bộ: ${result.synced} thành công, ${result.errors} lỗi'),
+              'Đồng bộ: ${result.saved} thành công, ${result.duplicates} trùng lặp, ${result.errors} lỗi'),
           backgroundColor: result.errors > 0
               ? const Color(0xFFD97706)
               : const Color(0xFF059669),

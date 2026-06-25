@@ -286,6 +286,19 @@ class HttpApiService implements ApiService {
   }
 
   @override
+  Future<String> getPeriodReportXml(
+      {required DateTime from, required DateTime to, String? storeId}) async {
+    final res = await _dio.get<String>('/reports/period/xml',
+        queryParameters: {
+          'from': from.toIso8601String().substring(0, 10),
+          'to': to.toIso8601String().substring(0, 10),
+          if (storeId != null) 'store_id': storeId,
+        },
+        options: Options(responseType: ResponseType.plain));
+    return res.data ?? '';
+  }
+
+  @override
   Future<Map<String, dynamic>> getTaxEstimate(
       {String period = 'month', String? storeId}) async {
     final res = await _dio.get('/tax/estimate', queryParameters: {

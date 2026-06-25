@@ -335,6 +335,15 @@ Tổng hợp doanh thu kỳ (dùng cho xuất báo cáo).
 }
 ```
 
+### GET `/reports/period/xml`
+Xuất báo cáo kỳ dưới dạng XML phù hợp với yêu cầu báo cáo thuế.
+
+**Query params:** `?store_id=<uuid>&from=YYYY-MM-DD&to=YYYY-MM-DD` (bắt buộc)
+
+**Response 200:** `Content-Type: application/xml; charset=utf-8`, file XML.
+
+**Lỗi:** 422 nếu cửa hàng thiếu `tax_id`.
+
 ---
 
 ## DTOs
