@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards, Request, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { ReportsService } from './reports.service';
-import { ReportsXmlService } from './reports-xml.service';
+import { VietnamTaxXmlExporter } from './vietnam-tax-xml-exporter';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('reports')
@@ -9,7 +9,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class ReportsController {
   constructor(
     private reportsService: ReportsService,
-    private reportsXmlService: ReportsXmlService,
+    private exporter: VietnamTaxXmlExporter,
   ) {}
 
   @Get('revenue')
@@ -66,7 +66,17 @@ export class ReportsController {
       to,
       storeId,
     );
-    const xml = this.reportsXmlService.buildXml(report);
+    const { xml } = this.exporter.export(report, {
+      schemaVersion: undefined,
+      prettyPrint: true,
+      validate: false,
+      metadata: {
+        reportCode: 'TDG-RPT-01',
+        taxAuthorityCode: 'TCCT',
+        formCode: 'TDG-RPT-01',
+        reportType: 'InternalTaxReport',
+      },
+    });
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
